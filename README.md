@@ -1,2 +1,2 @@
 # wawa-app
-Capstone - WaWa app frontend &amp; backend
+Capstone project- WaWa app frontend &amp; backend
