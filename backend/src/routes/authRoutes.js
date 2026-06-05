@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.post('/signup', signup);
 router.post('/login',  login);
-router.post('/logout', authenticateToken, logout); // 로그아웃은 토큰 검증 후
+router.post('/logout', authenticateToken, logout);
 
 module.exports = router;
