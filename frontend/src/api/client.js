@@ -1,8 +1,7 @@
 import axios from 'axios';
-import { API_URL } from '@env';
 
 const apiClient = axios.create({
-    baseURL: API_URL, 
+    baseURL: 'http://localhost:3000',
     timeout: 10000, 
     headers: {
         'Content-Type': 'application/json',
@@ -12,10 +11,6 @@ const apiClient = axios.create({
 // JWT 
 apiClient.interceptors.request.use(
     async (config) => {
-        // const token = await AsyncStorage.getItem('userToken');
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
         return config;
     },
     (error) => {

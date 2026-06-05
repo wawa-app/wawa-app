@@ -1,41 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
-import apiClient from './src/api/client';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ActivityIndicator, View } from 'react-native';
 
-export default function App() {
-    const [serverStatus, setServerStatus] = useState('Connecting to WaWa Backend...');
-    const [loading, setLoading] = useState(true);
+import { AuthProvider, useAuth } from './src/context/AuthContext';
+import LaunchScreen from './src/screens/LaunchScreen';
+import SignUpScreen from './src/screens/SignUpScreen';
+import SignInScreen from './src/screens/SignInScreen';
 
-    useEffect(() => {
-        apiClient.get('/')
-        .then((response) => {
-            setServerStatus(response.data); 
-        })
-        .catch((error) => {
-            setServerStatus('Backend Connection Failed');
-            setLoading(false);
-            console.error('Connection Error:', error);
-        });
-    }, []);
+const Stack = createNativeStackNavigator();
+
+function RootNavigator() {
+    const { user, loading } = useAuth();
+
+    // Show spinner while checking for existing token on launch
+    if (loading) {
+        return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#1a1a1a" />
+        </View>
+        );
+    }
 
     return (
-        <View style={styles.container}>
-        <Text style={styles.title}>WaWa App Initial Setup</Text>
-        {loading ? (
-            <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-            <Text style={[styles.status, serverStatus.includes('❌') ? styles.error : styles.success]}>
-            {serverStatus}
-            </Text>
-        )}
-        </View>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Launch" component={LaunchScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="SignIn" component={SignInScreen} />
+        </Stack.Navigator>
     );
 }
 
-const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' },
-    title: { fontSize: 22, fontWeight: 'bold', marginBottom: 15, color: '#333' },
-    status: { fontSize: 16, fontWeight: '600', padding: 10, borderRadius: 5 },
-    success: { color: '#2e7d32', backgroundColor: '#e8f5e9' },
-    error: { color: '#c62828', backgroundColor: '#ffebee' }
-});
+// Root component — wraps app with AuthContext and Navigation
+export default function App() {
+    return (
+        <AuthProvider>
+        <NavigationContainer>
+            <RootNavigator />
+        </NavigationContainer>
+        </AuthProvider>
+    );
+}
