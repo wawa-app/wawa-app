@@ -2,7 +2,7 @@ import './global.css';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import apiClient from './src/api/client';
-import { Button } from './src/components/common/Button'
+import Button from './src/components/common/Button'
 
 export default function App() {
     const [serverStatus, setServerStatus] = useState('Connecting to WaWa Backend...');
@@ -30,11 +30,6 @@ export default function App() {
                     {serverStatus}
                 </Text>
             )}
-
-            <View style={{ marginTop: 20, gap: 12 }}>
-                <Button label="click" onPress={() => console.log('clicked')} />
-                <Button label="disable" onPress={() => { }} disabled />
-            </View>
         </View>
     );
 }
