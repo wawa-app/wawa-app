@@ -10,26 +10,29 @@ const signToken = (userId, email) =>
 // POST /api/auth/signup
 const signup = async (req, res) => {
     try {
-        const { email, password, username } = req.body;
+        const { email, password } = req.body;
 
-        if (!email || !password || !username) {
-        return res.status(400).json({ success: false, error: 'MISSING_FIELDS' });
+        if (!email || !password) {
+            return res.status(400).json({ success: false, error: 'MISSING_FIELDS' });
         }
 
         const existing = await User.findOne({ email: email.toLowerCase() });
         if (existing) {
-        return res.status(409).json({ success: false, error: 'EMAIL_ALREADY_EXISTS' });
-    }
+            return res.status(409).json({ success: false, error: 'EMAIL_ALREADY_EXISTS' });
+        }
 
-    const passwordHash = await bcrypt.hash(password, 12);
-    const user = await User.create({ email: email.toLowerCase(), passwordHash, username });
-    const token = signToken(user._id, user.email);
+        // Auto-generate username from email (e.g. "bella@langara.ca" → "bella")
+        const username = email.split('@')[0];
 
-    return res.status(201).json({
-        success: true,
-        token,
-        user: { id: user._id, email: user.email, username: user.username },
-    });
+        const passwordHash = await bcrypt.hash(password, 12);
+        const user = await User.create({ email: email.toLowerCase(), passwordHash, username });
+        const token = signToken(user._id, user.email);
+
+        return res.status(201).json({
+            success: true,
+            token,
+            user: { id: user._id, email: user.email, username: user.username },
+        });
     } catch (err) {
         console.error('[authController.signup]', err);
         return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' });
