@@ -1,6 +1,8 @@
+import './global.css';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import apiClient from './src/api/client';
+import Button from './src/components/common/Button'
 
 export default function App() {
     const [serverStatus, setServerStatus] = useState('Connecting to WaWa Backend...');
@@ -8,26 +10,26 @@ export default function App() {
 
     useEffect(() => {
         apiClient.get('/')
-        .then((response) => {
-            setServerStatus(response.data); 
-        })
-        .catch((error) => {
-            setServerStatus('Backend Connection Failed');
-            setLoading(false);
-            console.error('Connection Error:', error);
-        });
+            .then((response) => {
+                setServerStatus(response.data);
+            })
+            .catch((error) => {
+                setServerStatus('Backend Connection Failed');
+                setLoading(false);
+                console.error('Connection Error:', error);
+            });
     }, []);
 
     return (
         <View style={styles.container}>
-        <Text style={styles.title}>WaWa App Initial Setup</Text>
-        {loading ? (
-            <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-            <Text style={[styles.status, serverStatus.includes('❌') ? styles.error : styles.success]}>
-            {serverStatus}
-            </Text>
-        )}
+            <Text style={styles.title}>WaWa App Initial Setup</Text>
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+                <Text style={[styles.status, serverStatus.includes('❌') ? styles.error : styles.success]}>
+                    {serverStatus}
+                </Text>
+            )}
         </View>
     );
 }
