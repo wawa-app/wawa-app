@@ -2,6 +2,11 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
+import './global.css';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import apiClient from './src/api/client';
+import Button from './src/components/common/Button'
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LaunchScreen from './src/screens/LaunchScreen';
