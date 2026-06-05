@@ -1,3 +1,4 @@
+import './global.css';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import apiClient from './src/api/client';
