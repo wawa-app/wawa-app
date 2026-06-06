@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LaunchScreen from './src/screens/LaunchScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import SignInScreen from './src/screens/SignInScreen';
+import AlarmListScreen from './src/screens/AlarmListScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -17,14 +18,15 @@ function RootNavigator() {
     // Show spinner while checking for existing token on launch
     if (loading) {
         return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#1a1a1a" />
-        </View>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#1a1a1a" />
+            </View>
         );
     }
 
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {/* <Stack.Screen name="Alarm" component={AlarmListScreen} /> */}
             <Stack.Screen name="Launch" component={LaunchScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
             <Stack.Screen name="SignIn" component={SignInScreen} />
@@ -36,9 +38,9 @@ function RootNavigator() {
 export default function App() {
     return (
         <AuthProvider>
-        <NavigationContainer>
-            <RootNavigator />
-        </NavigationContainer>
+            <NavigationContainer>
+                <RootNavigator />
+            </NavigationContainer>
         </AuthProvider>
     );
 }
