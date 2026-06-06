@@ -5,7 +5,7 @@ import AlarmCard from '../components/alarm/AlarmCard';
 //tentative data
 const MOCK_ALARMS = [
     { id: '1', label: 'Label', hour: 8, minute: 0, meridiem: 'AM', days: ['Mon', 'Tue', 'Wed'], enabled: true },
-    { id: '2', label: '',      hour: 8, minute: 0, meridiem: 'PM', days: ['Mon', 'Tue', 'Wed'], enabled: false },
+    { id: '2', label: '', hour: 8, minute: 0, meridiem: 'PM', days: ['Mon', 'Tue', 'Wed'], enabled: false },
 ]
 
 export default function AlarmListScreen({ navigation }) {
@@ -27,7 +27,7 @@ export default function AlarmListScreen({ navigation }) {
     }
 
     return (
-        <View className="flex-1 bg-white px-4">
+        <View className="flex-1 bg-white px-4 pt-12">
             <Text className="text-3xl font-bold text-black mt-4 mb-4">Alarms</Text>
 
             <ScrollView showsVerticalScrollIndicator={false}>
