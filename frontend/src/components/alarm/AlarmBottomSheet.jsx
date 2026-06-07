@@ -18,12 +18,35 @@ export default function AlarmBottomSheet({ visible, onClose }) {
         )
     }
 
+    const handleSave = () => {
+        onSave({
+            label,
+            hour: parseInt(hour) || 8,
+            minute: parseInt(minute) || 0,
+            meridiem,
+            days: selectedDays,
+            enabled: true,
+        })
+    }
+
     return (
         <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-            <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-                <View style={{ backgroundColor: 'white', padding: 20 }}>
+            <View className="flex-1 justify-end bg-black/40">
+                <View className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
+
+                    {/* header */}
+                    <View className="flex-row items-center justify-between mb-6">
+                        <Pressable onPress={onClose}>
+                            <Text className="text-gray-500 text-lg">Cancel</Text>
+                        </Pressable>
+                        <Text className="text-black text-xl font-bold">Set alarm</Text>
+                        <Pressable onPress={handleSave}>
+                            <Text className="text-black text-lg font-semibold">Save</Text>
+                        </Pressable>
+                    </View>
 
                     {/* Label */}
+                    <Text className="text-sm font-bold text-black mb-2">Label</Text>
                     <TextInput
                         placeholder="Label"
                         value={label}
@@ -31,30 +54,41 @@ export default function AlarmBottomSheet({ visible, onClose }) {
                     />
 
                     {/* Time */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View className="flex-row items-center mb-6">
                         <TextInput
+                            className="text-4xl font-bold"
                             value={hour}
                             onChangeText={setHour}
                             keyboardType="numeric"
                             maxLength={2}
                         />
-                        <Text>:</Text>
+                        <Text className="text-4xl font-bold">:</Text>
                         <TextInput
+                            className="text-4xl font-bold"
                             value={minute}
                             onChangeText={setMinute}
                             keyboardType="numeric"
                             maxLength={2}
                         />
-                        <Pressable onPress={() => setMeridiem('AM')}>
-                            <Text>{meridiem === 'AM' ? '[AM]' : 'AM'}</Text>
-                        </Pressable>
-                        <Pressable onPress={() => setMeridiem('PM')}>
-                            <Text>{meridiem === 'PM' ? '[PM]' : 'PM'}</Text>
-                        </Pressable>
+                        <View>
+                            <Pressable
+                                onPress={() => setMeridiem('AM')}
+                                className={`px-4 py-3 ${meridiem === 'AM' ? 'bg-black' : 'bg-gray-100'}`}
+                            >
+                                <Text className={`font-bold ${meridiem === 'AM' ? 'text-white' : 'text-gray-500'}`}>AM</Text>
+                            </Pressable>
+                            <Pressable
+                                onPress={() => setMeridiem('PM')}
+                                className={`px-4 py-3 ${meridiem === 'PM' ? 'bg-black' : 'bg-gray-100'}`}
+                            >
+                                <Text className={`font-bold ${meridiem === 'PM' ? 'text-white' : 'text-gray-500'}`}>PM</Text>
+                            </Pressable>
+                        </View>
                     </View>
 
                     {/* Days */}
-                    <View style={{ flexDirection: 'row' }}>
+                    <Text className="text-sm font-bold text-black mb-2">Day of week</Text>
+                    <View className="flex-row justify-between">
                         {DAYS.map((day, index) => {
                             const dayName = DAY_NAMES[index]
                             const isSelected = selectedDays.includes(dayName)
