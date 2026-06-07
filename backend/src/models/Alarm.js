@@ -1,16 +1,21 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
 const alarmSchema = new mongoose.Schema({
   // ── Ownership ─────────────────────────────────────────
-  userId:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  objectId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Object', required: true },
+  userId:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  objectId:     { type: mongoose.Schema.Types.ObjectId, ref: 'Object', required: true },
 
   // ── Schedule ──────────────────────────────────────────
-  time:       { type: String, required: true },               // "HH:MM" format e.g. "07:30"
-  days:       { type: [Number], required: true },             // [0,1,2,3,4,5,6] Sun=0 ~ Sat=6
-  label:      { type: String, default: '' },                  // user-defined alarm label
-  isEnabled:  { type: Boolean, default: true },               // on/off toggle
+  alarmTime:    { type: String, required: true, default: '07:00' }, // "HH:MM", initialized as AM
+  dayOfWeek:    { type: Number, required: true, min: 0, max: 6 },   // 0=Sun ~ 6=Sat
 
-}, { timestamps: true });
+  // ── Type ──────────────────────────────────────────────
+  // regular: max 2, special: max 1 (enforced in controller)
+  alarmType:    { type: String, enum: ['regular', 'special'], default: 'regular' },
 
-module.exports = mongoose.model('Alarm', alarmSchema);
+  // ── Status ────────────────────────────────────────────
+  isActive:     { type: Boolean, default: true },
+
+}, { timestamps: true })
+
+module.exports = mongoose.model('Alarm', alarmSchema)

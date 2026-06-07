@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
 const trackingLogSchema = new mongoose.Schema({
   // ── References ────────────────────────────────────────
@@ -15,6 +15,6 @@ const trackingLogSchema = new mongoose.Schema({
   // ── Timestamp ─────────────────────────────────────────
     triggeredAt: { type: Date, default: Date.now },             // when alarm fired
 
-}, { timestamps: true });
+}, { timestamps: true })
 
-module.exports = mongoose.model('TrackingLog', trackingLogSchema);
+module.exports = mongoose.model('TrackingLog', trackingLogSchema)
