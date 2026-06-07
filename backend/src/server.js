@@ -6,9 +6,11 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 
 // ── Routes ────────────────────────────────────────────────
-const authRoutes = require("./routes/authRoutes");
-const scanRoutes = require("./routes/scanRoutes");
-const userRoutes = require("./routes/userRoutes");
+const authRoutes   = require("./routes/authRoutes");
+const userRoutes   = require("./routes/userRoutes");
+const alarmRoutes  = require("./routes/alarmRoutes");
+const objectRoutes = require("./routes/objectRoutes");
+const scanRoutes   = require("./routes/scanRoutes");    // mission execution
 
 // ── Middleware ────────────────────────────────────────────
 const authenticateToken = require("./middleware/authenticateToken");
@@ -30,8 +32,10 @@ app.get("/", (req, res) => {
 });
 
 // ── Protected Routes (JWT required) ──────────────────────
-app.use("/api/scan",  authenticateToken, scanRoutes);
-app.use("/api/users", authenticateToken, userRoutes);
+app.use("/api/alarms",  authenticateToken, alarmRoutes);
+app.use("/api/objects", authenticateToken, objectRoutes);
+app.use("/api/mission", authenticateToken, scanRoutes);   // /api/scan → /api/mission
+app.use("/api/users",   authenticateToken, userRoutes);   // stats, history, profile, account
 
 // ── Server ────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;

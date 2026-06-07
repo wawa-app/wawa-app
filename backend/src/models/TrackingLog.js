@@ -7,9 +7,10 @@ const trackingLogSchema = new mongoose.Schema({
     objectId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Object', required: true },
 
   // ── Mission Result ────────────────────────────────────
-    status:     { type: String, enum: ['success', 'failed', 'emergency'], required: true },
-    expGained:  { type: Number, default: 0 },                   // EXP awarded on success
-    attemptCount: { type: Number, default: 1 },                 // number of scan attempts made
+    status:         { type: String, enum: ['success', 'failed', 'emergency'], required: true },
+    expGained:      { type: Number, default: 0 },               // EXP awarded on success
+    attemptCount:   { type: Number, default: 1 },               // number of scan attempts made
+    timeToComplete: { type: Number, default: null },            // seconds from alarm fire to success
 
   // ── Timestamp ─────────────────────────────────────────
     triggeredAt: { type: Date, default: Date.now },             // when alarm fired
