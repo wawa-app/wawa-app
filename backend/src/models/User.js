@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
 const userSchema = new mongoose.Schema({
   // ── Credentials ───────────────────────────────────────
@@ -18,13 +18,13 @@ const userSchema = new mongoose.Schema({
   // ── Auth ──────────────────────────────────────────────
   // refreshToken: { type: String, default: null },    // uncomment when Refresh Token is introduced
 
-}, { timestamps: true });
+}, { timestamps: true })
 
 // Strip sensitive fields from API responses
 userSchema.methods.toJSON = function () {
-  const obj = this.toObject();
-  delete obj.passwordHash;
-  return obj;
-};
+  const obj = this.toObject()
+  delete obj.passwordHash
+  return obj
+}
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('User', userSchema)
