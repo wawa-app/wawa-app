@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, NativeModules, Modal } from 'react-native';
 import AlarmCard from '../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
+import AlarmMenu from '../components/alarm/AlarmMenu'
 
 const { AlarmModule } = NativeModules;
 //tentative data
@@ -118,35 +119,11 @@ export default function AlarmListScreen({ navigation }) {
                 onSave={handleSaveAlarm}
             />
             {/* menu */}
-            <Modal
+            <AlarmMenu
                 visible={menuAlarmId !== null}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setMenuAlarmId(null)}
-            >
-                <Pressable
-                    className="flex-1 bg-black/40 justify-center items-center"
-                    onPress={() => setMenuAlarmId(null)}
-                >
-                    <Pressable className="bg-white rounded-2xl py-2 w-48">
-                        <Pressable
-                            onPress={() => {
-                                console.log('edit', menuAlarmId) // tentative
-                                setMenuAlarmId(null)
-                            }}
-                            className="px-5 py-3"
-                        >
-                            <Text className="text-black text-base">Edit</Text>
-                        </Pressable>
-                        <Pressable
-                            onPress={() => deleteAlarm(menuAlarmId)}
-                            className="px-5 py-3"
-                        >
-                            <Text className="text-red-500 text-base">Delete</Text>
-                        </Pressable>
-                    </Pressable>
-                </Pressable>
-            </Modal>
+                onClose={() => setMenuAlarmId(null)}
+                onDelete={() => deleteAlarm(menuAlarmId)}
+            />
         </View>
     )
 }

@@ -26,7 +26,7 @@ function RootNavigator() {
 
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Alarm" component={AlarmListScreen} />
+            {/* <Stack.Screen name="Alarm" component={AlarmListScreen} /> */}
             <Stack.Screen name="Launch" component={LaunchScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
             <Stack.Screen name="SignIn" component={SignInScreen} />
