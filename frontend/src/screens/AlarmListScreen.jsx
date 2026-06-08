@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
+// import { View, Text, ScrollView, Pressable, NativeModules } from 'react-native';
 import AlarmCard from '../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
 
+// const { AlarmModule } = NativeModules;
 //tentative data
 const MOCK_ALARMS = [
     { id: '1', label: 'Label', hour: 8, minute: 0, meridiem: 'AM', days: ['Mon', 'Tue', 'Wed'], enabled: true },
@@ -42,7 +44,12 @@ export default function AlarmListScreen({ navigation }) {
                     />
                 ))}
             </ScrollView>
-
+            {/* <Pressable
+                onPress={() => AlarmModule.setAlarm(9999, Date.now() + 15000)}
+                className="absolute bottom-24 right-6 bg-red-500 px-4 py-3 rounded-full"
+            >
+                <Text className="text-white">Test (15s)</Text>
+            </Pressable> */}
             {/* FAB - tentative */}
             <Pressable
                 onPress={() => setShowSheet(true)}
