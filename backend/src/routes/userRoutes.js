@@ -1,8 +1,21 @@
-const express = require("express");
-const router = express.Router();
+const express = require('express')
+const {
+    updateProfile,
+    updateAccount,
+    deleteAccount,
+    getStats,
+    getHistory,
+} = require('../controllers/userController')
 
-router.get("/", (req, res) => {
-    res.send("user route working");
-});
+const router = express.Router()
 
-module.exports = router;
+// ── Stats & History ───────────────────────────────────────
+router.get('/stats',   getStats) // GET    /api/users/stats
+router.get('/history', getHistory) // GET    /api/users/history
+
+// ── Profile & Account ─────────────────────────────────────
+router.patch('/profile',  updateProfile) // PATCH  /api/users/profile
+router.patch('/account',  updateAccount) // PATCH  /api/users/account
+router.delete('/account', deleteAccount) // DELETE /api/users/account
+
+module.exports = router

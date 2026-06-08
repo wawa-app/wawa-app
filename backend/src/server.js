@@ -1,41 +1,47 @@
-require("dotenv").config();
+require("dotenv").config()
 
-const express = require("express");
-const cors = require("cors");
+const express = require("express")
+const cors = require("cors")
 
-const connectDB = require("./config/db");
+const connectDB = require("./config/db")
 
 // ── Routes ────────────────────────────────────────────────
-const authRoutes = require("./routes/authRoutes");
-const scanRoutes = require("./routes/scanRoutes");
-const userRoutes = require("./routes/userRoutes");
+const authRoutes       = require("./routes/authRoutes")
+const userRoutes       = require("./routes/userRoutes")
+const alarmRoutes      = require("./routes/alarmRoutes")
+const objectRoutes     = require("./routes/objectRoutes")
+const onboardingRoutes = require("./routes/onboardingRoutes")
+const scanRoutes       = require("./routes/scanRoutes") // mission execution
 
 // ── Middleware ────────────────────────────────────────────
-const authenticateToken = require("./middleware/authenticateToken");
+const authenticateToken = require("./middleware/authenticateToken")
 
-const app = express();
+const app = express()
 
 // ── Global Middleware ─────────────────────────────────────
-app.use(cors());
-app.use(express.json());
+app.use(cors())
+app.use(express.json())
 
 // ── Database ──────────────────────────────────────────────
-connectDB();
+connectDB()
 
 // ── Public Routes (no auth required) ─────────────────────
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes)
 
 app.get("/", (req, res) => {
-    res.send("WaWa Backend Running!");
-});
+    res.send("WaWa Backend Running!")
+})
 
 // ── Protected Routes (JWT required) ──────────────────────
-app.use("/api/scan",  authenticateToken, scanRoutes);
-app.use("/api/users", authenticateToken, userRoutes);
+app.use("/api/onboarding", authenticateToken, onboardingRoutes) // photo-challenge
+app.use("/api/alarms",     authenticateToken, alarmRoutes)
+app.use("/api/objects",    authenticateToken, objectRoutes)
+app.use("/api/mission",    authenticateToken, scanRoutes) // mission execution
+app.use("/api/users",      authenticateToken, userRoutes) // stats, history, profile, account
 
 // ── Server ────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+    console.log(`Server running on port ${PORT}`)
+})
