@@ -5,7 +5,7 @@ import { Modal, View, Text, TextInput, Pressable } from 'react-native';
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-export default function AlarmBottomSheet({ visible, onClose }) {
+export default function AlarmBottomSheet({ visible, onClose, onSave }) {
     const [label, setLabel] = useState('')
     const [hour, setHour] = useState('8')
     const [minute, setMinute] = useState('00')
