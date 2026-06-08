@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import AlarmCard from '../components/alarm/AlarmCard';
+import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
 
 //tentative data
 const MOCK_ALARMS = [
@@ -10,6 +11,7 @@ const MOCK_ALARMS = [
 
 export default function AlarmListScreen({ navigation }) {
     const [alarms, setAlarms] = useState(MOCK_ALARMS)
+    const [showSheet, setShowSheet] = useState(false)
 
     // toggle
     const toggleAlarm = (id) => {
@@ -22,9 +24,9 @@ export default function AlarmListScreen({ navigation }) {
         console.log('menu for', id) // tentative
     }
 
-    const addAlarm = () => {
-        console.log('add alarm') // tentative
-    }
+    // const addAlarm = () => {
+    //     console.log('add alarm') // tentative
+    // }
 
     return (
         <View className="flex-1 bg-white px-4 pt-12">
@@ -43,11 +45,15 @@ export default function AlarmListScreen({ navigation }) {
 
             {/* FAB - tentative */}
             <Pressable
-                onPress={addAlarm}
+                onPress={() => setShowSheet(true)}
                 className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-black items-center justify-center"
             >
                 <Text className="text-white text-3xl leading-none">+</Text>
             </Pressable>
+            <AlarmBottomSheet
+                visible={showSheet}
+                onClose={() => setShowSheet(false)}
+            />
         </View>
     )
 }
