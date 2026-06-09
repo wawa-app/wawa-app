@@ -8,7 +8,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LaunchScreen from './src/screens/LaunchScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import SignInScreen from './src/screens/SignInScreen';
-import AlarmListScreen from './src/screens/AlarmListScreen'
+import NavTabs from './src/navigation/NavTabs';
 
 const Stack = createNativeStackNavigator();
 
@@ -26,10 +26,15 @@ function RootNavigator() {
 
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {/* <Stack.Screen name="Alarm" component={AlarmListScreen} /> */}
-            <Stack.Screen name="Launch" component={LaunchScreen} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} />
-            <Stack.Screen name="SignIn" component={SignInScreen} />
+            {user ? (
+                <Stack.Screen name="Main" component={NavTabs} />
+            ) : (
+                <>
+                    <Stack.Screen name="Launch" component={LaunchScreen} />
+                    <Stack.Screen name="SignIn" component={SignInScreen} />
+                    <Stack.Screen name="SignUp" component={SignUpScreen} />
+                </>
+            )}
         </Stack.Navigator>
     );
 }
