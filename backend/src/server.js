@@ -6,12 +6,12 @@ const cors = require("cors")
 const connectDB = require("./config/db")
 
 // ── Routes ────────────────────────────────────────────────
-const authRoutes       = require("./routes/authRoutes")
-const userRoutes       = require("./routes/userRoutes")
-const alarmRoutes      = require("./routes/alarmRoutes")
-const objectRoutes     = require("./routes/objectRoutes")
+const authRoutes = require("./routes/authRoutes")
+const userRoutes = require("./routes/userRoutes")
+const alarmRoutes = require("./routes/alarmRoutes")
+const objectRoutes = require("./routes/objectRoutes")
 const onboardingRoutes = require("./routes/onboardingRoutes")
-const scanRoutes       = require("./routes/scanRoutes") // mission execution
+const scanRoutes = require("./routes/scanRoutes") // mission execution
 
 // ── Middleware ────────────────────────────────────────────
 const authenticateToken = require("./middleware/authenticateToken")
@@ -34,10 +34,10 @@ app.get("/", (req, res) => {
 
 // ── Protected Routes (JWT required) ──────────────────────
 app.use("/api/onboarding", authenticateToken, onboardingRoutes) // photo-challenge
-app.use("/api/alarms",     authenticateToken, alarmRoutes)
-app.use("/api/objects",    authenticateToken, objectRoutes)
-app.use("/api/mission",    authenticateToken, scanRoutes) // mission execution
-app.use("/api/users",      authenticateToken, userRoutes) // stats, history, profile, account
+app.use("/api/alarms", authenticateToken, alarmRoutes)
+app.use("/api/objects", authenticateToken, objectRoutes)
+app.use("/api/mission", authenticateToken, scanRoutes) // mission execution
+app.use("/api/users", authenticateToken, userRoutes) // stats, history, profile, account
 
 // ── Server ────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000

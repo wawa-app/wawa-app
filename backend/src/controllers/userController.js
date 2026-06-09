@@ -96,8 +96,8 @@ const getHistory = async (req, res) => {
             .sort({ triggeredAt: -1 })
             .skip(Number(offset))
             .limit(Number(limit))
-            .populate('alarmId', 'time days label')
-            .populate('objectId', 'label imageUris')
+            .populate('alarmId', 'alarmTime dayOfWeek alarmType')
+            .populate('objectId', 'name localRef')
 
         return res.json({ success: true, logs })
     } catch (err) {
