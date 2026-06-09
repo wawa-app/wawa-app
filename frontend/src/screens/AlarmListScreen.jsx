@@ -1,19 +1,31 @@
-import React, { useState } from 'react';
-// import { View, Text, ScrollView, Pressable } from 'react-native';
-import { View, Text, ScrollView, Pressable, NativeModules, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, NativeModules, ActivityIndicator } from 'react-native';
+import apiClient from '../api/client';
 import AlarmCard from '../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
 import AlarmMenu from '../components/alarm/AlarmMenu'
 
 const { AlarmModule } = NativeModules;
-//tentative data
-const MOCK_ALARMS = [
-    { id: '1', alarmId: 1, label: 'Label', hour: 8, minute: 0, meridiem: 'AM', days: ['Mon', 'Tue', 'Wed'], enabled: true },
-    { id: '2', alarmId: 2, label: '', hour: 8, minute: 0, meridiem: 'PM', days: ['Mon', 'Tue', 'Wed'], enabled: false },
-]
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const mapAlarmFromApi = (a) => {
+    const [h24, m] = a.alarmTime.split(':').map(Number)
+    const meridiem = h24 >= 12 ? 'PM' : 'AM'
+    let hour = h24 % 12
+    if (hour === 0) hour = 12
+    return {
+        id: a._id,
+        label: '',
+        hour,
+        minute: m,
+        meridiem,
+        days: [DAY_NAMES[a.dayOfWeek]],
+        enabled: a.isActive,
+    }
+}
 
 const getNextTimestamp = (hour, minute, meridiem) => {
-    // 12h -> 24h
     let h = hour % 12
     if (meridiem === 'PM') h += 12
 
@@ -29,39 +41,35 @@ const getNextTimestamp = (hour, minute, meridiem) => {
 }
 
 export default function AlarmListScreen({ navigation }) {
-    const [alarms, setAlarms] = useState(MOCK_ALARMS)
+    const [alarms, setAlarms] = useState([])
+    const [loading, setLoading] = useState(true)
     const [showSheet, setShowSheet] = useState(false)
     const [menuAlarmId, setMenuAlarmId] = useState(null)
+
+    useEffect(() => {
+        const fetchAlarms = async () => {
+            try {
+                const res = await apiClient.get('/api/alarms')
+                setAlarms((res.data.data || []).map(mapAlarmFromApi))
+            } catch (err) {
+                console.error('[AlarmListScreen] fetchAlarms error:', err?.response?.status, err?.response?.data)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchAlarms()
+    }, [])
 
     // toggle
     const toggleAlarm = (id) => {
         setAlarms((prev) =>
-            prev.map((a) => {
-                if (a.id !== id) return a
-
-                const nextEnabled = !a.enabled
-
-                if (nextEnabled) {
-                    const timestamp = getNextTimestamp(a.hour, a.minute, a.meridiem)
-                    AlarmModule.setAlarm(a.alarmId, timestamp)
-                } else {
-                    AlarmModule.cancelAlarm(a.alarmId)
-                }
-
-                return { ...a, enabled: nextEnabled }
-            })
+            prev.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a))
         )
     }
 
     const handleSaveAlarm = ({ label, hour, minute, meridiem, days }) => {
-        const nextAlarmId =
-            alarms.length > 0
-                ? Math.max(...alarms.map((a) => a.alarmId)) + 1
-                : 1
-
         const newAlarm = {
             id: String(Date.now()),
-            alarmId: nextAlarmId,
             label,
             hour,
             minute,
@@ -69,10 +77,6 @@ export default function AlarmListScreen({ navigation }) {
             days: days ?? [],
             enabled: true,
         }
-
-        const timestamp = getNextTimestamp(hour, minute, meridiem)
-        AlarmModule.setAlarm(nextAlarmId, timestamp)
-
         setAlarms((prev) => [...prev, newAlarm])
         setShowSheet(false)
     }
@@ -82,13 +86,7 @@ export default function AlarmListScreen({ navigation }) {
     }
 
     const deleteAlarm = (id) => {
-        setAlarms((prev) => {
-            const target = prev.find((a) => a.id === id)
-            if (target?.enabled) {
-                AlarmModule.cancelAlarm(target.alarmId)
-            }
-            return prev.filter((a) => a.id !== id)
-        })
+        setAlarms((prev) => prev.filter((a) => a.id !== id))
         setMenuAlarmId(null)
     }
 
@@ -96,28 +94,37 @@ export default function AlarmListScreen({ navigation }) {
         <View className="flex-1 bg-white px-4 pt-12">
             <Text className="text-3xl font-bold text-black mt-4 mb-4">Alarms</Text>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {alarms.map((alarm) => (
-                    <AlarmCard
-                        key={alarm.id}
-                        alarm={alarm}
-                        onToggle={() => toggleAlarm(alarm.id)}
-                        onMenu={() => openMenu(alarm.id)}
-                    />
-                ))}
-            </ScrollView>
-            {/* FAB - tentative */}
+            {loading ? (
+                <View className="flex-1 items-center justify-center">
+                    <ActivityIndicator size="large" />
+                </View>
+            ) : (
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    {alarms.map((alarm) => (
+                        <AlarmCard
+                            key={alarm.id}
+                            alarm={alarm}
+                            onToggle={() => toggleAlarm(alarm.id)}
+                            onMenu={() => openMenu(alarm.id)}
+                        />
+                    ))}
+                </ScrollView>
+            )}
+
+            {/* FAB */}
             <Pressable
                 onPress={() => setShowSheet(true)}
                 className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-black items-center justify-center"
             >
                 <Text className="text-white text-3xl leading-none">+</Text>
             </Pressable>
+
             <AlarmBottomSheet
                 visible={showSheet}
                 onClose={() => setShowSheet(false)}
                 onSave={handleSaveAlarm}
             />
+
             {/* menu */}
             <AlarmMenu
                 visible={menuAlarmId !== null}
