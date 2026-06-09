@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, NativeModules, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, NativeModules, ActivityIndicator, Alert } from 'react-native';
 import apiClient from '../api/client';
 import AlarmCard from '../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
@@ -20,8 +20,18 @@ const mapAlarmFromApi = (a) => {
         hour,
         minute: m,
         meridiem,
-        days: [DAY_NAMES[a.dayOfWeek]],
+        days: (a.daysOfWeek || []).map((d) => DAY_NAMES[d]),
         enabled: a.isActive,
+    }
+}
+
+//create
+const mapAlarmToApi = ({ hour, minute, meridiem, days }) => {
+    let h24 = hour % 12
+    if (meridiem === 'PM') h24 += 12
+    return {
+        alarmTime: `${String(h24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+        daysOfWeek: (days || []).map((name) => DAY_NAMES.indexOf(name)),
     }
 }
 
@@ -61,33 +71,54 @@ export default function AlarmListScreen({ navigation }) {
     }, [])
 
     // toggle
-    const toggleAlarm = (id) => {
-        setAlarms((prev) =>
-            prev.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a))
-        )
+    const toggleAlarm = async (id) => {
+        const target = alarms.find((a) => a.id === id)
+        if (!target) return
+        const nextEnabled = !target.enabled
+
+        setAlarms((prev) => prev.map((a) => (a.id === id ? { ...a, enabled: nextEnabled } : a)))
+
+        try {
+            await apiClient.put(`/api/alarms/${id}`, { isActive: nextEnabled })
+        } catch (err) {
+            setAlarms((prev) => prev.map((a) => (a.id === id ? { ...a, enabled: !nextEnabled } : a)))
+            console.error('[AlarmListScreen] toggleAlarm error:', err?.response?.status, err?.response?.data)
+        }
     }
 
-    const handleSaveAlarm = ({ label, hour, minute, meridiem, days }) => {
-        const newAlarm = {
-            id: String(Date.now()),
-            label,
-            hour,
-            minute,
-            meridiem,
-            days: days ?? [],
-            enabled: true,
+    // post
+    const handleSaveAlarm = async ({ hour, minute, meridiem, days }) => {
+        if (!days || days.length === 0) {
+            Alert.alert('Select days', 'Pick at least one day of the week.')
+            return
         }
-        setAlarms((prev) => [...prev, newAlarm])
-        setShowSheet(false)
+        try {
+            const res = await apiClient.post('/api/alarms', mapAlarmToApi({ hour, minute, meridiem, days }))
+            setAlarms((prev) => [...prev, mapAlarmFromApi(res.data.data)])
+            setShowSheet(false)
+        } catch (err) {
+            const data = err?.response?.data
+            console.error('[AlarmListScreen] createAlarm error:', err?.response?.status, data)
+            if (data?.error?.startsWith('MAX_')) {
+                Alert.alert('Limit reached', data.message || 'Alarm limit reached.')
+            }
+        }
     }
 
     const openMenu = (id) => {
         setMenuAlarmId(id)
     }
 
-    const deleteAlarm = (id) => {
-        setAlarms((prev) => prev.filter((a) => a.id !== id))
-        setMenuAlarmId(null)
+    // delete
+    const deleteAlarm = async (id) => {
+        try {
+            await apiClient.delete(`/api/alarms/${id}`)
+            setAlarms((prev) => prev.filter((a) => a.id !== id))
+        } catch (err) {
+            console.error('[AlarmListScreen] deleteAlarm error:', err?.response?.status, err?.response?.data)
+        } finally {
+            setMenuAlarmId(null)
+        }
     }
 
     return (
