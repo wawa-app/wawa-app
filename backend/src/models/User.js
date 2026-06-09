@@ -17,6 +17,8 @@ const userSchema = new mongoose.Schema({
 
   // ── Auth ──────────────────────────────────────────────
   // refreshToken: { type: String, default: null },    // uncomment when Refresh Token is introduced
+  resetPasswordOtp:     { type: String,  default: null },
+  resetPasswordExpires: { type: Date,    default: null },
 
 }, { timestamps: true })
 
