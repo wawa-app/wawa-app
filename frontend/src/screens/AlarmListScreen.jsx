@@ -9,6 +9,8 @@ const { AlarmModule } = NativeModules;
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+const toRequestCode = (id) => parseInt(id.slice(-6), 16)
+
 const mapAlarmFromApi = (a) => {
     const [h24, m] = a.alarmTime.split(':').map(Number)
     const meridiem = h24 >= 12 ? 'PM' : 'AM'
@@ -35,19 +37,29 @@ const mapAlarmToApi = ({ hour, minute, meridiem, days }) => {
     }
 }
 
-const getNextTimestamp = (hour, minute, meridiem) => {
+const getNextTimestamp = (hour, minute, meridiem, days) => {
     let h = hour % 12
     if (meridiem === 'PM') h += 12
-
     const now = new Date()
-    const next = new Date()
-    next.setHours(h, minute, 0, 0)
-
-    if (next.getTime() <= now.getTime()) {
-        next.setDate(next.getDate() + 1)
+    for (let i = 0; i < 8; i++) {
+        const cand = new Date(now)
+        cand.setDate(now.getDate() + i)
+        cand.setHours(h, minute, 0, 0)
+        if (days.includes(DAY_NAMES[cand.getDay()]) && cand.getTime() > now.getTime()) {
+            return cand.getTime()
+        }
     }
+    return null
+}
 
-    return next.getTime()
+const syncNative = (alarm) => {
+    const code = toRequestCode(alarm.id)
+    if (alarm.enabled) {
+        const ts = getNextTimestamp(alarm.hour, alarm.minute, alarm.meridiem, alarm.days)
+        if (ts) AlarmModule.setAlarm(code, ts)
+    } else {
+        AlarmModule.cancelAlarm(code)
+    }
 }
 
 export default function AlarmListScreen({ navigation }) {
@@ -60,7 +72,9 @@ export default function AlarmListScreen({ navigation }) {
         const fetchAlarms = async () => {
             try {
                 const res = await apiClient.get('/api/alarms')
-                setAlarms((res.data.data || []).map(mapAlarmFromApi))
+                const mapped = (res.data.data || []).map(mapAlarmFromApi)
+                setAlarms(mapped)
+                mapped.forEach(syncNative)
             } catch (err) {
                 console.error('[AlarmListScreen] fetchAlarms error:', err?.response?.status, err?.response?.data)
             } finally {
@@ -80,6 +94,7 @@ export default function AlarmListScreen({ navigation }) {
 
         try {
             await apiClient.put(`/api/alarms/${id}`, { isActive: nextEnabled })
+            syncNative({ ...target, enabled: nextEnabled })
         } catch (err) {
             setAlarms((prev) => prev.map((a) => (a.id === id ? { ...a, enabled: !nextEnabled } : a)))
             console.error('[AlarmListScreen] toggleAlarm error:', err?.response?.status, err?.response?.data)
@@ -94,7 +109,9 @@ export default function AlarmListScreen({ navigation }) {
         }
         try {
             const res = await apiClient.post('/api/alarms', mapAlarmToApi({ hour, minute, meridiem, days }))
-            setAlarms((prev) => [...prev, mapAlarmFromApi(res.data.data)])
+            const created = mapAlarmFromApi(res.data.data)
+            setAlarms((prev) => [...prev, created])
+            syncNative(created)
             setShowSheet(false)
         } catch (err) {
             const data = err?.response?.data
@@ -111,8 +128,10 @@ export default function AlarmListScreen({ navigation }) {
 
     // delete
     const deleteAlarm = async (id) => {
+        const target = alarms.find((a) => a.id === id)
         try {
             await apiClient.delete(`/api/alarms/${id}`)
+            if (target) AlarmModule.cancelAlarm(toRequestCode(target.id))
             setAlarms((prev) => prev.filter((a) => a.id !== id))
         } catch (err) {
             console.error('[AlarmListScreen] deleteAlarm error:', err?.response?.status, err?.response?.data)
