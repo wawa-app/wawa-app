@@ -4,7 +4,6 @@ const Alarm = require('../models/Alarm')
 const getAlarms = async (req, res) => {
     try {
         const alarms = await Alarm.find({ userId: req.user.userId })
-            .populate('objectId', 'name localRef') // JOIN with Object
         return res.status(200).json({ success: true, data: alarms })
     } catch (err) {
         console.error('[alarmController.getAlarms]', err)
@@ -15,9 +14,9 @@ const getAlarms = async (req, res) => {
 // POST /api/alarms — Create a new alarm
 const createAlarm = async (req, res) => {
     try {
-        const { objectId, alarmTime, dayOfWeek, alarmType } = req.body
+        const { alarmTime, dayOfWeek, alarmType } = req.body
 
-        if (!objectId || !alarmTime || dayOfWeek === undefined) {
+        if (!alarmTime || dayOfWeek === undefined) {
             return res.status(400).json({ success: false, error: 'MISSING_FIELDS' })
         }
 
@@ -59,7 +58,6 @@ const createAlarm = async (req, res) => {
 
         const alarm = await Alarm.create({
             userId,
-            objectId,
             alarmTime,
             dayOfWeek,
             alarmType: alarmType || 'regular',
@@ -78,7 +76,7 @@ const getAlarmById = async (req, res) => {
         const alarm = await Alarm.findOne({
             _id: req.params.id,
             userId: req.user.userId,
-        }).populate('objectId', 'name localRef')
+        })
 
         if (!alarm) {
             return res.status(404).json({ success: false, error: 'ALARM_NOT_FOUND' })
@@ -94,11 +92,11 @@ const getAlarmById = async (req, res) => {
 // PUT /api/alarms/:id — Update an existing alarm
 const updateAlarm = async (req, res) => {
     try {
-        const { objectId, alarmTime, dayOfWeek, isActive } = req.body
+        const { alarmTime, dayOfWeek, isActive } = req.body
 
         const alarm = await Alarm.findOneAndUpdate(
             { _id: req.params.id, userId: req.user.userId },
-            { objectId, alarmTime, dayOfWeek, isActive },
+            { alarmTime, dayOfWeek, isActive },
             { new: true, runValidators: true }
         )
 

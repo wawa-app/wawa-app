@@ -3,7 +3,6 @@ const mongoose = require('mongoose')
 const alarmSchema = new mongoose.Schema({
   // ── Ownership ─────────────────────────────────────────
   userId:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  objectId:     { type: mongoose.Schema.Types.ObjectId, ref: 'Object', required: true },
 
   // ── Schedule ──────────────────────────────────────────
   alarmTime:    { type: String, required: true, default: '07:00' }, // "HH:MM", initialized as AM
