@@ -36,7 +36,7 @@ export default function SignInScreen({ navigation }) {
         <Text style={styles.label}>Email</Text>
         <TextInput
             style={styles.input}
-            placeholder="info@langara.ca"
+            placeholder="info@wawa.ca"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
