@@ -6,9 +6,10 @@ export default function Button({
     variant = 'primary',
     size = 'medium',
     disabled = false,
+    fullWidth = false,
 }) {
     const variants = {
-        primary: 'bg-gray-500',
+        primary: 'bg-black',
         secondary: 'bg-gray-300',
         outline: 'border border-gray-400 bg-transparent',
     }
@@ -38,6 +39,7 @@ export default function Button({
                 items-center
                 ${sizes[size]}
                 ${variants[variant]}
+                ${fullWidth ? 'w-full' : ''}
                 ${disabled ? 'opacity-50' : ''}
             `}
         >

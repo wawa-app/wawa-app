@@ -32,6 +32,16 @@ const verifyMission = async (req, res) => {
     try {
         const { alarmId, objectId, imageBase64, timeToComplete } = req.body
 
+        const alarm = await Alarm.findOne({ _id: alarmId, userId: req.user.userId })
+        if (!alarm) {
+            return res.status(404).json({ success: false, error: 'ALARM_NOT_FOUND' })
+        }
+
+        const object = await Object.findOne({ _id: objectId, userId: req.user.userId })
+        if (!object) {
+            return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
+        }
+
         // ── TODO: call OpenAI Vision API ──────────────────────────
         // const isSuccess = await callVisionAPI(imageBase64, objectId)
         const isSuccess = true // placeholder — replace with Vision API result
@@ -102,6 +112,16 @@ const changeObject = async (req, res) => {
 const emergencyOverride = async (req, res) => {
     try {
         const { alarmId, objectId } = req.body
+
+        const alarm = await Alarm.findOne({ _id: alarmId, userId: req.user.userId })
+        if (!alarm) {
+            return res.status(404).json({ success: false, error: 'ALARM_NOT_FOUND' })
+        }
+
+        const object = await Object.findOne({ _id: objectId, userId: req.user.userId })
+        if (!object) {
+            return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
+        }
 
         await TrackingLog.create({
             userId:   req.user.userId,

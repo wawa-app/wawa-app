@@ -1,91 +1,57 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import { View, Text, Image } from 'react-native';
+import Button from '../components/common/Button';
 
 export default function LaunchScreen({ navigation }) {
     return (
-        <View style={styles.container}>
+        <View className="flex-1 bg-white items-center">
 
-        {/* Logo placeholder */}
-        <View style={styles.logoPlaceholder}>
-            <Text style={styles.logoX}>✕</Text>
-        </View>
+            {/* Status bar */}
+            <View className="h-6 self-stretch" />
 
-        {/* App name */}
-        <Text style={styles.title}>WaWa</Text>
+            {/* Header zone */}
+            <View className="h-16 self-stretch" />
 
-        {/* Description */}
-        <Text style={styles.description}>
-            WaWa is a challenge-based alarm app that helps users build a reliable
-            morning routine through visual search missions, smart image recognition,
-            habit tracking, and rewards.
-        </Text>
+            {/* Top spacer */}
+            <View className="flex-1" />
 
-        {/* Get Started button */}
-        <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate('SignUp')}
-        >
-            <Text style={styles.buttonText}>Get Started</Text>
-        </TouchableOpacity>
+            {/* Content frame: w-328px h-454px, gap-40px */}
+            <View className="w-[328px] h-[454px] flex-col justify-center items-center">
+
+                {/* Logo + WaWa name */}
+                <View className="items-center mb-[40px]">
+
+                    {/* Logo placeholder — replace with actual image later */}
+                    <View className="w-14 h-14 border-2 border-black items-center justify-center mb-[32px]">
+                        <Text className="text-3xl text-[#1a1a1a]">✕</Text>
+                    </View>
+
+                    {/* App name */}
+                    <Text className="text-[48px] font-medium text-black text-center leading-[48px] self-stretch">
+                        WaWa
+                    </Text>
+
+                </View>
+
+                {/* Description */}
+                <Text className="text-[14px] font-light text-black text-center leading-[14px]">
+                    WaWa is a challenge-based alarm app that helps users build a reliable morning routine through visual search missions, smart image recognition, habit tracking, and rewards.
+                </Text>
+
+            </View>
+
+            {/* Bottom spacer */}
+            <View className="flex-1" />
+
+            {/* Button pinned to bottom */}
+            <View className="w-[296px] pb-[101px]">
+                <Button
+                    title="Get Started"
+                    onPress={() => navigation.navigate('SignUp')}
+                    fullWidth
+                />
+            </View>
 
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#FFF',
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 32,
-    },
-    logoPlaceholder: {
-        width: 56,
-        height: 56,
-        borderWidth: 2,
-        borderColor: '#000',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 24,
-    },
-    logoX: {
-        fontSize: 28,
-        color: '#1a1a1a',
-    },
-    title: {
-        fontSize: 48,
-        fontWeight: '500',
-        color: '#000',
-        marginBottom: 20,
-        alignItems: 'center',
-        lineHeight: 48,
-    },
-    description: {
-        fontSize: 14,
-        color: '#000',
-        textAlign: 'center',
-        lineHeight: 14,
-        marginBottom: 48,
-    },
-    button: {
-        backgroundColor: '#000',
-        borderRadius: 16,
-        height: 64,
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 12,
-        alignSelf: 'stretch',
-    },
-    buttonText: {
-        color: '#FFF',
-        textAlign: 'center',
-        fontSize: 18,
-        fontWeight: '700',
-        lineHeight: 28,
-        letterSpacing: -0.105,
-    },
-});

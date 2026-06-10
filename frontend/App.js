@@ -8,7 +8,11 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LaunchScreen from './src/screens/LaunchScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import SignInScreen from './src/screens/SignInScreen';
-import AlarmListScreen from './src/screens/AlarmListScreen'
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import OtpVerificationScreen from './src/screens/OtpVerificationScreen';
+import CreateNewPasswordScreen from './src/screens/CreateNewPasswordScreen';
+import PasswordResetSuccessScreen from './src/screens/PasswordResetSuccessScreen';
+import NavTabs from './src/navigation/NavTabs';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,14 +31,16 @@ function RootNavigator() {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             {user ? (
-                // ── Logged in ──
-                <Stack.Screen name="Alarm" component={AlarmListScreen} />
+                <Stack.Screen name="Main" component={NavTabs} />
             ) : (
-                // ── Not logged in ──
                 <>
                     <Stack.Screen name="Launch" component={LaunchScreen} />
                     <Stack.Screen name="SignIn" component={SignInScreen} />
                     <Stack.Screen name="SignUp" component={SignUpScreen} />
+                    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                    <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
+                    <Stack.Screen name="CreateNewPassword" component={CreateNewPasswordScreen} />
+                    <Stack.Screen name="PasswordResetSuccess" component={PasswordResetSuccessScreen} />
                 </>
             )}
         </Stack.Navigator>

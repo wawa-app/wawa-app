@@ -1,4 +1,5 @@
 const Object = require('../models/Object')
+const Alarm  = require('../models/Alarm')
 
 // GET /api/objects — Retrieve all objects for the authenticated user
 const getObjects = async (req, res) => {
@@ -53,6 +54,8 @@ const deleteObject = async (req, res) => {
         if (!object) {
             return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
         }
+
+        await Alarm.deleteMany({ objectId: req.params.id, userId: req.user.userId })
 
         return res.status(200).json({ success: true })
     } catch (err) {
