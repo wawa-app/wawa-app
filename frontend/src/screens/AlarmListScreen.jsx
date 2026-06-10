@@ -1,127 +1,231 @@
-import React, { useState } from 'react';
-// import { View, Text, ScrollView, Pressable } from 'react-native';
-import { View, Text, ScrollView, Pressable, NativeModules, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, NativeModules, ActivityIndicator, Alert } from 'react-native';
+import apiClient from '../api/client';
 import AlarmCard from '../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
 import AlarmMenu from '../components/alarm/AlarmMenu'
+import AlarmEmptyState from '../components/alarm/AlarmEmptyState'
 
 const { AlarmModule } = NativeModules;
-//tentative data
-const MOCK_ALARMS = [
-    { id: '1', alarmId: 1, label: 'Label', hour: 8, minute: 0, meridiem: 'AM', days: ['Mon', 'Tue', 'Wed'], enabled: true },
-    { id: '2', alarmId: 2, label: '', hour: 8, minute: 0, meridiem: 'PM', days: ['Mon', 'Tue', 'Wed'], enabled: false },
-]
 
-const getNextTimestamp = (hour, minute, meridiem) => {
-    // 12h -> 24h
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const toRequestCode = (id) => parseInt(id.slice(-6), 16)
+
+const mapAlarmFromApi = (a) => {
+    const [h24, m] = a.alarmTime.split(':').map(Number)
+    const meridiem = h24 >= 12 ? 'PM' : 'AM'
+    let hour = h24 % 12
+    if (hour === 0) hour = 12
+    return {
+        id: a._id,
+        label: a.label || '',
+        hour,
+        minute: m,
+        meridiem,
+        days: (a.daysOfWeek || []).map((d) => DAY_NAMES[d]),
+        enabled: a.isActive,
+    }
+}
+
+//create
+const mapAlarmToApi = ({ label, hour, minute, meridiem, days }) => {
+    let h24 = hour % 12
+    if (meridiem === 'PM') h24 += 12
+    return {
+        label: label || '',
+        alarmTime: `${String(h24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+        daysOfWeek: (days || []).map((name) => DAY_NAMES.indexOf(name)),
+    }
+}
+
+const getNextTimestamp = (hour, minute, meridiem, days) => {
     let h = hour % 12
     if (meridiem === 'PM') h += 12
-
     const now = new Date()
-    const next = new Date()
-    next.setHours(h, minute, 0, 0)
-
-    if (next.getTime() <= now.getTime()) {
-        next.setDate(next.getDate() + 1)
+    for (let i = 0; i < 8; i++) {
+        const cand = new Date(now)
+        cand.setDate(now.getDate() + i)
+        cand.setHours(h, minute, 0, 0)
+        if (days.includes(DAY_NAMES[cand.getDay()]) && cand.getTime() > now.getTime()) {
+            return cand.getTime()
+        }
     }
+    return null
+}
 
-    return next.getTime()
+const syncNative = (alarm) => {
+    const code = toRequestCode(alarm.id)
+    if (alarm.enabled) {
+        const ts = getNextTimestamp(alarm.hour, alarm.minute, alarm.meridiem, alarm.days)
+        if (ts) AlarmModule.setAlarm(code, ts)
+    } else {
+        AlarmModule.cancelAlarm(code)
+    }
 }
 
 export default function AlarmListScreen({ navigation }) {
-    const [alarms, setAlarms] = useState(MOCK_ALARMS)
+    const [alarms, setAlarms] = useState([])
+    const [loading, setLoading] = useState(true)
     const [showSheet, setShowSheet] = useState(false)
     const [menuAlarmId, setMenuAlarmId] = useState(null)
+    const [editingAlarm, setEditingAlarm] = useState(null)
 
-    // toggle
-    const toggleAlarm = (id) => {
-        setAlarms((prev) =>
-            prev.map((a) => {
-                if (a.id !== id) return a
 
-                const nextEnabled = !a.enabled
-
-                if (nextEnabled) {
-                    const timestamp = getNextTimestamp(a.hour, a.minute, a.meridiem)
-                    AlarmModule.setAlarm(a.alarmId, timestamp)
-                } else {
-                    AlarmModule.cancelAlarm(a.alarmId)
-                }
-
-                return { ...a, enabled: nextEnabled }
-            })
-        )
+    const closeSheet = () => {
+        setShowSheet(false)
+        setEditingAlarm(null)
     }
 
-    const handleSaveAlarm = ({ label, hour, minute, meridiem, days }) => {
-        const nextAlarmId =
-            alarms.length > 0
-                ? Math.max(...alarms.map((a) => a.alarmId)) + 1
-                : 1
+    const openEdit = (id) => {
+        const target = alarms.find((a) => a.id === id)
+        if (!target) return
+        setEditingAlarm(target)
+        setMenuAlarmId(null)
+        setShowSheet(true)
+    }
 
-        const newAlarm = {
-            id: String(Date.now()),
-            alarmId: nextAlarmId,
-            label,
-            hour,
-            minute,
-            meridiem,
-            days: days ?? [],
-            enabled: true,
+    // put
+    const handleUpdateAlarm = async (id, { label, hour, minute, meridiem, days }) => {
+        if (!days || days.length === 0) {
+            Alert.alert('Select days', 'Pick at least one day of the week.')
+            return
         }
+        try {
+            const res = await apiClient.put(`/api/alarms/${id}`, mapAlarmToApi({ label, hour, minute, meridiem, days }))
+            const updated = mapAlarmFromApi(res.data.data)
+            setAlarms((prev) => prev.map((a) => (a.id === id ? updated : a)))
+            syncNative(updated)
+            closeSheet()
+        } catch (err) {
+            console.error('[AlarmListScreen] updateAlarm error:', err?.response?.status, err?.response?.data)
+        }
+    }
 
-        const timestamp = getNextTimestamp(hour, minute, meridiem)
-        AlarmModule.setAlarm(nextAlarmId, timestamp)
+    // create / edit 
+    const handleSheetSave = (data) => {
+        if (editingAlarm) {
+            handleUpdateAlarm(editingAlarm.id, data)
+        } else {
+            handleSaveAlarm(data)
+        }
+    }
+    useEffect(() => {
+        const fetchAlarms = async () => {
+            try {
+                const res = await apiClient.get('/api/alarms')
+                const mapped = (res.data.data || []).map(mapAlarmFromApi)
+                setAlarms(mapped)
+                mapped.forEach(syncNative)
+            } catch (err) {
+                console.error('[AlarmListScreen] fetchAlarms error:', err?.response?.status, err?.response?.data)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchAlarms()
+    }, [])
 
-        setAlarms((prev) => [...prev, newAlarm])
-        setShowSheet(false)
+    // toggle
+    const toggleAlarm = async (id) => {
+        const target = alarms.find((a) => a.id === id)
+        if (!target) return
+        const nextEnabled = !target.enabled
+
+        setAlarms((prev) => prev.map((a) => (a.id === id ? { ...a, enabled: nextEnabled } : a)))
+
+        try {
+            await apiClient.put(`/api/alarms/${id}`, { isActive: nextEnabled })
+            syncNative({ ...target, enabled: nextEnabled })
+        } catch (err) {
+            setAlarms((prev) => prev.map((a) => (a.id === id ? { ...a, enabled: !nextEnabled } : a)))
+            console.error('[AlarmListScreen] toggleAlarm error:', err?.response?.status, err?.response?.data)
+        }
+    }
+
+    // post
+    const handleSaveAlarm = async ({ label, hour, minute, meridiem, days }) => {
+        if (!days || days.length === 0) {
+            Alert.alert('Select days', 'Pick at least one day of the week.')
+            return
+        }
+        try {
+            const res = await apiClient.post('/api/alarms', mapAlarmToApi({ label, hour, minute, meridiem, days }))
+            const created = mapAlarmFromApi(res.data.data)
+            setAlarms((prev) => [...prev, created])
+            syncNative(created)
+            setShowSheet(false)
+        } catch (err) {
+            const data = err?.response?.data
+            console.error('[AlarmListScreen] createAlarm error:', err?.response?.status, data)
+            if (data?.error?.startsWith('MAX_')) {
+                Alert.alert('Limit reached', data.message || 'Alarm limit reached.')
+            }
+        }
     }
 
     const openMenu = (id) => {
         setMenuAlarmId(id)
     }
 
-    const deleteAlarm = (id) => {
-        setAlarms((prev) => {
-            const target = prev.find((a) => a.id === id)
-            if (target?.enabled) {
-                AlarmModule.cancelAlarm(target.alarmId)
-            }
-            return prev.filter((a) => a.id !== id)
-        })
-        setMenuAlarmId(null)
+    // delete
+    const deleteAlarm = async (id) => {
+        const target = alarms.find((a) => a.id === id)
+        try {
+            await apiClient.delete(`/api/alarms/${id}`)
+            if (target) AlarmModule.cancelAlarm(toRequestCode(target.id))
+            setAlarms((prev) => prev.filter((a) => a.id !== id))
+        } catch (err) {
+            console.error('[AlarmListScreen] deleteAlarm error:', err?.response?.status, err?.response?.data)
+        } finally {
+            setMenuAlarmId(null)
+        }
     }
 
     return (
         <View className="flex-1 bg-white px-4 pt-12">
             <Text className="text-3xl font-bold text-black mt-4 mb-4">Alarms</Text>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {alarms.map((alarm) => (
-                    <AlarmCard
-                        key={alarm.id}
-                        alarm={alarm}
-                        onToggle={() => toggleAlarm(alarm.id)}
-                        onMenu={() => openMenu(alarm.id)}
-                    />
-                ))}
-            </ScrollView>
-            {/* FAB - tentative */}
+            {loading ? (
+                <View className="flex-1 items-center justify-center">
+                    <ActivityIndicator size="large" />
+                </View>
+            ) : alarms.length === 0 ? (
+                <AlarmEmptyState />
+            ) : (
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    {alarms.map((alarm) => (
+                        <AlarmCard
+                            key={alarm.id}
+                            alarm={alarm}
+                            onToggle={() => toggleAlarm(alarm.id)}
+                            onMenu={() => openMenu(alarm.id)}
+                        />
+                    ))}
+                </ScrollView>
+            )}
+
+            {/* FAB */}
             <Pressable
-                onPress={() => setShowSheet(true)}
+                onPress={() => { setEditingAlarm(null); setShowSheet(true) }}
                 className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-black items-center justify-center"
             >
                 <Text className="text-white text-3xl leading-none">+</Text>
             </Pressable>
+
+            {/* sheet */}
             <AlarmBottomSheet
                 visible={showSheet}
-                onClose={() => setShowSheet(false)}
-                onSave={handleSaveAlarm}
+                onClose={closeSheet}
+                onSave={handleSheetSave}
+                initialValue={editingAlarm}
             />
-            {/* menu */}
+
+            {/* menu*/}
             <AlarmMenu
                 visible={menuAlarmId !== null}
                 onClose={() => setMenuAlarmId(null)}
+                onEdit={() => openEdit(menuAlarmId)}
                 onDelete={() => deleteAlarm(menuAlarmId)}
             />
         </View>

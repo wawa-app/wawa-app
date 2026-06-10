@@ -4,7 +4,6 @@ const Alarm = require('../models/Alarm')
 const getAlarms = async (req, res) => {
     try {
         const alarms = await Alarm.find({ userId: req.user.userId })
-            .populate('objectId', 'name localRef') // JOIN with Object
         return res.status(200).json({ success: true, data: alarms })
     } catch (err) {
         console.error('[alarmController.getAlarms]', err)
@@ -15,9 +14,9 @@ const getAlarms = async (req, res) => {
 // POST /api/alarms — Create a new alarm
 const createAlarm = async (req, res) => {
     try {
-        const { objectId, alarmTime, dayOfWeek, alarmType } = req.body
+        const { alarmTime, daysOfWeek, alarmType, label } = req.body
 
-        if (!objectId || !alarmTime || dayOfWeek === undefined) {
+        if (!alarmTime || !Array.isArray(daysOfWeek) || daysOfWeek.length === 0) {
             return res.status(400).json({ success: false, error: 'MISSING_FIELDS' })
         }
 
@@ -59,10 +58,10 @@ const createAlarm = async (req, res) => {
 
         const alarm = await Alarm.create({
             userId,
-            objectId,
             alarmTime,
-            dayOfWeek,
+            daysOfWeek,
             alarmType: alarmType || 'regular',
+            label: label || '',
         })
 
         return res.status(201).json({ success: true, data: alarm })
@@ -78,7 +77,7 @@ const getAlarmById = async (req, res) => {
         const alarm = await Alarm.findOne({
             _id: req.params.id,
             userId: req.user.userId,
-        }).populate('objectId', 'name localRef')
+        })
 
         if (!alarm) {
             return res.status(404).json({ success: false, error: 'ALARM_NOT_FOUND' })
@@ -94,17 +93,16 @@ const getAlarmById = async (req, res) => {
 // PUT /api/alarms/:id — Update an existing alarm
 const updateAlarm = async (req, res) => {
     try {
-        const { objectId, alarmTime, dayOfWeek, isActive } = req.body
-
-        const updates = {}
-        if (objectId   !== undefined) updates.objectId   = objectId
-        if (alarmTime  !== undefined) updates.alarmTime  = alarmTime
-        if (dayOfWeek  !== undefined) updates.dayOfWeek  = dayOfWeek
-        if (isActive   !== undefined) updates.isActive   = isActive
+        const { alarmTime, daysOfWeek, isActive, label } = req.body
+        const update = {}
+        if (alarmTime !== undefined) update.alarmTime = alarmTime
+        if (daysOfWeek !== undefined) update.daysOfWeek = daysOfWeek
+        if (isActive !== undefined) update.isActive = isActive
+        if (label !== undefined) update.label = label
 
         const alarm = await Alarm.findOneAndUpdate(
             { _id: req.params.id, userId: req.user.userId },
-            { $set: updates },
+            { $set: update },
             { new: true, runValidators: true }
         )
 
