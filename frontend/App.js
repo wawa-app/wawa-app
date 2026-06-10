@@ -8,6 +8,10 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LaunchScreen from './src/screens/LaunchScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import SignInScreen from './src/screens/SignInScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import OtpVerificationScreen from './src/screens/OtpVerificationScreen';
+import CreateNewPasswordScreen from './src/screens/CreateNewPasswordScreen';
+import PasswordResetSuccessScreen from './src/screens/PasswordResetSuccessScreen';
 import NavTabs from './src/navigation/NavTabs';
 
 const Stack = createNativeStackNavigator();
@@ -33,6 +37,10 @@ function RootNavigator() {
                     <Stack.Screen name="Launch" component={LaunchScreen} />
                     <Stack.Screen name="SignIn" component={SignInScreen} />
                     <Stack.Screen name="SignUp" component={SignUpScreen} />
+                    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                    <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
+                    <Stack.Screen name="CreateNewPassword" component={CreateNewPasswordScreen} />
+                    <Stack.Screen name="PasswordResetSuccess" component={PasswordResetSuccessScreen} />
                 </>
             )}
         </Stack.Navigator>
