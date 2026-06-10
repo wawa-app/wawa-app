@@ -1,9 +1,23 @@
-const Alarm       = require('../models/Alarm')
-const Object      = require('../models/Object')
-const TrackingLog = require('../models/TrackingLog')
-const User        = require('../models/User')
+const Alarm          = require('../models/Alarm')
+const Object         = require('../models/Object')
+const MissionAttempt = require('../models/MissionAttempt')
+const MissionLog     = require('../models/MissionLog')
+const Streak         = require('../models/Streak')
+const Uni            = require('../models/Uni')
+const User           = require('../models/User')
 
 const EXP_PER_SUCCESS = 10 // MVP: flat EXP per mission success
+
+// Determine Uni stage based on level (every 5 levels = new stage)
+const getStage = (level) => {
+    if (level <= 5)  return 'Baby Uni'
+    if (level <= 10) return 'Child Uni'
+    if (level <= 15) return 'Teen Uni'
+    if (level <= 20) return 'Adult Uni'
+    if (level <= 25) return 'Worker Uni'
+    if (level <= 30) return 'Senior Uni'
+    return 'Chubby Uni'
+}
 
 // GET /api/mission/:alarmId
 // Fetches active mission config when alarm fires (called by Android BroadcastReceiver)
@@ -27,7 +41,7 @@ const getMission = async (req, res) => {
 }
 
 // POST /api/mission/verify
-// Receives scanned image, calls OpenAI Vision API, updates streak & EXP
+// Receives scanned image, calls OpenAI Vision API, updates Streak, Uni, and logs result
 const verifyMission = async (req, res) => {
     try {
         const { alarmId, objectId, imageBase64, timeToComplete } = req.body
@@ -46,38 +60,57 @@ const verifyMission = async (req, res) => {
         // const isSuccess = await callVisionAPI(imageBase64, objectId)
         const isSuccess = true // placeholder — replace with Vision API result
 
-        const status = isSuccess ? 'success' : 'failed'
-
-        // Log the attempt
-        await TrackingLog.create({
-            userId:         req.user.userId,
+        // Create MissionAttempt record
+        const attempt = await MissionAttempt.create({
+            userId:   req.user.userId,
             alarmId,
             objectId,
-            status,
-            expGained:      isSuccess ? EXP_PER_SUCCESS : 0,
+            status:   isSuccess ? 'success' : 'failed',
+        })
+
+        // Create MissionLog record
+        await MissionLog.create({
+            userId:         req.user.userId,
+            objectId,
+            missionId:      attempt._id,
             timeToComplete: timeToComplete ?? null,
+            isSuccess,
+            attemptAt:      new Date(),
+            completedAt:    isSuccess ? new Date() : null,
         })
 
         if (isSuccess) {
-            // Update streak, longestStreak, EXP, totalUnlocks
-            const user = await User.findById(req.user.userId)
-            const newStreak = user.streak + 1
-            const newExp    = user.exp + EXP_PER_SUCCESS
-            // MVP: level up every 100 EXP
-            const newLevel  = Math.floor(newExp / 100) + 1
-
-            await User.findByIdAndUpdate(req.user.userId, {
+            // Update Streak
+            let streak = await Streak.findOne({ userId: req.user.userId })
+            if (!streak) {
+                streak = await Streak.create({ userId: req.user.userId })
+            }
+            const newCount = streak.currentCount + 1
+            await Streak.findByIdAndUpdate(streak._id, {
                 $set: {
-                    streak:       newStreak,
-                    longestStreak: Math.max(user.longestStreak, newStreak),
-                    exp:          newExp,
-                    level:        newLevel,
-                },
-                $inc: { totalUnlocks: 1 },
+                    currentCount:    newCount,
+                    longestCount:    Math.max(streak.longestCount, newCount),
+                    lastSuccessDate: new Date(),
+                }
             })
+
+            // Update Uni (exp, level, stage)
+            let uni = await Uni.findOne({ userId: req.user.userId })
+            if (!uni) {
+                uni = await Uni.create({ userId: req.user.userId, avatarKey: 'default' })
+            }
+            const newExp   = uni.exp + EXP_PER_SUCCESS
+            const newLevel = Math.floor(newExp / 100) + 1
+            const newStage = getStage(newLevel)
+            await Uni.findByIdAndUpdate(uni._id, {
+                $set: { exp: newExp, level: newLevel, stage: newStage }
+            })
+
+            // Update User totalUnlocks
+            await User.findByIdAndUpdate(req.user.userId, { $inc: { totalUnlocks: 1 } })
         }
 
-        return res.json({ success: true, result: status })
+        return res.json({ success: true, result: isSuccess ? 'success' : 'failed' })
     } catch (err) {
         console.error('[scanController.verifyMission]', err)
         return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
@@ -108,7 +141,7 @@ const changeObject = async (req, res) => {
 }
 
 // PATCH /api/mission/emergency
-// Forces alarm off, logs as emergency, resets streak to 0
+// Forces alarm off, logs as emergency, resets current streak to 0
 const emergencyOverride = async (req, res) => {
     try {
         const { alarmId, objectId } = req.body
@@ -123,16 +156,29 @@ const emergencyOverride = async (req, res) => {
             return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
         }
 
-        await TrackingLog.create({
+        // Create MissionAttempt as failed
+        const attempt = await MissionAttempt.create({
             userId:   req.user.userId,
             alarmId,
             objectId,
-            status:   'emergency',
-            expGained: 0,
+            status:   'failed',
         })
 
-        // Reset current streak
-        await User.findByIdAndUpdate(req.user.userId, { $set: { streak: 0 } })
+        // Create MissionLog as not successful
+        await MissionLog.create({
+            userId:      req.user.userId,
+            objectId,
+            missionId:   attempt._id,
+            isSuccess:   false,
+            attemptAt:   new Date(),
+            completedAt: null,
+        })
+
+        // Reset current streak to 0
+        await Streak.findOneAndUpdate(
+            { userId: req.user.userId },
+            { $set: { currentCount: 0 } }
+        )
 
         return res.json({ success: true, message: 'Emergency override logged, streak reset' })
     } catch (err) {

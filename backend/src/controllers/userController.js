@@ -1,6 +1,9 @@
-const bcrypt = require('bcryptjs')
-const User = require('../models/User')
-const TrackingLog = require('../models/TrackingLog')
+const bcrypt        = require('bcryptjs')
+const User          = require('../models/User')
+const Streak        = require('../models/Streak')
+const Uni           = require('../models/Uni')
+const MissionAttempt = require('../models/MissionAttempt')
+const MissionLog    = require('../models/MissionLog')
 
 // PATCH /api/users/profile
 // Updates username and/or avatar
@@ -54,13 +57,16 @@ const updateAccount = async (req, res) => {
 }
 
 // DELETE /api/users/account
-// Permanently deletes user and all related data
+// Permanently deletes user and all related data across all collections
 const deleteAccount = async (req, res) => {
     try {
-        await TrackingLog.deleteMany({ userId: req.user.userId })
-        // Alarms and Objects cascade via userId — delete them too
         const Alarm  = require('../models/Alarm')
         const Object = require('../models/Object')
+
+        await MissionLog.deleteMany({ userId: req.user.userId })
+        await MissionAttempt.deleteMany({ userId: req.user.userId })
+        await Streak.deleteMany({ userId: req.user.userId })
+        await Uni.deleteMany({ userId: req.user.userId })
         await Alarm.deleteMany({ userId: req.user.userId })
         await Object.deleteMany({ userId: req.user.userId })
         await User.findByIdAndDelete(req.user.userId)
@@ -73,14 +79,34 @@ const deleteAccount = async (req, res) => {
 }
 
 // GET /api/users/stats
-// Returns aggregate stats: streak, level, exp, totalUnlocks
+// Returns aggregate stats from User, Streak, and Uni collections
 const getStats = async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId).select(
-            'username avatar level exp streak longestStreak totalUnlocks stage'
-        )
+        const user   = await User.findById(req.user.userId).select('username avatar totalUnlocks')
         if (!user) return res.status(404).json({ success: false, error: 'USER_NOT_FOUND' })
-        return res.json({ success: true, stats: user })
+
+        const streak = await Streak.findOne({ userId: req.user.userId })
+        const uni    = await Uni.findOne({ userId: req.user.userId })
+
+        return res.json({
+            success: true,
+            stats: {
+                username:     user.username,
+                avatar:       user.avatar,
+                totalUnlocks: user.totalUnlocks,
+                streak: {
+                    currentCount:    streak?.currentCount    ?? 0,
+                    longestCount:    streak?.longestCount    ?? 0,
+                    lastSuccessDate: streak?.lastSuccessDate ?? null,
+                },
+                uni: {
+                    avatarKey: uni?.avatarKey ?? 'default',
+                    level:     uni?.level     ?? 1,
+                    stage:     uni?.stage     ?? 'Baby Uni',
+                    exp:       uni?.exp       ?? 0,
+                },
+            }
+        })
     } catch (err) {
         console.error('[userController.getStats]', err)
         return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
@@ -88,15 +114,15 @@ const getStats = async (req, res) => {
 }
 
 // GET /api/users/history
-// Returns past mission attempt logs, newest first
+// Returns past mission logs, newest first
 const getHistory = async (req, res) => {
     try {
         const { limit = 20, offset = 0 } = req.query
-        const logs = await TrackingLog.find({ userId: req.user.userId })
-            .sort({ triggeredAt: -1 })
+        const logs = await MissionLog.find({ userId: req.user.userId })
+            .sort({ attemptAt: -1 })
             .skip(Number(offset))
             .limit(Number(limit))
-            .populate('alarmId', 'alarmTime dayOfWeek alarmType')
+            .populate('missionId', 'alarmId objectId status')
             .populate('objectId', 'name localRef')
 
         return res.json({ success: true, logs })

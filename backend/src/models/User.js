@@ -8,12 +8,9 @@ const userSchema = new mongoose.Schema({
   avatar:       { type: String, default: null },
 
   // ── Gamification ──────────────────────────────────────
-  exp:          { type: Number, default: 0 },
-  level:        { type: Number, default: 1 },
-  streak:        { type: Number, default: 0 },         // current consecutive streak
-  longestStreak: { type: Number, default: 0 },         // all-time best streak
+  // exp, level, stage are managed in the Uni collection
+  // streak data is managed in the Streak collection
   totalUnlocks:  { type: Number, default: 0 },         // lifetime mission success count
-  stage:         { type: String, default: 'Baby Uni' }, // Uni growth stage label
 
   // ── Auth ──────────────────────────────────────────────
   // refreshToken: { type: String, default: null },    // uncomment when Refresh Token is introduced
