@@ -4,6 +4,7 @@ import apiClient from '../api/client';
 import AlarmCard from '../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
 import AlarmMenu from '../components/alarm/AlarmMenu'
+import AlarmEmptyState from '../components/alarm/AlarmEmptyState'
 
 const { AlarmModule } = NativeModules;
 
@@ -189,6 +190,8 @@ export default function AlarmListScreen({ navigation }) {
                 <View className="flex-1 items-center justify-center">
                     <ActivityIndicator size="large" />
                 </View>
+            ) : alarms.length === 0 ? (
+                <AlarmEmptyState />
             ) : (
                 <ScrollView showsVerticalScrollIndicator={false}>
                     {alarms.map((alarm) => (
