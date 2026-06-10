@@ -28,8 +28,8 @@ export default function NavTabs() {
                 tabBarActiveTintColor: '#5B5363',
                 tabBarInactiveTintColor: '#4D4A50',
                 tabBarLabelStyle: {
-                    fontSize: 13,
-                    fontWeight: '600',
+                    fontSize: 12,
+                    fontFamily: 'Geologica-Medium',
                 },
                 tabBarStyle: {
                     height: 80,
