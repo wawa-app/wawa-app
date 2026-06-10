@@ -67,7 +67,47 @@ export default function AlarmListScreen({ navigation }) {
     const [loading, setLoading] = useState(true)
     const [showSheet, setShowSheet] = useState(false)
     const [menuAlarmId, setMenuAlarmId] = useState(null)
+    const [editingAlarm, setEditingAlarm] = useState(null)
 
+
+    const closeSheet = () => {
+        setShowSheet(false)
+        setEditingAlarm(null)
+    }
+
+    const openEdit = (id) => {
+        const target = alarms.find((a) => a.id === id)
+        if (!target) return
+        setEditingAlarm(target)
+        setMenuAlarmId(null)
+        setShowSheet(true)
+    }
+
+    // put
+    const handleUpdateAlarm = async (id, { hour, minute, meridiem, days }) => {
+        if (!days || days.length === 0) {
+            Alert.alert('Select days', 'Pick at least one day of the week.')
+            return
+        }
+        try {
+            const res = await apiClient.put(`/api/alarms/${id}`, mapAlarmToApi({ hour, minute, meridiem, days }))
+            const updated = mapAlarmFromApi(res.data.data)
+            setAlarms((prev) => prev.map((a) => (a.id === id ? updated : a)))
+            syncNative(updated)
+            closeSheet()
+        } catch (err) {
+            console.error('[AlarmListScreen] updateAlarm error:', err?.response?.status, err?.response?.data)
+        }
+    }
+
+    // create / edit 
+    const handleSheetSave = (data) => {
+        if (editingAlarm) {
+            handleUpdateAlarm(editingAlarm.id, data)
+        } else {
+            handleSaveAlarm(data)
+        }
+    }
     useEffect(() => {
         const fetchAlarms = async () => {
             try {
@@ -163,22 +203,25 @@ export default function AlarmListScreen({ navigation }) {
 
             {/* FAB */}
             <Pressable
-                onPress={() => setShowSheet(true)}
+                onPress={() => { setEditingAlarm(null); setShowSheet(true) }}
                 className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-black items-center justify-center"
             >
                 <Text className="text-white text-3xl leading-none">+</Text>
             </Pressable>
 
+            {/* sheet */}
             <AlarmBottomSheet
                 visible={showSheet}
-                onClose={() => setShowSheet(false)}
-                onSave={handleSaveAlarm}
+                onClose={closeSheet}
+                onSave={handleSheetSave}
+                initialValue={editingAlarm}
             />
 
-            {/* menu */}
+            {/* menu*/}
             <AlarmMenu
                 visible={menuAlarmId !== null}
                 onClose={() => setMenuAlarmId(null)}
+                onEdit={() => openEdit(menuAlarmId)}
                 onDelete={() => deleteAlarm(menuAlarmId)}
             />
         </View>

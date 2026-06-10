@@ -1,16 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TextInput, Pressable } from 'react-native';
 
 //tentative
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-export default function AlarmBottomSheet({ visible, onClose, onSave }) {
+export default function AlarmBottomSheet({ visible, onClose, onSave, initialValue }) {
     const [label, setLabel] = useState('')
     const [hour, setHour] = useState('8')
     const [minute, setMinute] = useState('00')
     const [meridiem, setMeridiem] = useState('AM')
     const [selectedDays, setSelectedDays] = useState([])
+
+    useEffect(() => {
+        if (!visible) return
+        if (initialValue) {
+            setLabel(initialValue.label || '')
+            setHour(String(initialValue.hour))
+            setMinute(String(initialValue.minute).padStart(2, '0'))
+            setMeridiem(initialValue.meridiem || 'AM')
+            setSelectedDays(initialValue.days || [])
+        } else {
+            setLabel('')
+            setHour('8')
+            setMinute('00')
+            setMeridiem('AM')
+            setSelectedDays([])
+        }
+    }, [visible])
 
     const toggleDay = (dayName) => {
         setSelectedDays((prev) =>

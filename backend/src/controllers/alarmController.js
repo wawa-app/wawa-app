@@ -98,15 +98,9 @@ const updateAlarm = async (req, res) => {
         if (daysOfWeek !== undefined) update.daysOfWeek = daysOfWeek
         if (isActive !== undefined) update.isActive = isActive
 
-        const updates = {}
-        if (objectId !== undefined) updates.objectId = objectId
-        if (alarmTime !== undefined) updates.alarmTime = alarmTime
-        if (dayOfWeek !== undefined) updates.dayOfWeek = dayOfWeek
-        if (isActive !== undefined) updates.isActive = isActive
-
         const alarm = await Alarm.findOneAndUpdate(
             { _id: req.params.id, userId: req.user.userId },
-            { $set: updates },
+            { $set: update },
             { new: true, runValidators: true }
         )
 
