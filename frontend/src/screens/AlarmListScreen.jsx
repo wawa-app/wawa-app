@@ -18,7 +18,7 @@ const mapAlarmFromApi = (a) => {
     if (hour === 0) hour = 12
     return {
         id: a._id,
-        label: '',
+        label: a.label || '',
         hour,
         minute: m,
         meridiem,
@@ -28,10 +28,11 @@ const mapAlarmFromApi = (a) => {
 }
 
 //create
-const mapAlarmToApi = ({ hour, minute, meridiem, days }) => {
+const mapAlarmToApi = ({ label, hour, minute, meridiem, days }) => {
     let h24 = hour % 12
     if (meridiem === 'PM') h24 += 12
     return {
+        label: label || '',
         alarmTime: `${String(h24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
         daysOfWeek: (days || []).map((name) => DAY_NAMES.indexOf(name)),
     }
@@ -84,13 +85,13 @@ export default function AlarmListScreen({ navigation }) {
     }
 
     // put
-    const handleUpdateAlarm = async (id, { hour, minute, meridiem, days }) => {
+    const handleUpdateAlarm = async (id, { label, hour, minute, meridiem, days }) => {
         if (!days || days.length === 0) {
             Alert.alert('Select days', 'Pick at least one day of the week.')
             return
         }
         try {
-            const res = await apiClient.put(`/api/alarms/${id}`, mapAlarmToApi({ hour, minute, meridiem, days }))
+            const res = await apiClient.put(`/api/alarms/${id}`, mapAlarmToApi({ label, hour, minute, meridiem, days }))
             const updated = mapAlarmFromApi(res.data.data)
             setAlarms((prev) => prev.map((a) => (a.id === id ? updated : a)))
             syncNative(updated)
@@ -142,13 +143,13 @@ export default function AlarmListScreen({ navigation }) {
     }
 
     // post
-    const handleSaveAlarm = async ({ hour, minute, meridiem, days }) => {
+    const handleSaveAlarm = async ({ label, hour, minute, meridiem, days }) => {
         if (!days || days.length === 0) {
             Alert.alert('Select days', 'Pick at least one day of the week.')
             return
         }
         try {
-            const res = await apiClient.post('/api/alarms', mapAlarmToApi({ hour, minute, meridiem, days }))
+            const res = await apiClient.post('/api/alarms', mapAlarmToApi({ label, hour, minute, meridiem, days }))
             const created = mapAlarmFromApi(res.data.data)
             setAlarms((prev) => [...prev, created])
             syncNative(created)

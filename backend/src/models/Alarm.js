@@ -19,6 +19,9 @@ const alarmSchema = new mongoose.Schema({
   // regular: max 2, special: max 1 (enforced in controller)
   alarmType: { type: String, enum: ['regular', 'special'], default: 'regular' },
 
+  // ── Display ───────────────────────────────────────────
+  label: { type: String, default: '', trim: true },
+
   // ── Status ────────────────────────────────────────────
   isActive: { type: Boolean, default: true },
 

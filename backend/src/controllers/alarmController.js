@@ -14,7 +14,7 @@ const getAlarms = async (req, res) => {
 // POST /api/alarms — Create a new alarm
 const createAlarm = async (req, res) => {
     try {
-        const { alarmTime, daysOfWeek, alarmType } = req.body
+        const { alarmTime, daysOfWeek, alarmType, label } = req.body
 
         if (!alarmTime || !Array.isArray(daysOfWeek) || daysOfWeek.length === 0) {
             return res.status(400).json({ success: false, error: 'MISSING_FIELDS' })
@@ -61,6 +61,7 @@ const createAlarm = async (req, res) => {
             alarmTime,
             daysOfWeek,
             alarmType: alarmType || 'regular',
+            label: label || '',
         })
 
         return res.status(201).json({ success: true, data: alarm })
@@ -92,11 +93,12 @@ const getAlarmById = async (req, res) => {
 // PUT /api/alarms/:id — Update an existing alarm
 const updateAlarm = async (req, res) => {
     try {
-        const { alarmTime, daysOfWeek, isActive } = req.body
+        const { alarmTime, daysOfWeek, isActive, label } = req.body
         const update = {}
         if (alarmTime !== undefined) update.alarmTime = alarmTime
         if (daysOfWeek !== undefined) update.daysOfWeek = daysOfWeek
         if (isActive !== undefined) update.isActive = isActive
+        if (label !== undefined) update.label = label
 
         const alarm = await Alarm.findOneAndUpdate(
             { _id: req.params.id, userId: req.user.userId },
