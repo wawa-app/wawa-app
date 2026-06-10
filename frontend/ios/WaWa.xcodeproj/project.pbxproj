@@ -11,6 +11,10 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		5449D4FF1D1A4FD8AB78642C /* Geologica-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7E475AAA1102477F92D19979 /* Geologica-Medium.ttf */; };
+		2CD6A883ECCD4641B0411B07 /* Geologica-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE76CA11B320460A879A96DC /* Geologica-Bold.ttf */; };
+		38E7488EC5E14842B54368E2 /* Geologica-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E554BBEC1382415092BF5FDB /* Geologica-Black.ttf */; };
+		428779980FF8457B89FACE03 /* Geologica-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 70D9A8DB9FBF4B4DA92CC20E /* Geologica-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +28,10 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = WaWa/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = WaWa/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		7E475AAA1102477F92D19979 /* Geologica-Medium.ttf */ = {isa = PBXFileReference; name = "Geologica-Medium.ttf"; path = "../src/assets/fonts/Geologica-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		EE76CA11B320460A879A96DC /* Geologica-Bold.ttf */ = {isa = PBXFileReference; name = "Geologica-Bold.ttf"; path = "../src/assets/fonts/Geologica-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		E554BBEC1382415092BF5FDB /* Geologica-Black.ttf */ = {isa = PBXFileReference; name = "Geologica-Black.ttf"; path = "../src/assets/fonts/Geologica-Black.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		70D9A8DB9FBF4B4DA92CC20E /* Geologica-Regular.ttf */ = {isa = PBXFileReference; name = "Geologica-Regular.ttf"; path = "../src/assets/fonts/Geologica-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +82,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				850FD92CA1944F3BB4CA1520 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -96,6 +105,18 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
+		};
+		850FD92CA1944F3BB4CA1520 /* Resources */ = {
+			isa = "PBXGroup";
+			children = (
+				7E475AAA1102477F92D19979 /* Geologica-Medium.ttf */,
+				EE76CA11B320460A879A96DC /* Geologica-Bold.ttf */,
+				E554BBEC1382415092BF5FDB /* Geologica-Black.ttf */,
+				70D9A8DB9FBF4B4DA92CC20E /* Geologica-Regular.ttf */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+			path = "";
 		};
 /* End PBXGroup section */
 
@@ -159,6 +180,10 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				5449D4FF1D1A4FD8AB78642C /* Geologica-Medium.ttf in Resources */,
+				2CD6A883ECCD4641B0411B07 /* Geologica-Bold.ttf in Resources */,
+				38E7488EC5E14842B54368E2 /* Geologica-Black.ttf in Resources */,
+				428779980FF8457B89FACE03 /* Geologica-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
