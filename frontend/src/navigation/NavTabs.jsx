@@ -3,7 +3,7 @@ import { View, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import AlarmListScreen from '../screens/AlarmListScreen.jsx';
-import ObjectsScreen from '../screens/ObjectsScreen.js';
+import ObjectsScreen from '../screens/ObjectsScreen.jsx';
 import TrackingScreen from '../screens/TrackingScreen.jsx';
 import ProfileScreen from '../screens/ProfileScreen.jsx';
 
