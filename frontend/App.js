@@ -12,6 +12,7 @@ import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import OtpVerificationScreen from './src/screens/OtpVerificationScreen';
 import CreateNewPasswordScreen from './src/screens/CreateNewPasswordScreen';
 import PasswordResetSuccessScreen from './src/screens/PasswordResetSuccessScreen';
+import CameraCaptureScreen from './src/screens/CameraCaptureScreen';
 import NavTabs from './src/navigation/NavTabs';
 
 const Stack = createNativeStackNavigator();
@@ -31,7 +32,10 @@ function RootNavigator() {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             {user ? (
-                <Stack.Screen name="Main" component={NavTabs} />
+                <>
+                    <Stack.Screen name="Main" component={NavTabs} />
+                    <Stack.Screen name="CameraCapture" component={CameraCaptureScreen} />
+                </>
             ) : (
                 <>
                     <Stack.Screen name="Launch" component={LaunchScreen} />

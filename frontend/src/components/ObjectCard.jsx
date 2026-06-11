@@ -20,6 +20,7 @@ const ObjectCard = ({
                     <Image
                         source={{ uri: imageUri }}
                         className="w-full h-full"
+                        resizeMode="cover"
                     />
                 ) : (
                     <View className="w-full h-full bg-[#F7F7F7]" />
