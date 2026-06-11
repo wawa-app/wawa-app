@@ -1,14 +1,20 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
     ScrollView,
     Pressable,
+    Modal,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import ObjectCard from "../components/ObjectCard.jsx";
+import CautionModal from "../components/objects/CautionModal.jsx";
+import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
 
-const mockObjects = [
+const OBJECTS_STORAGE_KEY = "wawa_objects";
+
+const initialObjects = [
     {
         id: "1",
         objectName: "Coffee Mug",
@@ -32,7 +38,239 @@ const mockObjects = [
     },
 ];
 
-export default function ObjectsScreen() {
+function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
+    return (
+        <Modal
+            transparent
+            visible
+            animationType="none"
+            onRequestClose={onClose}
+        >
+            <Pressable className="flex-1" onPress={onClose}>
+                <View
+                    className="absolute w-[178px] bg-[#FFF7FF] rounded-2xl shadow-lg overflow-hidden"
+                    style={{
+                        top: position.top,
+                        left: position.left,
+                        elevation: 20,
+                        zIndex: 999,
+                    }}
+                >
+                    <Pressable
+                        className="h-12 px-4 flex-row items-center"
+                        onPress={onEdit}
+                    >
+                        <Text className="w-8 text-[18px] leading-[20px] text-[#49454F]">
+                            ✎
+                        </Text>
+
+                        <Text
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            className="text-[14px] leading-[20px] tracking-[0.1px] font-geologica-medium text-[#1D1B20]"
+                        >
+                            Edit
+                        </Text>
+                    </Pressable>
+
+                    <Pressable
+                        className="h-12 px-4 flex-row items-center"
+                        onPress={onDelete}
+                    >
+                        <Text className="w-8 text-[18px] leading-[20px] text-[#49454F]">
+                            ▮
+                        </Text>
+
+                        <Text
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            className="text-[14px] leading-[20px] tracking-[0.1px] font-geologica-medium text-[#1D1B20]"
+                        >
+                            Delete
+                        </Text>
+                    </Pressable>
+
+                    <Pressable
+                        className="h-12 px-4 flex-row items-center"
+                        onPress={onMarkAsChecked}
+                    >
+                        <Text className="w-8 text-[18px] leading-[20px] text-[#49454F]">
+                            ✓
+                        </Text>
+
+                        <Text
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            className="text-[14px] leading-[20px] tracking-[0.1px] font-geologica-medium text-[#1D1B20]"
+                        >
+                            Mark as checked
+                        </Text>
+                    </Pressable>
+                </View>
+            </Pressable>
+        </Modal>
+    );
+}
+
+export default function ObjectsScreen({ navigation, route }) {
+    const [objects, setObjects] = useState(initialObjects);
+    const [objectsLoaded, setObjectsLoaded] = useState(false);
+
+    const [activeMenuId, setActiveMenuId] = useState(null);
+    const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+    const [showCautionModal, setShowCautionModal] = useState(false);
+    const [showAddObjectSheet, setShowAddObjectSheet] = useState(false);
+    const [pendingPhotoUri, setPendingPhotoUri] = useState(null);
+
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+
+    const cardRefs = useRef({});
+
+    const mustCheckObjects = objects.slice(0, 2);
+    const normalObjects = objects.slice(2);
+
+    useEffect(() => {
+        const loadObjects = async () => {
+            try {
+                const savedObjects = await AsyncStorage.getItem(OBJECTS_STORAGE_KEY);
+
+                if (savedObjects) {
+                    setObjects(JSON.parse(savedObjects));
+                }
+            } catch (error) {
+                console.error("[ObjectsScreen] loadObjects error:", error);
+            } finally {
+                setObjectsLoaded(true);
+            }
+        };
+
+        loadObjects();
+    }, []);
+
+    useEffect(() => {
+        const saveObjects = async () => {
+            try {
+                if (!objectsLoaded) return;
+
+                await AsyncStorage.setItem(
+                    OBJECTS_STORAGE_KEY,
+                    JSON.stringify(objects)
+                );
+            } catch (error) {
+                console.error("[ObjectsScreen] saveObjects error:", error);
+            }
+        };
+
+        saveObjects();
+    }, [objects, objectsLoaded]);
+
+    useEffect(() => {
+        const capturedPhotoUri = route?.params?.capturedPhotoUri;
+
+        if (!capturedPhotoUri) return;
+
+        setPendingPhotoUri(capturedPhotoUri);
+        setShowAddObjectSheet(true);
+
+        navigation.setParams({
+            capturedPhotoUri: undefined,
+            capturedAt: undefined,
+        });
+    }, [route?.params?.capturedAt]);
+
+    useEffect(() => {
+        if (!snackbarMessage) return;
+
+        const timer = setTimeout(() => {
+            setSnackbarMessage("");
+        }, 2500);
+
+        return () => clearTimeout(timer);
+    }, [snackbarMessage]);
+
+    const openMenu = (id) => {
+        const cardRef = cardRefs.current[id];
+
+        if (!cardRef) return;
+
+        cardRef.measureInWindow((x, y, width) => {
+            setMenuPosition({
+                top: y + 42,
+                left: x + width - 178,
+            });
+
+            setActiveMenuId(id);
+        });
+    };
+
+    const closeMenu = () => {
+        setActiveMenuId(null);
+    };
+
+    const handleEdit = (id) => {
+        console.log("Edit object:", id);
+        closeMenu();
+    };
+
+    const handleDelete = (id) => {
+        setObjects((prevObjects) =>
+            prevObjects.filter((object) => object.id !== id)
+        );
+
+        closeMenu();
+    };
+
+    const handleMarkAsChecked = (id) => {
+        setObjects((prevObjects) =>
+            prevObjects.map((object) =>
+                object.id === id
+                    ? {
+                        ...object,
+                        status: "Updated",
+                        date: "2026/04/01",
+                    }
+                    : object
+            )
+        );
+
+        closeMenu();
+    };
+
+    const handleAddPress = () => {
+        setShowCautionModal(true);
+    };
+
+    const handleCancelCaution = () => {
+        setShowCautionModal(false);
+    };
+
+    const handleConfirmCaution = () => {
+        setShowCautionModal(false);
+        navigation.navigate("CameraCapture");
+    };
+
+    const handleCancelAddObject = () => {
+        setShowAddObjectSheet(false);
+        setPendingPhotoUri(null);
+    };
+
+    const handleSaveObject = ({ objectName, imageUri }) => {
+        const newObject = {
+            id: String(Date.now()),
+            objectName,
+            status: "Updated",
+            date: "2026/04/01",
+            imageUri,
+        };
+
+        setObjects((prevObjects) => [...prevObjects, newObject]);
+
+        setShowAddObjectSheet(false);
+        setPendingPhotoUri(null);
+        setSnackbarMessage(`${objectName} is Added`);
+    };
+
     return (
         <View className="flex-1 bg-white">
             <ScrollView
@@ -77,30 +315,42 @@ export default function ObjectsScreen() {
                     </Text>
 
                     <View className="gap-4 items-center">
-                        {mockObjects.slice(0, 2).map((item) => (
-                            <ObjectCard
+                        {mustCheckObjects.map((item) => (
+                            <View
                                 key={item.id}
-                                objectName={item.objectName}
-                                status={item.status}
-                                date={item.date}
-                                imageUri={item.imageUri}
-                                onMenuPress={() => console.log("Menu pressed:", item.id)}
-                            />
+                                ref={(ref) => {
+                                    cardRefs.current[item.id] = ref;
+                                }}
+                            >
+                                <ObjectCard
+                                    objectName={item.objectName}
+                                    status={item.status}
+                                    date={item.date}
+                                    imageUri={item.imageUri}
+                                    onMenuPress={() => openMenu(item.id)}
+                                />
+                            </View>
                         ))}
                     </View>
                 </View>
 
                 {/* Normal objects list */}
                 <View className="bg-white px-4 pt-6 gap-4 items-center">
-                    {mockObjects.slice(2).map((item) => (
-                        <ObjectCard
+                    {normalObjects.map((item) => (
+                        <View
                             key={item.id}
-                            objectName={item.objectName}
-                            status={item.status}
-                            date={item.date}
-                            imageUri={item.imageUri}
-                            onMenuPress={() => console.log("Menu pressed:", item.id)}
-                        />
+                            ref={(ref) => {
+                                cardRefs.current[item.id] = ref;
+                            }}
+                        >
+                            <ObjectCard
+                                objectName={item.objectName}
+                                status={item.status}
+                                date={item.date}
+                                imageUri={item.imageUri}
+                                onMenuPress={() => openMenu(item.id)}
+                            />
+                        </View>
                     ))}
                 </View>
             </ScrollView>
@@ -108,12 +358,43 @@ export default function ObjectsScreen() {
             {/* Floating add button */}
             <Pressable
                 className="absolute right-6 bottom-[98px] w-[58px] h-[58px] rounded-full bg-[#101010] items-center justify-center z-10"
-                onPress={() => console.log("Add object pressed")}
+                onPress={handleAddPress}
             >
                 <Text className="text-white text-[32px] leading-[34px] font-light">
                     +
                 </Text>
             </Pressable>
+
+            {activeMenuId && (
+                <ObjectMenu
+                    position={menuPosition}
+                    onClose={closeMenu}
+                    onEdit={() => handleEdit(activeMenuId)}
+                    onDelete={() => handleDelete(activeMenuId)}
+                    onMarkAsChecked={() => handleMarkAsChecked(activeMenuId)}
+                />
+            )}
+
+            <CautionModal
+                visible={showCautionModal}
+                onCancel={handleCancelCaution}
+                onConfirm={handleConfirmCaution}
+            />
+
+            <AddObjectSheet
+                visible={showAddObjectSheet}
+                imageUri={pendingPhotoUri}
+                onCancel={handleCancelAddObject}
+                onSave={handleSaveObject}
+            />
+
+            {snackbarMessage ? (
+                <View className="absolute right-6 bottom-[150px] bg-[#302D38] px-6 py-4 rounded-sm shadow-lg">
+                    <Text className="text-white text-[14px] leading-[20px] font-geologica-regular">
+                        {snackbarMessage}
+                    </Text>
+                </View>
+            ) : null}
         </View>
     );
 }
