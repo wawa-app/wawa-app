@@ -1,24 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, NativeModules } from 'react-native';
 
-const { AlarmModule } = NativeModules
+const { AlarmModule } = NativeModules;
 
-export default function AlarmRingingScreen(props) {
-    const time = props?.time ?? '07:00'
-    const date = props?.date ?? 'MONDAY, MAY 19'
+const WEEKDAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+const MONTHS = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+    'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
-    // const onStartMission = async () => {
-    //     try {
-    //         const unlocked = await AlarmModule.requestDismissKeyguard();
-    //         if (unlocked) {
-    //             AlarmModule.stopAlarm();
-    //         } else {
-    //             console.log('cancelled(Locked)');
-    //         }
-    //     } catch (e) {
-    //         console.warn('dismiss error', e);
-    //     }
-    // }
+const formatTime = (d) => {
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+};
+
+const formatDate = (d) =>
+    `${WEEKDAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+
+export default function AlarmRingingScreen() {
+    const [now, setNow] = useState(new Date());
+
+    useEffect(() => {
+        const id = setInterval(() => setNow(new Date()), 1000);
+        return () => clearInterval(id);
+    }, []);
+
     const onStartMission = () => {
         AlarmModule.stopAlarm();
     };
@@ -26,8 +31,8 @@ export default function AlarmRingingScreen(props) {
     return (
         <View className="flex-1 bg-background justify-between py-20 px-6">
             <View className="items-center mt-16">
-                <Text className="text-on-background text-8xl">{time}</Text>
-                <Text className="text-on-surface text-xl tracking-widest mt-2">{date}</Text>
+                <Text className="text-on-background text-8xl">{formatTime(now)}</Text>
+                <Text className="text-on-surface text-xl tracking-widest mt-2">{formatDate(now)}</Text>
             </View>
 
             <Pressable
@@ -37,5 +42,5 @@ export default function AlarmRingingScreen(props) {
                 <Text className="text-background text-lg">Start mission</Text>
             </Pressable>
         </View>
-    )
+    );
 }
