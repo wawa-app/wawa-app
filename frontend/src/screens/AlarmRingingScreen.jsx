@@ -7,18 +7,21 @@ export default function AlarmRingingScreen(props) {
     const time = props?.time ?? '07:00'
     const date = props?.date ?? 'MONDAY, MAY 19'
 
-    const onStartMission = async () => {
-        try {
-            const unlocked = await AlarmModule.requestDismissKeyguard();
-            if (unlocked) {
-                AlarmModule.stopAlarm();
-            } else {
-                console.log('cancelled(Locked)');
-            }
-        } catch (e) {
-            console.warn('dismiss error', e);
-        }
-    }
+    // const onStartMission = async () => {
+    //     try {
+    //         const unlocked = await AlarmModule.requestDismissKeyguard();
+    //         if (unlocked) {
+    //             AlarmModule.stopAlarm();
+    //         } else {
+    //             console.log('cancelled(Locked)');
+    //         }
+    //     } catch (e) {
+    //         console.warn('dismiss error', e);
+    //     }
+    // }
+    const onStartMission = () => {
+        AlarmModule.stopAlarm();
+    };
 
     return (
         <View className="flex-1 bg-background justify-between py-20 px-6">

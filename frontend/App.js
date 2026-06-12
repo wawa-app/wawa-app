@@ -15,6 +15,9 @@ import PasswordResetSuccessScreen from './src/screens/PasswordResetSuccessScreen
 import CameraCaptureScreen from './src/screens/CameraCaptureScreen';
 import NavTabs from './src/navigation/NavTabs';
 
+import { API_URL } from '@env';
+console.log('API_URL =', API_URL); 
+
 const Stack = createNativeStackNavigator();
 
 function RootNavigator() {
