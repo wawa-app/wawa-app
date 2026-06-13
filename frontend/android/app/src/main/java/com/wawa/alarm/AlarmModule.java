@@ -1,14 +1,16 @@
-package com.wawa.alarm; 
+package com.wawa.alarm;
 
+import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.KeyguardManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-
 
 public class AlarmModule extends ReactContextBaseJavaModule {
     private ReactApplicationContext context;
@@ -51,10 +53,32 @@ public class AlarmModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void requestDismissKeyguard(final Promise promise) {
+        final Activity activity = getCurrentActivity();
+        if (activity == null) {
+            promise.reject("NO_ACTIVITY", "no current activity");
+            return;
+        }
+        activity.runOnUiThread(() -> {
+            KeyguardManager km =
+                (KeyguardManager) activity.getSystemService(Context.KEYGUARD_SERVICE);
+            km.requestDismissKeyguard(activity, new KeyguardManager.KeyguardDismissCallback() {
+                @Override public void onDismissSucceeded() { promise.resolve(true); } 
+                @Override public void onDismissCancelled() { promise.resolve(false); }
+                @Override public void onDismissError()     { promise.reject("DISMISS_ERROR", "error"); }
+            });
+        });
+    }
+
+    @ReactMethod
     public void stopAlarm() {
         if (currentRingtone != null) {
             currentRingtone.stop();
             currentRingtone = null;
+        }
+        Activity activity = getCurrentActivity();
+        if (activity instanceof AlarmActivity) {
+            activity.finish(); //Tentative for stop
         }
     }
 }
