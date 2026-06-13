@@ -15,7 +15,39 @@ import PasswordResetSuccessScreen from './src/screens/PasswordResetSuccessScreen
 import CameraCaptureScreen from './src/screens/CameraCaptureScreen';
 import NavTabs from './src/navigation/NavTabs';
 
+//For testing ChallengeCaptureScreen in isolation without auth flow
+
+import ChallengeCaptureScreen from './src/screens/challenge/ChallengeCaptureScreen';
+import { listPhotos, pickRandom, seedPhotos } from './src/utils/photos';
+
+
 const Stack = createNativeStackNavigator();
+
+function ChallengeCaptureOnly() {
+    const [target, setTarget] = React.useState(null);
+
+    const loadTarget = React.useCallback(async () => {
+        await seedPhotos();
+        const photos = await listPhotos();
+        setTarget(pickRandom(photos));
+    }, []);
+
+    React.useEffect(() => {
+        loadTarget();
+    }, [loadTarget]);
+
+    const handleCaptured = React.useCallback((photoUri) => {
+        console.log('Challenge photo captured:', photoUri);
+    }, []);
+
+    return (
+        <ChallengeCaptureScreen
+            target={target}
+            onCaptured={handleCaptured}
+            onChangeTarget={loadTarget}
+        />
+    );
+}
 
 function RootNavigator() {
     const { user, loading } = useAuth();
@@ -51,7 +83,7 @@ function RootNavigator() {
     );
 }
 
-// Root component — wraps app with AuthContext and Navigation
+//Root component — wraps app with AuthContext and Navigation
 export default function App() {
     return (
         <AuthProvider>
@@ -61,3 +93,17 @@ export default function App() {
         </AuthProvider>
     );
 }
+
+
+
+// For testing ChallengeCaptureScreen in isolation without auth flow
+// comment out the above App component and uncomment the below to test ChallengeCaptureScreen without going through auth flow. Remember to switch back before final testing and submission.
+// export default function App() {
+//     return (
+//         <NavigationContainer>
+//             <Stack.Navigator screenOptions={{ headerShown: false }}>
+//                 <Stack.Screen name="ChallengeCapture" component={ChallengeCaptureOnly} />
+//             </Stack.Navigator>
+//         </NavigationContainer>
+//     );
+// }

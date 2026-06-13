@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import AlarmListScreen from '../screens/AlarmListScreen.jsx';
 import ObjectsScreen from '../screens/ObjectsScreen.jsx';
+import ChallengeScreen from '../screens/ChallengeScreen.jsx';
 import TrackingScreen from '../screens/TrackingScreen.jsx';
 import ProfileScreen from '../screens/ProfileScreen.jsx';
 
@@ -51,6 +52,14 @@ export default function NavTabs() {
             <Tab.Screen
                 name="Objects"
                 component={ObjectsScreen}
+                options={{
+                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
+                }}
+            />
+
+            <Tab.Screen
+                name="Challenge"
+                component={ChallengeScreen}
                 options={{
                     tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
                 }}
