@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, NativeModules } from 'react-native';
+import Button from '../components/common/Button';
 
 const { AlarmModule } = NativeModules;
 
@@ -35,12 +36,13 @@ export default function AlarmRingingScreen() {
                 <Text className="text-on-surface text-xl tracking-widest mt-2">{formatDate(now)}</Text>
             </View>
 
-            <Pressable
+            <Button
+                title="Start mission"
                 onPress={onStartMission}
-                className="bg-on-background rounded-3xl py-5 items-center active:opacity-80"
-            >
-                <Text className="text-background text-lg">Start mission</Text>
-            </Pressable>
+                variant="primary"
+                size="medium"
+                fullWidth
+            />
         </View>
     );
 }
