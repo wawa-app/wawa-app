@@ -16,6 +16,10 @@
     {
       "path": "src/assets/fonts/Geologica-Regular.ttf",
       "sha1": "ab9b9e5cb7a8eca098cb72aa5498cecce2ae6c30"
+    },
+    {
+      "path": "src/assets/fonts/Ionicons.ttf",
+      "sha1": "86e07c3d974eb09099e6e5a9b3b8310303cf0feb"
     }
   ]
 }
