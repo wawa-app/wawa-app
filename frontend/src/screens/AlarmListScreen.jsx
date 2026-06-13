@@ -70,6 +70,7 @@ export default function AlarmListScreen({ navigation }) {
     const [showSheet, setShowSheet] = useState(false)
     const [menuAlarmId, setMenuAlarmId] = useState(null)
     const [editingAlarm, setEditingAlarm] = useState(null)
+    const atLimit = alarms.length >= 3
 
 
     const closeSheet = () => {
@@ -207,8 +208,13 @@ export default function AlarmListScreen({ navigation }) {
 
             {/* FAB */}
             <Pressable
-                onPress={() => { setEditingAlarm(null); setShowSheet(true) }}
-                className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-black items-center justify-center"
+                onPress={() => {
+                    if (atLimit) return
+                    setEditingAlarm(null)
+                    setShowSheet(true)
+                }}
+                disabled={atLimit}
+                className={`absolute bottom-6 right-6 w-14 h-14 rounded-full items-center justify-center ${atLimit ? 'bg-gray-300' : 'bg-black'}`}
             >
                 <Text className="text-white text-3xl leading-none">+</Text>
             </Pressable>

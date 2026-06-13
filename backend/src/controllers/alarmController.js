@@ -22,45 +22,20 @@ const createAlarm = async (req, res) => {
 
         const userId = req.user.userId
 
-        // Enforce max 3 alarms total (2 regular + 1 special)
+        // Enforce max 3 alarms total
         const existingAlarms = await Alarm.find({ userId })
         if (existingAlarms.length >= 3) {
             return res.status(400).json({
                 success: false,
                 error: 'MAX_ALARMS_REACHED',
-                message: 'Maximum 3 alarms allowed (2 regular + 1 special)'
+                message: 'Maximum 3 alarms allowed'
             })
-        }
-
-        // Enforce max 2 regular alarms
-        if (alarmType === 'regular' || !alarmType) {
-            const regularAlarms = existingAlarms.filter(a => a.alarmType === 'regular')
-            if (regularAlarms.length >= 2) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'MAX_REGULAR_ALARMS_REACHED',
-                    message: 'Maximum 2 regular alarms allowed'
-                })
-            }
-        }
-
-        // Enforce max 1 special alarm
-        if (alarmType === 'special') {
-            const specialAlarms = existingAlarms.filter(a => a.alarmType === 'special')
-            if (specialAlarms.length >= 1) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'MAX_SPECIAL_ALARMS_REACHED',
-                    message: 'Maximum 1 special alarm allowed'
-                })
-            }
         }
 
         const alarm = await Alarm.create({
             userId,
             alarmTime,
             daysOfWeek,
-            alarmType: alarmType || 'regular',
             label: label || '',
         })
 
