@@ -11,6 +11,7 @@ import { challengeTw as tw, cameraFrameStyle, captureControlsStyle } from './cha
 
 export default function ChallengeCaptureScreen({
   target,
+  targetName = 'Saved object',
   onCaptured,
   onChangeTarget,
 }) {
@@ -85,7 +86,7 @@ export default function ChallengeCaptureScreen({
 
         <View className={tw.targetTextWrap}>
           <Text className={tw.targetLabel}>Targeting</Text>
-          <Text className={tw.targetNameWithButton}>Coffee Mug</Text>
+          <Text className={tw.targetNameWithButton}>{targetName}</Text>
           <TouchableOpacity
             className={tw.changeObjectButton}
             onPress={handleChangeTarget}

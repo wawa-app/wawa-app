@@ -5,6 +5,7 @@ import { challengeTw as tw, cameraFrameStyle } from './challengeNativewind';
 
 export default function ChallengeComparingScreen({
   target,
+  targetName = 'Saved object',
   candidate,
 }) {
   const scanAnim = useRef(new Animated.Value(0)).current;
@@ -76,7 +77,7 @@ export default function ChallengeComparingScreen({
 
         <View className={tw.targetTextWrap}>
           <Text className={tw.targetLabel}>Targeting</Text>
-          <Text className={tw.targetName}>Coffee Mug</Text>
+          <Text className={tw.targetName}>{targetName}</Text>
         </View>
       </View>
 

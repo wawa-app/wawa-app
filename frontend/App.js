@@ -18,31 +18,80 @@ import NavTabs from './src/navigation/NavTabs';
 //For testing ChallengeCaptureScreen in isolation without auth flow
 
 import ChallengeCaptureScreen from './src/screens/challenge/ChallengeCaptureScreen';
-import { listPhotos, pickRandom, seedPhotos } from './src/utils/photos';
+import ChallengeComparingScreen from './src/screens/challenge/ChallengeComparingScreen';
+import ChallengeResultScreen from './src/screens/challenge/ChallengeResultScreen';
+import { getStoredObjectsWithImages, pickRandomObject } from './src/storage/objectStorage';
+import { compareImages } from './src/utils/vision';
 
 
 const Stack = createNativeStackNavigator();
 
 function ChallengeCaptureOnly() {
-    const [target, setTarget] = React.useState(null);
+    const [targetObject, setTargetObject] = React.useState(null);
+    const [candidate, setCandidate] = React.useState(null);
+    const [stage, setStage] = React.useState('capture');
+    const [matched, setMatched] = React.useState(false);
+    const target = targetObject?.imageUri || null;
+    const targetName = targetObject?.objectName || 'Saved object';
 
     const loadTarget = React.useCallback(async () => {
-        await seedPhotos();
-        const photos = await listPhotos();
-        setTarget(pickRandom(photos));
+        const objects = await getStoredObjectsWithImages();
+        setTargetObject(pickRandomObject(objects));
     }, []);
 
     React.useEffect(() => {
         loadTarget();
     }, [loadTarget]);
 
-    const handleCaptured = React.useCallback((photoUri) => {
+    const handleCaptured = React.useCallback(async (photoUri) => {
         console.log('Challenge photo captured:', photoUri);
+        setCandidate(photoUri);
+        setStage('comparing');
+
+        try {
+            if (!target) throw new Error('No target photo selected');
+            const result = await compareImages(target, photoUri);
+            console.log('Challenge comparison result:', result);
+            setMatched(result.match);
+        } catch (e) {
+            console.warn('Challenge comparison failed:', e);
+            setMatched(false);
+        } finally {
+            setStage('result');
+        }
+    }, [target]);
+
+    const handleTryAgain = React.useCallback(() => {
+        setCandidate(null);
+        setStage('capture');
     }, []);
+
+    const handleClose = React.useCallback(() => {
+        setCandidate(null);
+        setStage('capture');
+        loadTarget();
+    }, [loadTarget]);
+
+    if (stage === 'comparing') {
+        return <ChallengeComparingScreen target={target} targetName={targetName} candidate={candidate} />;
+    }
+
+    if (stage === 'result') {
+        return (
+            <ChallengeResultScreen
+                matched={matched}
+                targetName={targetName}
+                onClose={handleClose}
+                onTryAgain={handleTryAgain}
+                onEmergencyExit={handleClose}
+            />
+        );
+    }
 
     return (
         <ChallengeCaptureScreen
             target={target}
+            targetName={targetName}
             onCaptured={handleCaptured}
             onChangeTarget={loadTarget}
         />
