@@ -13,27 +13,37 @@ export default function StreakCard({ variant = "lose" }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                setLoading(true);
-                setError(false);
+    const fetchStats = async () => {
+        try {
+            setLoading(true);
+            setError(false);
 
-                const response = await apiClient.get("/api/users/stats");
+            const response = await apiClient.get("/api/users/stats");
 
-                if (response.data?.success) {
-                    setStreak(response.data.stats?.streak ?? 0);
-                } else {
-                    setError(true);
-                }
-            } catch (err) {
-                console.error("[StreakCard] fetchStats error:", err);
+            if (response.data?.success) {
+                const streakStats = response.data.stats?.streak;
+                setStreak(
+                    typeof streakStats === "number"
+                        ? streakStats
+                        : streakStats?.currentCount ?? 0
+                );
+            } else {
+                console.warn("[StreakCard] stats response error:", response.data);
                 setError(true);
-            } finally {
-                setLoading(false);
             }
-        };
+        } catch (err) {
+            console.warn(
+                "[StreakCard] fetchStats error:",
+                err?.response?.status,
+                err?.response?.data || err?.message
+            );
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchStats();
     }, []);
 
@@ -49,9 +59,12 @@ export default function StreakCard({ variant = "lose" }) {
             {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
             ) : error ? (
-                <TouchableOpacity>
+                <TouchableOpacity onPress={fetchStats} activeOpacity={0.8}>
                     <Text className="text-white text-[14px] font-geologica-bold font-bold text-center">
                         Unable to load streak
+                    </Text>
+                    <Text className="mt-1 text-white text-[11px] font-geologica-bold font-bold text-center opacity-80">
+                        Tap to retry
                     </Text>
                 </TouchableOpacity>
             ) : (
