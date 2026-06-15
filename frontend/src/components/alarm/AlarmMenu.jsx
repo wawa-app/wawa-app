@@ -1,7 +1,9 @@
+//AlarmMenu.jsx
 import React from 'react';
 import { Modal, View, Text, Pressable } from 'react-native';
+import { Check } from '../components/icons'
 
-export default function AlarmMenu({ visible, onClose, onEdit, onDelete }) {
+export default function AlarmMenu({ visible, onClose, items = [] }) {
     return (
         <Modal
             visible={visible}
@@ -9,19 +11,27 @@ export default function AlarmMenu({ visible, onClose, onEdit, onDelete }) {
             animationType="fade"
             onRequestClose={onClose}
         >
-            {/* onClose */}
+            {/* backdrop */}
             <Pressable
-                className="flex-1 bg-black/40 justify-center items-center"
+                className="flex-1 bg-black/40 justify-center items-center px-10"
                 onPress={onClose}
             >
-                {/* menu */}
-                <Pressable className="bg-white">
-                    <Pressable onPress={onEdit} className="py-3">
-                        <Text>Edit</Text>
-                    </Pressable>
-                    <Pressable onPress={onDelete} className="py-3">
-                        <Text>Delete</Text>
-                    </Pressable>
+                {/* menu card — w-52 = 208px, rounded-2xl = 16px (Corner-Large) */}
+                <Pressable
+                    onPress={() => { }}
+                    style={{ elevation: 6 }}
+                    className="w-52 items-start rounded-2xl bg-white overflow-hidden py-2"
+                >
+                    {items.map((item, i) => (
+                        <Pressable
+                            key={i}
+                            onPress={item.onPress}
+                            className="w-full flex-row items-center gap-3 px-5 py-4 active:bg-black/5"
+                        >
+                            {item.icon}
+                            <Text className="text-base text-black">{item.label}</Text>
+                        </Pressable>
+                    ))}
                 </Pressable>
             </Pressable>
         </Modal>
