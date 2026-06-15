@@ -6,13 +6,11 @@ import {
     Pressable,
     Modal,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import ObjectCard from "../components/ObjectCard.jsx";
 import CautionModal from "../components/objects/CautionModal.jsx";
 import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
-
-const OBJECTS_STORAGE_KEY = "wawa_objects";
+import { loadStoredObjects, saveStoredObjects } from "../storage/objectStorage";
 
 const initialObjects = [
     {
@@ -133,10 +131,10 @@ export default function ObjectsScreen({ navigation, route }) {
     useEffect(() => {
         const loadObjects = async () => {
             try {
-                const savedObjects = await AsyncStorage.getItem(OBJECTS_STORAGE_KEY);
+                const savedObjects = await loadStoredObjects();
 
-                if (savedObjects) {
-                    setObjects(JSON.parse(savedObjects));
+                if (savedObjects.length) {
+                    setObjects(savedObjects);
                 }
             } catch (error) {
                 console.error("[ObjectsScreen] loadObjects error:", error);
@@ -153,10 +151,7 @@ export default function ObjectsScreen({ navigation, route }) {
             try {
                 if (!objectsLoaded) return;
 
-                await AsyncStorage.setItem(
-                    OBJECTS_STORAGE_KEY,
-                    JSON.stringify(objects)
-                );
+                await saveStoredObjects(objects);
             } catch (error) {
                 console.error("[ObjectsScreen] saveObjects error:", error);
             }

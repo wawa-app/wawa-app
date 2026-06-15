@@ -5,6 +5,7 @@ import { challengeTw as tw } from './challengeNativewind';
 
 export default function ChallengeResultScreen({
   matched,
+  targetName = 'saved object',
   onClose,
   onTryAgain,
   onEmergencyExit,
@@ -43,7 +44,7 @@ export default function ChallengeResultScreen({
           <Text className={tw.successTitle}>MISSION{'\n'}ACCOMPLISHED</Text>
           <Text className={tw.resultCopy}>
             Congratulations! You’ve successfully{'\n'}
-            scanned the coffee mug and started{'\n'}
+            scanned the {targetName} and started{'\n'}
             your day on time.
           </Text>
 
