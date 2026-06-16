@@ -1,5 +1,5 @@
 const Object = require('../models/Object')
-const Alarm  = require('../models/Alarm')
+const Alarm = require('../models/Alarm')
 
 // GET /api/objects — Retrieve all objects for the authenticated user
 const getObjects = async (req, res) => {
@@ -22,11 +22,11 @@ const photoChallenge = async (req, res) => {
         }
 
         // Enforce min 10, max 20 images
-        if (localRef.length < 10 || localRef.length > 20) {
+        if (localRef.length < 1 || localRef.length > 20) {
             return res.status(400).json({
                 success: false,
                 error: 'IMAGE_COUNT_INVALID',
-                message: 'Must provide between 10 and 20 reference images'
+                message: 'Must provide between 1 and 20 reference images'
             })
         }
 
