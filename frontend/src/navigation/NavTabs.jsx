@@ -1,6 +1,13 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
+import {
+    AlarmIcon,
+    ObjectLists,
+    Tracking,
+    Profile,
+} from '../components/icons';
 
 import AlarmListScreen from '../screens/AlarmListScreen.jsx';
 import ObjectsScreen from '../screens/ObjectsScreen.jsx';
@@ -10,13 +17,20 @@ import ProfileScreen from '../screens/ProfileScreen.jsx';
 
 const Tab = createBottomTabNavigator();
 
-function TabIcon({ focused }) {
+const TAB_ICONS = {
+    Alarm: AlarmIcon,
+    Objects: ObjectLists,
+    Tracking: Tracking,
+    Profile: Profile,
+}
+
+function TabIcon({ Icon, focused }) {
     return (
         <View
             className={`w-10 h-10 rounded-full items-center justify-center ${focused ? 'bg-white' : 'bg-transparent'
                 }`}
         >
-            <Text className="text-2xl text-neutral-700">★</Text>
+            <Icon size={22} color={focused ? '#1A0F07' : '#5B5363'} />
         </View>
     )
 }
@@ -24,7 +38,7 @@ function TabIcon({ focused }) {
 export default function NavTabs() {
     return (
         <Tab.Navigator
-            screenOptions={{
+            screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarActiveTintColor: '#5B5363',
                 tabBarInactiveTintColor: '#4D4A50',
@@ -39,47 +53,18 @@ export default function NavTabs() {
                     backgroundColor: '#c9c9c9',
                     borderTopWidth: 0,
                 },
-            }}
+                tabBarIcon: ({ focused }) => {
+                    const Icon = TAB_ICONS[route.name];
+                    if (!Icon) return null;
+                    return <TabIcon Icon={Icon} focused={focused} />;
+                },
+            })}
         >
-            <Tab.Screen
-                name="Alarm"
-                component={AlarmListScreen}
-                options={{
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
-                }}
-            />
-
-            <Tab.Screen
-                name="Objects"
-                component={ObjectsScreen}
-                options={{
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
-                }}
-            />
-
-            <Tab.Screen
-                name="Challenge"
-                component={ChallengeScreen}
-                options={{
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
-                }}
-            />
-
-            <Tab.Screen
-                name="Tracking"
-                component={TrackingScreen}
-                options={{
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
-                }}
-            />
-
-            <Tab.Screen
-                name="Profile"
-                component={ProfileScreen}
-                options={{
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
-                }}
-            />
+            <Tab.Screen name="Alarm" component={AlarmListScreen} />
+            <Tab.Screen name="Objects" component={ObjectsScreen} />
+            <Tab.Screen name="Challenge" component={ChallengeScreen} />
+            <Tab.Screen name="Tracking" component={TrackingScreen} />
+            <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
     )
 }

@@ -5,6 +5,7 @@ import AlarmCard from '../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
 import AlarmMenu from '../components/alarm/AlarmMenu'
 import AlarmEmptyState from '../components/alarm/AlarmEmptyState'
+import { Edit, Delete } from '../components/icons'
 
 const { AlarmModule } = NativeModules;
 
@@ -119,7 +120,7 @@ export default function AlarmListScreen({ navigation }) {
                 setAlarms(mapped)
                 mapped.forEach(syncNative)
             } catch (err) {
-                console.error('[AlarmListScreen] fetchAlarms error:', err?.response?.status, err?.response?.data)
+                console.error('[AlarmListScreen] fetchAlarms error:', err?.response?.status, err?.response?.data || err?.message, err)
             } finally {
                 setLoading(false)
             }
@@ -231,8 +232,10 @@ export default function AlarmListScreen({ navigation }) {
             <AlarmMenu
                 visible={menuAlarmId !== null}
                 onClose={() => setMenuAlarmId(null)}
-                onEdit={() => openEdit(menuAlarmId)}
-                onDelete={() => deleteAlarm(menuAlarmId)}
+                items={[
+                    { label: 'Edit', icon: <Edit width={24} height={24} />, onPress: () => openEdit(menuAlarmId) },
+                    { label: 'Delete', icon: <Delete width={24} height={24} />, onPress: () => deleteAlarm(menuAlarmId) },
+                ]}
             />
         </View>
     )
