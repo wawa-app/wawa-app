@@ -5,6 +5,9 @@ const cors = require("cors")
 
 const connectDB = require("./config/db")
 
+// ── Models (preload to register collections in MongoDB) ───
+require('./models/SocialShare')
+
 // ── Routes ────────────────────────────────────────────────
 const authRoutes = require("./routes/authRoutes")
 const userRoutes = require("./routes/userRoutes")
