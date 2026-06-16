@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import StreakCard from '../../components/tracking/StreakCard';
 import { challengeTw as tw } from './challengeNativewind';
 
 export default function ChallengeResultScreen({
@@ -48,7 +49,9 @@ export default function ChallengeResultScreen({
             your day on time.
           </Text>
 
-          <StreakCard tone="success" />
+          <View className="mt-8">
+            <StreakCard variant="success" />
+          </View>
 
           <TouchableOpacity className={tw.resultButton} onPress={onClose} activeOpacity={0.85}>
             <Text className={tw.resultButtonText}>Close</Text>
@@ -80,7 +83,9 @@ export default function ChallengeResultScreen({
           keep the streak!
         </Text>
 
-        <StreakCard tone="danger" />
+        <View className="mt-8">
+          <StreakCard variant="lose" />
+        </View>
 
         <TouchableOpacity className={tw.resultButton} onPress={onTryAgain} activeOpacity={0.85}>
           <Text className={tw.resultButtonText}>Try again</Text>
@@ -95,31 +100,5 @@ export default function ChallengeResultScreen({
         </TouchableOpacity>
       </View>
     </ScrollView>
-  );
-}
-
-function StreakCard({ tone }) {
-  const isSuccess = tone === 'success';
-  const days = isSuccess
-    ? ['checkmark', 'checkmark', 'checkmark', 'checkmark', 'checkmark', null, null]
-    : ['checkmark', 'checkmark', 'checkmark', 'checkmark', 'close', null, null];
-
-  return (
-    <View className={tw.streakCard}>
-      <View className={tw.streakHeader}>
-        <Ionicons name={isSuccess ? 'flame' : 'flame-outline'} size={30} color="#fff" />
-        <Text className={tw.streakCount}>5</Text>
-      </View>
-      <Text className={tw.streakLabel}>
-        {isSuccess ? 'Day streak count!' : 'Day streak lose!'}
-      </Text>
-      <View className={tw.streakDays}>
-        {days.map((icon, index) => (
-          <View key={index} className={icon ? tw.streakDayDone : tw.streakDayEmpty}>
-            {icon ? <Ionicons name={icon} size={14} color="#000" /> : null}
-          </View>
-        ))}
-      </View>
-    </View>
   );
 }
