@@ -13,6 +13,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
+import android.media.AudioAttributes;
 
 public class AlarmReceiver extends BroadcastReceiver {
     @Override
@@ -22,7 +23,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         // Wake the device
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock = pm.newWakeLock(
-            PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            PowerManager.PARTIAL_WAKE_LOCK,
             "WaWaAlarm::AlarmWakeLock"
         );
         wakeLock.acquire(10000);
@@ -30,6 +31,16 @@ public class AlarmReceiver extends BroadcastReceiver {
         // Play the alarm sound
         Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         Ringtone ringtone = RingtoneManager.getRingtone(context, alarmUri);
+
+        ringtone.setAudioAttributes(new AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_ALARM)
+        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+        .build());
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            ringtone.setLooping(true); //keep ringing
+        }
+
         AlarmModule.currentRingtone = ringtone;
         ringtone.play();
 
