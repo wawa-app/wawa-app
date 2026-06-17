@@ -3,10 +3,20 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import ChallengeCaptureScreen from './challenge/ChallengeCaptureScreen';
 import ChallengeComparingScreen from './challenge/ChallengeComparingScreen';
 import ChallengeResultScreen from './challenge/ChallengeResultScreen';
-import { getStoredObjectsWithImages, pickRandomObject } from '../storage/objectStorage';
+import { getChallengeObjectsWithImages, pickRandomObject } from '../storage/objectStorage';
 import { compareImages } from '../utils/vision';
 
-export default function ChallengeScreen() {
+const normalizeSelectedObject = (object) => {
+  if (!object?.imageUri) return null;
+
+  return {
+    id: object.id,
+    objectName: object.objectName || object.name || 'Saved object',
+    imageUri: object.imageUri,
+  };
+};
+
+export default function ChallengeScreen({ route }) {
   const [targetObject, setTargetObject] = React.useState(null);
   const [candidate, setCandidate] = React.useState(null);
   const [stage, setStage] = React.useState('capture');
@@ -16,10 +26,17 @@ export default function ChallengeScreen() {
   const target = targetObject?.imageUri || null;
   const targetName = targetObject?.objectName || 'Saved object';
 
-  const loadTarget = React.useCallback(async () => {
+  const loadTarget = React.useCallback(async ({ preferSelected = false } = {}) => {
     setLoadingTarget(true);
     try {
-      const objects = await getStoredObjectsWithImages();
+      const selectedObject = normalizeSelectedObject(route?.params?.selectedObject);
+
+      if (preferSelected && selectedObject) {
+        setTargetObject(selectedObject);
+        return;
+      }
+
+      const objects = await getChallengeObjectsWithImages();
       setTargetObject(pickRandomObject(objects));
     } catch (e) {
       console.warn('Failed to load challenge target object:', e);
@@ -27,11 +44,11 @@ export default function ChallengeScreen() {
     } finally {
       setLoadingTarget(false);
     }
-  }, []);
+  }, [route?.params?.selectedObject]);
 
   React.useEffect(() => {
-    loadTarget();
-  }, [loadTarget]);
+    loadTarget({ preferSelected: true });
+  }, [loadTarget, route?.params?.selectedAt]);
 
   const handleCaptured = React.useCallback(async (photoUri) => {
     console.log('Challenge photo captured:', photoUri);
@@ -113,7 +130,7 @@ export default function ChallengeScreen() {
       target={target}
       targetName={targetName}
       onCaptured={handleCaptured}
-      onChangeTarget={loadTarget}
+      onChangeTarget={() => loadTarget()}
     />
   );
 }

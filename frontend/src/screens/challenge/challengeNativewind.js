@@ -1,4 +1,5 @@
 export const cameraFrameStyle = { height: 550, maxWidth: 340 };
+export const captureCameraFrameStyle = { height: 420, maxWidth: 300 };
 export const captureControlsStyle = { maxWidth: 340 };
 
 export const challengeTw = {

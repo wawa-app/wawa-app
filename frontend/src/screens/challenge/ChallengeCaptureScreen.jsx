@@ -7,7 +7,11 @@ import {
   usePhotoOutput,
 } from 'react-native-vision-camera';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { challengeTw as tw, cameraFrameStyle, captureControlsStyle } from './challengeNativewind';
+import {
+  challengeTw as tw,
+  captureCameraFrameStyle,
+  captureControlsStyle,
+} from './challengeNativewind';
 
 export default function ChallengeCaptureScreen({
   target,
@@ -101,7 +105,7 @@ export default function ChallengeCaptureScreen({
       </View>
 
       <View className={tw.captureBody}>
-        <View className={tw.cameraFrame} style={cameraFrameStyle}>
+        <View className={tw.cameraFrame} style={captureCameraFrameStyle}>
           {device ? (
             <Camera
               style={StyleSheet.absoluteFill}

@@ -15,12 +15,18 @@ const ObjectCard = ({
     status,
     imageUri,
     onMenuPress,
+    onImagePress,
 }) => {
     const isEnrolled = status === "Enrolled";
 
     return (
         <View className="w-[328px] h-[120px] p-4 rounded-lg border border-[#191919] bg-[#C1C1C1] flex-row items-center relative">
-            <View className="w-[88px] h-[88px] rounded-2xl overflow-hidden bg-[#F2F2F2]">
+            <TouchableOpacity
+                className="w-[88px] h-[88px] rounded-2xl overflow-hidden bg-[#F2F2F2]"
+                onPress={onImagePress}
+                activeOpacity={onImagePress ? 0.8 : 1}
+                disabled={!onImagePress}
+            >
                 {imageUri ? (
                     <Image
                         source={{ uri: imageUri }}
@@ -30,7 +36,7 @@ const ObjectCard = ({
                 ) : (
                     <View className="w-full h-full bg-[#F7F7F7]" />
                 )}
-            </View>
+            </TouchableOpacity>
 
             <View className="flex-1 ml-4">
                 <Text className="text-[18px] leading-[24px] font-geologica-bold font-semibold text-black mb-2">

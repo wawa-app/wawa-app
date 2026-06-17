@@ -289,6 +289,19 @@ export default function ObjectsScreen({ navigation, route }) {
         setShowCautionModal(true);
     };
 
+    const handleObjectImagePress = (object) => {
+        if (!object?.imageUri) return;
+
+        navigation.navigate("Challenge", {
+            selectedObject: {
+                id: object.id,
+                objectName: object.objectName,
+                imageUri: object.imageUri,
+            },
+            selectedAt: Date.now(),
+        });
+    };
+
     const handleCancelCaution = () => {
         setShowCautionModal(false);
     };
@@ -420,6 +433,7 @@ export default function ObjectsScreen({ navigation, route }) {
                                         status={item.status}
                                         date={item.date}
                                         imageUri={item.imageUri}
+                                        onImagePress={() => handleObjectImagePress(item)}
                                         onMenuPress={() => openMenu(item.id)}
                                     />
                                 </View>
@@ -442,6 +456,7 @@ export default function ObjectsScreen({ navigation, route }) {
                                 status={item.status}
                                 date={item.date}
                                 imageUri={item.imageUri}
+                                onImagePress={() => handleObjectImagePress(item)}
                                 onMenuPress={() => openMenu(item.id)}
                             />
                         </View>
