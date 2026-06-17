@@ -14,6 +14,7 @@ import CreateNewPasswordScreen from './src/screens/CreateNewPasswordScreen';
 import PasswordResetSuccessScreen from './src/screens/PasswordResetSuccessScreen';
 import CameraCaptureScreen from './src/screens/CameraCaptureScreen';
 import NavTabs from './src/navigation/NavTabs';
+import StackHeader from './src/navigation/StackHeader';
 
 //For testing ChallengeCaptureScreen in isolation without auth flow
 
@@ -114,7 +115,15 @@ function RootNavigator() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             {user ? (
                 <>
-                    <Stack.Screen name="Main" component={NavTabs} />
+                    <Stack.Screen
+                        name="Main"
+                        component={NavTabs}
+                        options={{ headerShown: true, header: () => <StackHeader /> }}
+                    />
+                    {/* Detail / full-screen pages go here.
+                    Build the screen (content only), then add a line below with name + title.
+                    Example:
+                    {/* <Stack.Screen name="ChangeUserName" component={ChangeUserName}　options={{ headerShown: true, title: 'Change User Name' }} /> */}
                     <Stack.Screen name="CameraCapture" component={CameraCaptureScreen} />
                 </>
             ) : (
