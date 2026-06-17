@@ -5,12 +5,19 @@ import {
     ScrollView,
     Pressable,
     Modal,
+    StatusBar,
+    Platform,
 } from "react-native";
 
 import apiClient from "../api/client";
 import ObjectCard from "../components/ObjectCard.jsx";
 import CautionModal from "../components/objects/CautionModal.jsx";
 import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
+
+import EditIcon from "../components/icons/Edit";
+import DeleteIcon from "../components/icons/Delete";
+import CheckIcon from "../components/icons/Check";
+
 
 function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
     return (
@@ -34,9 +41,9 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         className="h-12 px-4 flex-row items-center"
                         onPress={onEdit}
                     >
-                        <Text className="w-8 text-[18px] leading-[20px] text-[#49454F]">
-                            ✎
-                        </Text>
+                        <View className="w-8 items-start justify-center">
+                            <EditIcon size={20} color="#49454F" />
+                        </View>
 
                         <Text
                             numberOfLines={1}
@@ -51,9 +58,9 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         className="h-12 px-4 flex-row items-center"
                         onPress={onDelete}
                     >
-                        <Text className="w-8 text-[18px] leading-[20px] text-[#49454F]">
-                            ▮
-                        </Text>
+                        <View className="w-8 items-start justify-center">
+                            <DeleteIcon size={20} color="#49454F" />
+                        </View>
 
                         <Text
                             numberOfLines={1}
@@ -68,9 +75,9 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         className="h-12 px-4 flex-row items-center"
                         onPress={onMarkAsChecked}
                     >
-                        <Text className="w-8 text-[18px] leading-[20px] text-[#49454F]">
-                            ✓
-                        </Text>
+                        <View className="w-8 items-start justify-center">
+                            <CheckIcon size={20} color="#49454F" />
+                        </View>
 
                         <Text
                             numberOfLines={1}
@@ -95,13 +102,65 @@ export default function ObjectsScreen({ navigation, route }) {
     const [showCautionModal, setShowCautionModal] = useState(false);
     const [showAddObjectSheet, setShowAddObjectSheet] = useState(false);
     const [pendingPhotoUri, setPendingPhotoUri] = useState(null);
+    const [editingObject, setEditingObject] = useState(null);
 
     const [snackbarMessage, setSnackbarMessage] = useState("");
 
     const cardRefs = useRef({});
 
-    const mustCheckObjects = [];
-    const normalObjects = objects;
+    const statusBarHeight =
+        Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
+
+    const CHECK_DAYS = 30;
+
+    const isOlderThanCheckLimit = (dateValue) => {
+        if (!dateValue) return false;
+
+        const lastUpdatedDate = new Date(dateValue);
+
+        if (Number.isNaN(lastUpdatedDate.getTime())) {
+            return false;
+        }
+
+        const today = new Date();
+        const differenceInMs = today.getTime() - lastUpdatedDate.getTime();
+        const differenceInDays = differenceInMs / (1000 * 60 * 60 * 24);
+
+        return differenceInDays >= CHECK_DAYS;
+    };
+
+    const formatDate = (dateValue) => {
+        if (!dateValue) return "";
+
+        const date = new Date(dateValue);
+
+        if (Number.isNaN(date.getTime())) {
+            return "";
+        }
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}/${month}/${day}`;
+    };
+
+    const formatBackendObject = (object) => {
+        const lastUpdatedAt = object.updatedAt || object.createdAt || "";
+
+        return {
+            id: object._id,
+            objectName: object.name,
+            status: object.status || "Enrolled",
+            date: formatDate(lastUpdatedAt),
+            imageUri: object.localRef?.[0] || null,
+            lastUpdatedAt,
+            needsCheck: isOlderThanCheckLimit(lastUpdatedAt),
+        };
+    };
+
+    const mustCheckObjects = objects.filter((object) => object.needsCheck);
+    const normalObjects = objects.filter((object) => !object.needsCheck);
 
     const enrolledCount = objects.length;
     const objectsToCheckCount = mustCheckObjects.length;
@@ -111,13 +170,9 @@ export default function ObjectsScreen({ navigation, route }) {
             try {
                 const response = await apiClient.get("/api/objects");
 
-                const backendObjects = response.data.data.map((object) => ({
-                    id: object._id,
-                    objectName: object.name,
-                    status: object.status || "",
-                    date: object.updatedAt || object.createdAt || "",
-                    imageUri: object.localRef?.[0] || null,
-                }));
+                const backendObjects = response.data.data.map((object) =>
+                    formatBackendObject(object)
+                );
 
                 setObjects(backendObjects);
             } catch (error) {
@@ -172,7 +227,16 @@ export default function ObjectsScreen({ navigation, route }) {
     };
 
     const handleEdit = (id) => {
-        console.log("Edit object through backend:", id);
+        const objectToEdit = objects.find((object) => object.id === id);
+
+        if (!objectToEdit) {
+            closeMenu();
+            return;
+        }
+
+        setEditingObject(objectToEdit);
+        setPendingPhotoUri(objectToEdit.imageUri);
+        setShowAddObjectSheet(true);
         closeMenu();
     };
 
@@ -185,17 +249,43 @@ export default function ObjectsScreen({ navigation, route }) {
             );
 
             closeMenu();
+            setSnackbarMessage("Object deleted");
         } catch (error) {
-            console.error("[ObjectsScreen] deleteObject error:", error);
+            console.error(
+                "[ObjectsScreen] deleteObject error:",
+                error.response?.data || error.message
+            );
         }
     };
 
-    const handleMarkAsChecked = (id) => {
-        console.log("Mark as checked object through backend:", id);
-        closeMenu();
+    const handleMarkAsChecked = async (id) => {
+        try {
+            const response = await apiClient.patch(`/api/objects/${id}`, {
+                status: "Updated",
+            });
+
+            const updatedObject = response.data.data;
+            const formattedObject = formatBackendObject(updatedObject);
+
+            setObjects((prevObjects) =>
+                prevObjects.map((object) =>
+                    object.id === id ? formattedObject : object
+                )
+            );
+
+            setSnackbarMessage("Object marked as checked");
+            closeMenu();
+        } catch (error) {
+            console.error(
+                "[ObjectsScreen] markAsChecked error:",
+                error.response?.data || error.message
+            );
+        }
     };
 
     const handleAddPress = () => {
+        setEditingObject(null);
+        setPendingPhotoUri(null);
         setShowCautionModal(true);
     };
 
@@ -211,11 +301,38 @@ export default function ObjectsScreen({ navigation, route }) {
     const handleCancelAddObject = () => {
         setShowAddObjectSheet(false);
         setPendingPhotoUri(null);
+        setEditingObject(null);
     };
 
     const handleSaveObject = async ({ objectName, imageUri }) => {
         try {
             console.log("[ObjectsScreen] Save pressed:", { objectName, imageUri });
+
+            if (editingObject) {
+                const response = await apiClient.patch(
+                    `/api/objects/${editingObject.id}`,
+                    {
+                        name: objectName,
+                        localRef: [imageUri],
+                    }
+                );
+
+                const savedObject = response.data.data;
+                const formattedObject = formatBackendObject(savedObject);
+
+                setObjects((prevObjects) =>
+                    prevObjects.map((object) =>
+                        object.id === editingObject.id ? formattedObject : object
+                    )
+                );
+
+                setShowAddObjectSheet(false);
+                setPendingPhotoUri(null);
+                setEditingObject(null);
+                setSnackbarMessage(`${objectName} is Updated`);
+
+                return;
+            }
 
             const response = await apiClient.post("/api/onboarding/photo-challenge", {
                 name: objectName,
@@ -223,19 +340,13 @@ export default function ObjectsScreen({ navigation, route }) {
             });
 
             const savedObject = response.data.data;
-
-            const formattedObject = {
-                id: savedObject._id,
-                objectName: savedObject.name,
-                status: "",
-                date: savedObject.updatedAt || savedObject.createdAt || "",
-                imageUri: savedObject.localRef?.[0] || null,
-            };
+            const formattedObject = formatBackendObject(savedObject);
 
             setObjects((prevObjects) => [...prevObjects, formattedObject]);
 
             setShowAddObjectSheet(false);
             setPendingPhotoUri(null);
+            setEditingObject(null);
             setSnackbarMessage(`${objectName} is Added`);
         } catch (error) {
             console.error(
@@ -247,18 +358,30 @@ export default function ObjectsScreen({ navigation, route }) {
 
     return (
         <View className="flex-1 bg-white">
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="dark-content"
+            />
+
+            {/* White status bar space */}
+            <View
+                className="bg-white"
+                style={{ height: statusBarHeight }}
+            />
+
+            {/* App header */}
+            <View className="h-16 bg-black items-center justify-center">
+                <Text className="text-white text-[32px] leading-[39px] font-geologica-bold font-bold">
+                    WaWa
+                </Text>
+            </View>
+
             <ScrollView
                 className="flex-1"
                 contentContainerStyle={{ paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* App header */}
-                <View className="h-[52px] bg-black items-center justify-center">
-                    <Text className="text-white text-[32px] leading-[39px] font-geologica-bold font-bold">
-                        WaWa
-                    </Text>
-                </View>
-
                 {/* Page title section */}
                 <View className="bg-white px-4 py-6">
                     <Text className="text-[32px] leading-[39px] font-geologica-bold font-bold text-black">
