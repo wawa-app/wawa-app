@@ -6,6 +6,9 @@ import {
     TouchableOpacity,
 } from "react-native";
 
+import CalendarIcon from "./icons/Calendar";
+import UpdateIcon from "./icons/Update";
+
 const ObjectCard = ({
     objectName,
     date,
@@ -13,6 +16,8 @@ const ObjectCard = ({
     imageUri,
     onMenuPress,
 }) => {
+    const isEnrolled = status === "Enrolled";
+
     return (
         <View className="w-[328px] h-[120px] p-4 rounded-lg border border-[#191919] bg-[#C1C1C1] flex-row items-center relative">
             <View className="w-[88px] h-[88px] rounded-2xl overflow-hidden bg-[#F2F2F2]">
@@ -33,9 +38,13 @@ const ObjectCard = ({
                 </Text>
 
                 <View className="flex-row items-center">
-                    <Text className="text-base text-[#4A4A4A] mr-2">
-                        {status === "Enrolled" ? "▣" : "↻"}
-                    </Text>
+                    <View className="w-5 h-5 items-center justify-center mr-2">
+                        {isEnrolled ? (
+                            <CalendarIcon size={16} color="#4A4A4A" />
+                        ) : (
+                            <UpdateIcon size={16} color="#4A4A4A" />
+                        )}
+                    </View>
 
                     <Text className="text-xs text-[#4A4A4A]">
                         {status} {date}
