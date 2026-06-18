@@ -4,102 +4,94 @@ import AlarmRingingScreen from './AlarmRingingScreen';
 import ChallengeCaptureScreen from './challenge/ChallengeCaptureScreen';
 import ChallengeComparingScreen from './challenge/ChallengeComparingScreen';
 import ChallengeResultScreen from './challenge/ChallengeResultScreen';
-import { listPhotos, pickRandom } from '../utils/photos';
-
-async function compare(targetUri, candidateUri) {
-    await new Promise((r) => setTimeout(r, 1200)); //tentative
-    return { matched: Math.random() > 0.5 };
-};
+import { getStoredObjectsWithImages, pickRandomObject } from '../storage/objectStorage';
+import { compareImages } from '../utils/vision';
+import apiClient from '../api/client';
 
 const { AlarmModule } = NativeModules;
 
-// const handleClose = useCallback(() => {
-//     AlarmModule.stopAlarm(); //tentative
-// }, []);
-
-//tentative
-const PHASE = {
-    RINGING: 'ringing',
-    CAPTURING: 'capturing',
-    COMPARING: 'comparing',
-    RESULT: 'result',
-};
+const PHASE = { RINGING: 'ringing', CAPTURING: 'capturing', COMPARING: 'comparing', RESULT: 'result' };
 
 export default function AlarmFlow() {
     const [phase, setPhase] = useState(PHASE.RINGING);
-    const [target, setTarget] = useState(null);
+    const [targetObject, setTargetObject] = useState(null);
     const [candidate, setCandidate] = useState(null);
     const [matched, setMatched] = useState(false);
 
-    // Pick the object the user must scan, once on mount.
-    useEffect(() => {
-        (async () => {
-            const photos = await listPhotos();
-            setTarget(pickRandom(photos));
-        })();
+    const target = targetObject?.imageUri || null;
+    const targetName = targetObject?.objectName || 'Saved object';
+
+    const loadTarget = useCallback(async () => {
+        try {
+            const objects = await getStoredObjectsWithImages();
+            setTargetObject(pickRandomObject(objects));
+        } catch (e) {
+            console.warn('Failed to load alarm challenge target:', e);
+            setTargetObject(null);
+        }
     }, []);
 
+    useEffect(() => { loadTarget(); }, [loadTarget]);
+
     const handleStartMission = useCallback(() => {
-        // Do NOT stop the alarm here — it must keep ringing until success.
+        // Keep the alarm ringing — only success stops it.
         setPhase(PHASE.CAPTURING);
     }, []);
 
-    const handleCaptured = useCallback(
-        async (candidateUri) => {
-            setCandidate(candidateUri);
-            setPhase(PHASE.COMPARING);
-            const { matched: isMatch } = await compare(target, candidateUri);
+    const handleCaptured = useCallback(async (photoUri) => {
+        setCandidate(photoUri);
+        setPhase(PHASE.COMPARING);
+
+        let isMatch = false;
+        try {
+            console.log('🔍 target =', target);
+            console.log('🔍 candidate =', photoUri);
+            if (!target) throw new Error('No saved object photo selected');
+            const result = await compareImages(target, photoUri);
+            console.log('🔍 result =', result);
+            isMatch = result.match;
+            if (isMatch) {
+                AlarmModule.stopRingtone();
+                try {
+                    await apiClient.post('/api/mission/challenge-success', { objectId: targetObject?.id });
+                } catch (rewardError) {
+                    console.warn('success POST failed:', rewardError?.message);
+                }
+            }
+        } catch (e) {
+            console.warn('🔍 comparison failed:', e?.message, e?.response?.status, e?.response?.data);
+            isMatch = false;
+        } finally {
             setMatched(isMatch);
             setPhase(PHASE.RESULT);
-            // STEP 2 (native): if (isMatch) AlarmModule.stopRingtone();
-        },
-        [target]
-    );
+        }
+    }, [target, targetObject?.id]);
 
-    const handleChangeTarget = useCallback(async () => {
-        const photos = await listPhotos();
-        setTarget(pickRandom(photos));
-    }, []);
+    const handleChangeTarget = useCallback(async () => { await loadTarget(); }, [loadTarget]);
 
     const handleClose = useCallback(() => {
-        // Success path. STEP 2 (native): AlarmModule.dismissAndReturn();
-        console.log('[AlarmFlow] mission complete → return to app');
+        // success path → leave alarm screen, go to app
+        AlarmModule.dismissAndReturn();
     }, []);
 
     const handleTryAgain = useCallback(() => {
+        // Failure path: alarm is STILL ringing.
         setCandidate(null);
         setMatched(false);
-        setPhase(PHASE.CAPTURING); // alarm still ringing
+        setPhase(PHASE.CAPTURING);
     }, []);
 
     const handleEmergencyExit = useCallback(() => {
-        // DESIGN DECISION: whether/how the user may bail out of the mission.
-        console.log('[AlarmFlow] emergency exit pressed');
+        AlarmModule.dismissAndReturn();
     }, []);
 
     switch (phase) {
         case PHASE.CAPTURING:
-            return (
-                <ChallengeCaptureScreen
-                    target={target}
-                    onCaptured={handleCaptured}
-                    onChangeTarget={handleChangeTarget}
-                />
-            );
-
+            return <ChallengeCaptureScreen target={target} targetName={targetName} onCaptured={handleCaptured} onChangeTarget={handleChangeTarget} />;
         case PHASE.COMPARING:
-            return <ChallengeComparingScreen target={target} candidate={candidate} />;
-
+            return <ChallengeComparingScreen target={target} targetName={targetName} candidate={candidate} />;
         case PHASE.RESULT:
-            return (
-                <ChallengeResultScreen
-                    matched={matched}
-                    onClose={handleClose}
-                    onTryAgain={handleTryAgain}
-                    onEmergencyExit={handleEmergencyExit}
-                />
-            );
-
+            return <ChallengeResultScreen matched={matched} targetName={targetName} onClose={handleClose} onTryAgain={handleTryAgain} onEmergencyExit={handleEmergencyExit} />;
         case PHASE.RINGING:
         default:
             return <AlarmRingingScreen onStartMission={handleStartMission} />;
