@@ -109,8 +109,8 @@ export default function ObjectsScreen({ navigation, route }) {
 
     const cardRefs = useRef({});
 
-    const statusBarHeight =
-        Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
+    // const statusBarHeight =
+    //     Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
 
     const isOlderThanCheckLimit = useCallback((dateValue) => {
         if (!dateValue) return false;

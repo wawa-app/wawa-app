@@ -78,7 +78,33 @@ public class AlarmModule extends ReactContextBaseJavaModule {
         }
         Activity activity = getCurrentActivity();
         if (activity instanceof AlarmActivity) {
-            activity.finish(); //Tentative for stop
+            activity.finish();
+        }
+    }
+
+     @ReactMethod
+    public void stopRingtone() {
+        if (currentRingtone != null) {
+            currentRingtone.stop();
+            currentRingtone = null;
+        }
+    }
+
+    @ReactMethod
+    public void dismissAndReturn() {
+        if (currentRingtone != null) {
+            currentRingtone.stop();
+            currentRingtone = null;
+        }
+        Activity activity = getCurrentActivity();
+        if (activity instanceof AlarmActivity) {
+            Intent launch = context.getPackageManager()
+                .getLaunchIntentForPackage(context.getPackageName());
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                context.startActivity(launch);
+            }
+            activity.finish();
         }
     }
 }
