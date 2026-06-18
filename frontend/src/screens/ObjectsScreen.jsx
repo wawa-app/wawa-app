@@ -6,7 +6,6 @@ import {
     Pressable,
     Modal,
     StatusBar,
-    Platform,
 } from "react-native";
 
 import apiClient from "../api/client";
@@ -17,7 +16,6 @@ import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
 import EditIcon from "../components/icons/Edit";
 import DeleteIcon from "../components/icons/Delete";
 import CheckIcon from "../components/icons/Check";
-
 
 function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
     return (
@@ -107,9 +105,6 @@ export default function ObjectsScreen({ navigation, route }) {
     const [snackbarMessage, setSnackbarMessage] = useState("");
 
     const cardRefs = useRef({});
-
-    const statusBarHeight =
-        Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
 
     const CHECK_DAYS = 30;
 
@@ -364,18 +359,7 @@ export default function ObjectsScreen({ navigation, route }) {
                 barStyle="dark-content"
             />
 
-            {/* White status bar space */}
-            <View
-                className="bg-white"
-                style={{ height: statusBarHeight }}
-            />
 
-            {/* App header */}
-            <View className="h-16 bg-black items-center justify-center">
-                <Text className="text-white text-[32px] leading-[39px] font-geologica-bold font-bold">
-                    WaWa
-                </Text>
-            </View>
 
             <ScrollView
                 className="flex-1"
