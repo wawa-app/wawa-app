@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '@env';
-import { getToken } from '../storage/tokenStorage';
+import { getToken, deleteToken } from '../storage/tokenStorage'
 
 if (__DEV__) {
     console.log('[apiClient] API_BASE_URL:', API_BASE_URL);
@@ -14,7 +14,7 @@ const apiClient = axios.create({
     },
 });
 
-// JWT 
+// Request interceptor
 apiClient.interceptors.request.use(
     async (config) => {
         const token = await getToken();
@@ -32,5 +32,17 @@ apiClient.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
+// Response interceptor 
+apiClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.response?.status === 401) {
+            await deleteToken()
+            delete apiClient.defaults.headers.common['Authorization']
+        }
+        return Promise.reject(error)
+    }
+)
 
 export default apiClient;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -6,18 +6,19 @@ import {
     Pressable,
     Modal,
     StatusBar,
-    Platform,
 } from "react-native";
 
 import apiClient from "../api/client";
 import ObjectCard from "../components/ObjectCard.jsx";
 import CautionModal from "../components/objects/CautionModal.jsx";
 import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
+import { saveStoredObjects } from "../storage/objectStorage";
 
 import EditIcon from "../components/icons/Edit";
 import DeleteIcon from "../components/icons/Delete";
 import CheckIcon from "../components/icons/Check";
 
+const CHECK_DAYS = 30;
 
 function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
     return (
@@ -111,9 +112,7 @@ export default function ObjectsScreen({ navigation, route }) {
     const statusBarHeight =
         Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
 
-    const CHECK_DAYS = 30;
-
-    const isOlderThanCheckLimit = (dateValue) => {
+    const isOlderThanCheckLimit = useCallback((dateValue) => {
         if (!dateValue) return false;
 
         const lastUpdatedDate = new Date(dateValue);
@@ -127,9 +126,9 @@ export default function ObjectsScreen({ navigation, route }) {
         const differenceInDays = differenceInMs / (1000 * 60 * 60 * 24);
 
         return differenceInDays >= CHECK_DAYS;
-    };
+    }, []);
 
-    const formatDate = (dateValue) => {
+    const formatDate = useCallback((dateValue) => {
         if (!dateValue) return "";
 
         const date = new Date(dateValue);
@@ -143,9 +142,9 @@ export default function ObjectsScreen({ navigation, route }) {
         const day = String(date.getDate()).padStart(2, "0");
 
         return `${year}/${month}/${day}`;
-    };
+    }, []);
 
-    const formatBackendObject = (object) => {
+    const formatBackendObject = useCallback((object) => {
         const lastUpdatedAt = object.updatedAt || object.createdAt || "";
 
         return {
@@ -157,7 +156,12 @@ export default function ObjectsScreen({ navigation, route }) {
             lastUpdatedAt,
             needsCheck: isOlderThanCheckLimit(lastUpdatedAt),
         };
-    };
+    }, [formatDate, isOlderThanCheckLimit]);
+
+    const persistObjects = useCallback(async (nextObjects) => {
+        setObjects(nextObjects);
+        await saveStoredObjects(nextObjects);
+    }, []);
 
     const mustCheckObjects = objects.filter((object) => object.needsCheck);
     const normalObjects = objects.filter((object) => !object.needsCheck);
@@ -174,14 +178,14 @@ export default function ObjectsScreen({ navigation, route }) {
                     formatBackendObject(object)
                 );
 
-                setObjects(backendObjects);
+                await persistObjects(backendObjects);
             } catch (error) {
                 console.error("[ObjectsScreen] fetchObjects error:", error);
             }
         };
 
         fetchObjects();
-    }, []);
+    }, [formatBackendObject, persistObjects]);
 
     useEffect(() => {
         const capturedPhotoUri = route?.params?.capturedPhotoUri;
@@ -195,7 +199,7 @@ export default function ObjectsScreen({ navigation, route }) {
             capturedPhotoUri: undefined,
             capturedAt: undefined,
         });
-    }, [route?.params?.capturedAt]);
+    }, [navigation, route?.params?.capturedAt, route?.params?.capturedPhotoUri]);
 
     useEffect(() => {
         if (!snackbarMessage) return;
@@ -244,9 +248,9 @@ export default function ObjectsScreen({ navigation, route }) {
         try {
             await apiClient.delete(`/api/objects/${id}`);
 
-            setObjects((prevObjects) =>
-                prevObjects.filter((object) => object.id !== id)
-            );
+            const nextObjects = objects.filter((object) => object.id !== id);
+
+            await persistObjects(nextObjects);
 
             closeMenu();
             setSnackbarMessage("Object deleted");
@@ -267,11 +271,11 @@ export default function ObjectsScreen({ navigation, route }) {
             const updatedObject = response.data.data;
             const formattedObject = formatBackendObject(updatedObject);
 
-            setObjects((prevObjects) =>
-                prevObjects.map((object) =>
-                    object.id === id ? formattedObject : object
-                )
+            const nextObjects = objects.map((object) =>
+                object.id === id ? formattedObject : object
             );
+
+            await persistObjects(nextObjects);
 
             setSnackbarMessage("Object marked as checked");
             closeMenu();
@@ -320,11 +324,11 @@ export default function ObjectsScreen({ navigation, route }) {
                 const savedObject = response.data.data;
                 const formattedObject = formatBackendObject(savedObject);
 
-                setObjects((prevObjects) =>
-                    prevObjects.map((object) =>
-                        object.id === editingObject.id ? formattedObject : object
-                    )
+                const nextObjects = objects.map((object) =>
+                    object.id === editingObject.id ? formattedObject : object
                 );
+
+                await persistObjects(nextObjects);
 
                 setShowAddObjectSheet(false);
                 setPendingPhotoUri(null);
@@ -342,7 +346,7 @@ export default function ObjectsScreen({ navigation, route }) {
             const savedObject = response.data.data;
             const formattedObject = formatBackendObject(savedObject);
 
-            setObjects((prevObjects) => [...prevObjects, formattedObject]);
+            await persistObjects([...objects, formattedObject]);
 
             setShowAddObjectSheet(false);
             setPendingPhotoUri(null);
@@ -364,18 +368,7 @@ export default function ObjectsScreen({ navigation, route }) {
                 barStyle="dark-content"
             />
 
-            {/* White status bar space */}
-            <View
-                className="bg-white"
-                style={{ height: statusBarHeight }}
-            />
 
-            {/* App header */}
-            <View className="h-16 bg-black items-center justify-center">
-                <Text className="text-white text-[32px] leading-[39px] font-geologica-bold font-bold">
-                    WaWa
-                </Text>
-            </View>
 
             <ScrollView
                 className="flex-1"

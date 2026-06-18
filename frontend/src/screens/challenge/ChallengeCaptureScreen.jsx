@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   Camera,
   useCameraDevice,
@@ -19,6 +19,7 @@ export default function ChallengeCaptureScreen({
   const [facing] = useState('back');
   const [isCapturing, setIsCapturing] = useState(false);
   const [isChangingTarget, setIsChangingTarget] = useState(false);
+  const cameraRef = useRef(null);
   const device = useCameraDevice(facing);
   const photoOutput = usePhotoOutput({ quality: 0.85 });
 
@@ -26,8 +27,16 @@ export default function ChallengeCaptureScreen({
     if (!device || isCapturing) return;
     setIsCapturing(true);
     try {
+      if (Platform.OS === 'android') {
+        const snapshot = await cameraRef.current?.takeSnapshot();
+        if (!snapshot) throw new Error('Camera snapshot is not ready');
+        const filePath = await snapshot.saveToTemporaryFileAsync('jpg', 85);
+        await onCaptured(`file://${filePath}`);
+        return;
+      }
+
       const photo = await photoOutput.capturePhotoToFile(
-        { flashMode: 'off', enableShutterSound: true },
+        { flashMode: 'off', enableShutterSound: false },
         {}
       );
       if (!photo?.filePath) throw new Error('No photo file path returned');
@@ -104,6 +113,7 @@ export default function ChallengeCaptureScreen({
         <View className={tw.cameraFrame} style={cameraFrameStyle}>
           {device ? (
             <Camera
+              ref={cameraRef}
               style={StyleSheet.absoluteFill}
               device={device}
               isActive

@@ -8,6 +8,17 @@ const User           = require('../models/User')
 
 const EXP_PER_SUCCESS = 10 // MVP: flat EXP per mission success
 
+const startOfUtcDay = (date) => {
+    const day = new Date(date)
+    day.setUTCHours(0, 0, 0, 0)
+    return day
+}
+
+const daysBetweenUtc = (from, to) => {
+    const msPerDay = 24 * 60 * 60 * 1000
+    return Math.round((startOfUtcDay(to) - startOfUtcDay(from)) / msPerDay)
+}
+
 // Determine Uni stage based on level (every 5 levels = new stage)
 const getStage = (level) => {
     if (level <= 5)  return 'Baby Uni'
@@ -17,6 +28,61 @@ const getStage = (level) => {
     if (level <= 25) return 'Worker Uni'
     if (level <= 30) return 'Senior Uni'
     return 'Chubby Uni'
+}
+
+const applyMissionSuccessRewards = async (userId, completedAt = new Date()) => {
+    let streak = await Streak.findOne({ userId })
+    if (!streak) {
+        streak = await Streak.create({ userId })
+    }
+
+    const daysSinceLastSuccess = streak.lastSuccessDate
+        ? daysBetweenUtc(streak.lastSuccessDate, completedAt)
+        : null
+
+    let newCount = streak.currentCount
+    if (daysSinceLastSuccess === 0) {
+        newCount = Math.max(streak.currentCount, 1)
+    } else if (daysSinceLastSuccess === 1) {
+        newCount = streak.currentCount + 1
+    } else {
+        newCount = 1
+    }
+
+    streak.currentCount = newCount
+    streak.longestCount = Math.max(streak.longestCount, newCount)
+    streak.lastSuccessDate = completedAt
+    await streak.save()
+
+    let uni = await Uni.findOne({ userId })
+    if (!uni) {
+        uni = await Uni.create({ userId, avatarKey: 'default' })
+    }
+
+    const newExp = uni.exp + EXP_PER_SUCCESS
+    const newLevel = Math.floor(newExp / 100) + 1
+    const newStage = getStage(newLevel)
+
+    uni.exp = newExp
+    uni.level = newLevel
+    uni.stage = newStage
+    await uni.save()
+
+    await User.findByIdAndUpdate(userId, { $inc: { totalUnlocks: 1 } })
+
+    return {
+        streak: {
+            currentCount: streak.currentCount,
+            longestCount: streak.longestCount,
+            lastSuccessDate: streak.lastSuccessDate,
+        },
+        uni: {
+            avatarKey: uni.avatarKey,
+            level: uni.level,
+            stage: uni.stage,
+            exp: uni.exp,
+        },
+    }
 }
 
 // GET /api/mission/:alarmId
@@ -80,34 +146,7 @@ const verifyMission = async (req, res) => {
         })
 
         if (isSuccess) {
-            // Update Streak
-            let streak = await Streak.findOne({ userId: req.user.userId })
-            if (!streak) {
-                streak = await Streak.create({ userId: req.user.userId })
-            }
-            const newCount = streak.currentCount + 1
-            await Streak.findByIdAndUpdate(streak._id, {
-                $set: {
-                    currentCount:    newCount,
-                    longestCount:    Math.max(streak.longestCount, newCount),
-                    lastSuccessDate: new Date(),
-                }
-            })
-
-            // Update Uni (exp, level, stage)
-            let uni = await Uni.findOne({ userId: req.user.userId })
-            if (!uni) {
-                uni = await Uni.create({ userId: req.user.userId, avatarKey: 'default' })
-            }
-            const newExp   = uni.exp + EXP_PER_SUCCESS
-            const newLevel = Math.floor(newExp / 100) + 1
-            const newStage = getStage(newLevel)
-            await Uni.findByIdAndUpdate(uni._id, {
-                $set: { exp: newExp, level: newLevel, stage: newStage }
-            })
-
-            // Update User totalUnlocks
-            await User.findByIdAndUpdate(req.user.userId, { $inc: { totalUnlocks: 1 } })
+            await applyMissionSuccessRewards(req.user.userId)
         }
 
         return res.json({ success: true, result: isSuccess ? 'success' : 'failed' })
@@ -187,4 +226,21 @@ const emergencyOverride = async (req, res) => {
     }
 }
 
-module.exports = { getMission, verifyMission, changeObject, emergencyOverride }
+// POST /api/mission/challenge-success
+// Records a successful standalone challenge compare and updates streak/Uni stats
+const recordChallengeSuccess = async (req, res) => {
+    try {
+        const stats = await applyMissionSuccessRewards(req.user.userId)
+
+        return res.json({
+            success: true,
+            result: 'success',
+            stats,
+        })
+    } catch (err) {
+        console.error('[scanController.recordChallengeSuccess]', err)
+        return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
+    }
+}
+
+module.exports = { getMission, verifyMission, changeObject, emergencyOverride, recordChallengeSuccess }
