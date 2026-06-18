@@ -6,7 +6,6 @@ import {
     Pressable,
     Modal,
     StatusBar,
-    Platform,
 } from "react-native";
 
 import apiClient from "../api/client";
@@ -369,18 +368,7 @@ export default function ObjectsScreen({ navigation, route }) {
                 barStyle="dark-content"
             />
 
-            {/* White status bar space */}
-            <View
-                className="bg-white"
-                style={{ height: statusBarHeight }}
-            />
 
-            {/* App header */}
-            <View className="h-16 bg-black items-center justify-center">
-                <Text className="text-white text-[32px] leading-[39px] font-geologica-bold font-bold">
-                    WaWa
-                </Text>
-            </View>
 
             <ScrollView
                 className="flex-1"

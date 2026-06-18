@@ -7,7 +7,6 @@ import {
     TouchableOpacity,
     Share as RNShare,
     StatusBar,
-    Platform,
 } from "react-native";
 
 import apiClient from "../api/client";
@@ -35,6 +34,7 @@ const DEFAULT_STATS = {
 function getDurationSeconds(log) {
     return (
         log?.durationSeconds ??
+        log?.timeToComplete ??
         log?.timeToCompleteSeconds ??
         log?.completedInSeconds ??
         log?.totalTimeSeconds ??
@@ -247,8 +247,8 @@ function MissionHistorySection({ logs }) {
                         <View
                             key={log?._id ?? index}
                             className={`p-4 ${index !== logs.length - 1
-                                    ? "border-b border-[#D9D9D9]"
-                                    : ""
+                                ? "border-b border-[#D9D9D9]"
+                                : ""
                                 }`}
                         >
                             <Text className="text-black text-[14px] leading-[18px] font-geologica-bold font-bold">
@@ -272,8 +272,6 @@ export default function TrackingScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
-    const statusBarHeight =
-        Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
 
     const fetchTrackingData = async () => {
         try {
@@ -327,10 +325,7 @@ export default function TrackingScreen() {
                     barStyle="dark-content"
                 />
 
-                <View
-                    className="bg-white"
-                    style={{ height: statusBarHeight }}
-                />
+
 
                 <View className="flex-1 items-center justify-center">
                     <ActivityIndicator color="#000000" />
@@ -352,10 +347,7 @@ export default function TrackingScreen() {
                     barStyle="dark-content"
                 />
 
-                <View
-                    className="bg-white"
-                    style={{ height: statusBarHeight }}
-                />
+
 
                 <View className="flex-1 px-6 items-center justify-center">
                     <Text className="text-black text-[22px] leading-[28px] font-geologica-bold font-bold text-center">
@@ -388,18 +380,9 @@ export default function TrackingScreen() {
                 barStyle="dark-content"
             />
 
-            {/* White status bar space */}
-            <View
-                className="bg-white"
-                style={{ height: statusBarHeight }}
-            />
 
-            {/* App header */}
-            <View className="w-full h-16 bg-black items-center justify-center">
-                <Text className="text-white text-[32px] leading-[39px] font-geologica-bold font-bold">
-                    WaWa
-                </Text>
-            </View>
+
+
 
             <ScrollView
                 className="flex-1"
