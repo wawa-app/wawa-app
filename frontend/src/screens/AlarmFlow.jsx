@@ -13,9 +13,9 @@ async function compare(targetUri, candidateUri) {
 
 const { AlarmModule } = NativeModules;
 
-const handleClose = useCallback(() => {
-    AlarmModule.stopAlarm(); //tentative
-}, []);
+// const handleClose = useCallback(() => {
+//     AlarmModule.stopAlarm(); //tentative
+// }, []);
 
 //tentative
 const PHASE = {
