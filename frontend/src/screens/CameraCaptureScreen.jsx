@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -17,6 +18,7 @@ import RNFS from "react-native-fs";
 
 export default function CameraCaptureScreen({ navigation }) {
     const [takingPhoto, setTakingPhoto] = useState(false);
+    const cameraRef = useRef(null);
 
     const device = useCameraDevice("back");
     const photoOutput = usePhotoOutput();
@@ -53,6 +55,29 @@ export default function CameraCaptureScreen({ navigation }) {
             }
 
             setTakingPhoto(true);
+
+            if (Platform.OS === "android") {
+                const snapshot = await cameraRef.current?.takeSnapshot();
+                if (!snapshot) {
+                    Alert.alert("Camera Error", "Camera snapshot is not ready yet.");
+                    return;
+                }
+
+                const snapshotPath = await snapshot.saveToTemporaryFileAsync("jpg", 85);
+                const savedPhotoUri = await savePhotoLocally(snapshotPath);
+
+                console.log("[CameraCaptureScreen] saved snapshot uri:", savedPhotoUri);
+
+                navigation.navigate("Main", {
+                    screen: "Objects",
+                    params: {
+                        capturedPhotoUri: savedPhotoUri,
+                        capturedAt: Date.now(),
+                    },
+                });
+
+                return;
+            }
 
             const photo = await photoOutput.capturePhotoToFile(
                 {
@@ -146,6 +171,7 @@ export default function CameraCaptureScreen({ navigation }) {
     return (
         <View className="flex-1 bg-black">
             <Camera
+                ref={cameraRef}
                 style={StyleSheet.absoluteFill}
                 device={device}
                 isActive={true}
