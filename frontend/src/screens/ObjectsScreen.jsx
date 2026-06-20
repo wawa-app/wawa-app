@@ -30,7 +30,7 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
         >
             <Pressable className="flex-1" onPress={onClose}>
                 <View
-                    className="absolute w-[178px] bg-[#FFF7FF] rounded-2xl shadow-lg overflow-hidden"
+                    className="absolute w-[178px] bg-white rounded-2xl shadow-lg overflow-hidden"
                     style={{
                         top: position.top,
                         left: position.left,
@@ -42,15 +42,11 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         className="h-12 px-4 flex-row items-center"
                         onPress={onEdit}
                     >
-                        <View className="w-8 items-start justify-center">
-                            <EditIcon size={20} color="#49454F" />
+                        <View className="w-8">
+                            <EditIcon size={20} color="black" />
                         </View>
 
-                        <Text
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                            className="text-[14px] leading-[20px] tracking-[0.1px] font-geologica-medium text-[#1D1B20]"
-                        >
+                        <Text className="text-sm font-geologica-medium text-black">
                             Edit
                         </Text>
                     </Pressable>
@@ -59,15 +55,11 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         className="h-12 px-4 flex-row items-center"
                         onPress={onDelete}
                     >
-                        <View className="w-8 items-start justify-center">
-                            <DeleteIcon size={20} color="#49454F" />
+                        <View className="w-8">
+                            <DeleteIcon size={20} color="black" />
                         </View>
 
-                        <Text
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                            className="text-[14px] leading-[20px] tracking-[0.1px] font-geologica-medium text-[#1D1B20]"
-                        >
+                        <Text className="text-sm font-geologica-medium text-black">
                             Delete
                         </Text>
                     </Pressable>
@@ -76,15 +68,11 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         className="h-12 px-4 flex-row items-center"
                         onPress={onMarkAsChecked}
                     >
-                        <View className="w-8 items-start justify-center">
-                            <CheckIcon size={20} color="#49454F" />
+                        <View className="w-8">
+                            <CheckIcon size={20} color="black" />
                         </View>
 
-                        <Text
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                            className="text-[14px] leading-[20px] tracking-[0.1px] font-geologica-medium text-[#1D1B20]"
-                        >
+                        <Text className="text-sm font-geologica-medium text-black">
                             Mark as checked
                         </Text>
                     </Pressable>
@@ -103,14 +91,13 @@ export default function ObjectsScreen({ navigation, route }) {
     const [showCautionModal, setShowCautionModal] = useState(false);
     const [showAddObjectSheet, setShowAddObjectSheet] = useState(false);
     const [pendingPhotoUri, setPendingPhotoUri] = useState(null);
+
     const [editingObject, setEditingObject] = useState(null);
+    const [editingObjectId, setEditingObjectId] = useState(null);
 
     const [snackbarMessage, setSnackbarMessage] = useState("");
 
     const cardRefs = useRef({});
-
-    // const statusBarHeight =
-    //     Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
 
     const isOlderThanCheckLimit = useCallback((dateValue) => {
         if (!dateValue) return false;
@@ -144,24 +131,36 @@ export default function ObjectsScreen({ navigation, route }) {
         return `${year}/${month}/${day}`;
     }, []);
 
-    const formatBackendObject = useCallback((object) => {
-        const lastUpdatedAt = object.updatedAt || object.createdAt || "";
+    const formatBackendObject = useCallback(
+        (object) => {
+            const lastUpdatedAt = object.updatedAt || object.createdAt || "";
 
-        return {
-            id: object._id,
-            objectName: object.name,
-            status: object.status || "Enrolled",
-            date: formatDate(lastUpdatedAt),
-            imageUri: object.localRef?.[0] || null,
-            lastUpdatedAt,
-            needsCheck: isOlderThanCheckLimit(lastUpdatedAt),
-        };
-    }, [formatDate, isOlderThanCheckLimit]);
+            return {
+                id: object._id,
+                objectName: object.name,
+                status: object.status || "Enrolled",
+                date: formatDate(lastUpdatedAt),
+                imageUri: object.localRef?.[0] || null,
+                lastUpdatedAt,
+                needsCheck: isOlderThanCheckLimit(lastUpdatedAt),
+            };
+        },
+        [formatDate, isOlderThanCheckLimit]
+    );
 
     const persistObjects = useCallback(async (nextObjects) => {
         setObjects(nextObjects);
         await saveStoredObjects(nextObjects);
     }, []);
+
+    const clearEditState = useCallback(() => {
+        setEditingObject(null);
+        setEditingObjectId(null);
+
+        navigation.setParams({
+            editingObjectId: undefined,
+        });
+    }, [navigation]);
 
     const mustCheckObjects = objects.filter((object) => object.needsCheck);
     const normalObjects = objects.filter((object) => !object.needsCheck);
@@ -189,8 +188,21 @@ export default function ObjectsScreen({ navigation, route }) {
 
     useEffect(() => {
         const capturedPhotoUri = route?.params?.capturedPhotoUri;
+        const routeEditingObjectId = route?.params?.editingObjectId;
 
         if (!capturedPhotoUri) return;
+
+        if (routeEditingObjectId) {
+            const objectToEdit = objects.find(
+                (object) => object.id === routeEditingObjectId
+            );
+
+            setEditingObject(objectToEdit || null);
+            setEditingObjectId(routeEditingObjectId);
+        } else {
+            setEditingObject(null);
+            setEditingObjectId(null);
+        }
 
         setPendingPhotoUri(capturedPhotoUri);
         setShowAddObjectSheet(true);
@@ -199,7 +211,13 @@ export default function ObjectsScreen({ navigation, route }) {
             capturedPhotoUri: undefined,
             capturedAt: undefined,
         });
-    }, [navigation, route?.params?.capturedAt, route?.params?.capturedPhotoUri]);
+    }, [
+        navigation,
+        objects,
+        route?.params?.capturedAt,
+        route?.params?.capturedPhotoUri,
+        route?.params?.editingObjectId,
+    ]);
 
     useEffect(() => {
         if (!snackbarMessage) return;
@@ -239,9 +257,17 @@ export default function ObjectsScreen({ navigation, route }) {
         }
 
         setEditingObject(objectToEdit);
-        setPendingPhotoUri(objectToEdit.imageUri);
-        setShowAddObjectSheet(true);
+        setEditingObjectId(id);
+        setPendingPhotoUri(null);
         closeMenu();
+
+        navigation.setParams({
+            editingObjectId: id,
+        });
+
+        navigation.navigate("CameraCapture", {
+            editingObjectId: id,
+        });
     };
 
     const handleDelete = async (id) => {
@@ -289,7 +315,13 @@ export default function ObjectsScreen({ navigation, route }) {
 
     const handleAddPress = () => {
         setEditingObject(null);
+        setEditingObjectId(null);
         setPendingPhotoUri(null);
+
+        navigation.setParams({
+            editingObjectId: undefined,
+        });
+
         setShowCautionModal(true);
     };
 
@@ -305,16 +337,17 @@ export default function ObjectsScreen({ navigation, route }) {
     const handleCancelAddObject = () => {
         setShowAddObjectSheet(false);
         setPendingPhotoUri(null);
-        setEditingObject(null);
+        clearEditState();
     };
 
     const handleSaveObject = async ({ objectName, imageUri }) => {
         try {
-            console.log("[ObjectsScreen] Save pressed:", { objectName, imageUri });
+            const objectIdToUpdate =
+                editingObject?.id || editingObjectId || route?.params?.editingObjectId;
 
-            if (editingObject) {
+            if (objectIdToUpdate) {
                 const response = await apiClient.patch(
-                    `/api/objects/${editingObject.id}`,
+                    `/api/objects/${objectIdToUpdate}`,
                     {
                         name: objectName,
                         localRef: [imageUri],
@@ -325,14 +358,14 @@ export default function ObjectsScreen({ navigation, route }) {
                 const formattedObject = formatBackendObject(savedObject);
 
                 const nextObjects = objects.map((object) =>
-                    object.id === editingObject.id ? formattedObject : object
+                    object.id === objectIdToUpdate ? formattedObject : object
                 );
 
                 await persistObjects(nextObjects);
 
                 setShowAddObjectSheet(false);
                 setPendingPhotoUri(null);
-                setEditingObject(null);
+                clearEditState();
                 setSnackbarMessage(`${objectName} is Updated`);
 
                 return;
@@ -350,7 +383,7 @@ export default function ObjectsScreen({ navigation, route }) {
 
             setShowAddObjectSheet(false);
             setPendingPhotoUri(null);
-            setEditingObject(null);
+            clearEditState();
             setSnackbarMessage(`${objectName} is Added`);
         } catch (error) {
             console.error(
@@ -368,16 +401,13 @@ export default function ObjectsScreen({ navigation, route }) {
                 barStyle="dark-content"
             />
 
-
-
             <ScrollView
                 className="flex-1"
                 contentContainerStyle={{ paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Page title section */}
-                <View className="bg-white px-4 py-6">
-                    <Text className="text-[32px] leading-[39px] font-geologica-bold font-bold text-black">
+                <View className="px-4 py-6">
+                    <Text className="text-4xl font-geologica-bold font-bold text-black">
                         Objects
                     </Text>
 
@@ -389,9 +419,8 @@ export default function ObjectsScreen({ navigation, route }) {
                     </Text>
                 </View>
 
-                {/* Must check section */}
                 {mustCheckObjects.length > 0 && (
-                    <View className="bg-[#D9D9D9] px-4 py-6">
+                    <View className="px-4 py-6">
                         <Text className="text-base font-geologica-bold font-bold text-black">
                             Are these objects still near you?
                         </Text>
@@ -421,8 +450,7 @@ export default function ObjectsScreen({ navigation, route }) {
                     </View>
                 )}
 
-                {/* Normal objects list */}
-                <View className="bg-white px-4 pt-6 gap-4 items-center">
+                <View className="px-4 pt-6 gap-4 items-center">
                     {normalObjects.map((item) => (
                         <View
                             key={item.id}
@@ -442,12 +470,11 @@ export default function ObjectsScreen({ navigation, route }) {
                 </View>
             </ScrollView>
 
-            {/* Floating add button */}
             <Pressable
-                className="absolute right-6 bottom-[98px] w-[58px] h-[58px] rounded-full bg-[#101010] items-center justify-center z-10"
+                className="absolute right-6 bottom-[98px] w-[58px] h-[58px] rounded-full bg-black items-center justify-center z-10"
                 onPress={handleAddPress}
             >
-                <Text className="text-white text-[32px] leading-[34px] font-light">
+                <Text className="text-white text-4xl font-light">
                     +
                 </Text>
             </Pressable>
@@ -476,8 +503,8 @@ export default function ObjectsScreen({ navigation, route }) {
             />
 
             {snackbarMessage ? (
-                <View className="absolute right-6 bottom-[150px] bg-[#302D38] px-6 py-4 rounded-sm shadow-lg">
-                    <Text className="text-white text-[14px] leading-[20px] font-geologica-regular">
+                <View className="absolute right-6 bottom-[150px] bg-black px-6 py-4 rounded-sm shadow-lg">
+                    <Text className="text-white text-sm font-geologica-regular">
                         {snackbarMessage}
                     </Text>
                 </View>
