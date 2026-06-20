@@ -14,6 +14,7 @@ export default function ChallengeScreen() {
   const [stage, setStage] = React.useState('capture');
   const [matched, setMatched] = React.useState(false);
   const [loadingTarget, setLoadingTarget] = React.useState(true);
+  const [completionStats, setCompletionStats] = React.useState(null);
 
   const target = targetObject?.imageUri || null;
   const targetName = targetObject?.objectName || 'Saved object';
@@ -48,9 +49,10 @@ export default function ChallengeScreen() {
 
       if (result.match) {
         try {
-          await apiClient.post('/api/mission/challenge-success', {
+          const response = await apiClient.post('/api/mission/challenge-success', {
             objectId: targetObject?.id,
           });
+          setCompletionStats(response.data?.stats ?? null);
         } catch (rewardError) {
           console.warn(
             'Challenge matched, but streak update failed:',
@@ -69,11 +71,13 @@ export default function ChallengeScreen() {
 
   const handleTryAgain = React.useCallback(() => {
     setCandidate(null);
+    setCompletionStats(null);
     setStage('capture');
   }, []);
 
   const handleClose = React.useCallback(() => {
     setCandidate(null);
+    setCompletionStats(null);
     setStage('capture');
     loadTarget();
   }, [loadTarget]);
@@ -120,6 +124,7 @@ export default function ChallengeScreen() {
         onClose={handleClose}
         onTryAgain={handleTryAgain}
         onEmergencyExit={handleClose}
+        completionStats={completionStats}
       />
     );
   }
