@@ -16,7 +16,7 @@ import {
 } from "react-native-vision-camera";
 import RNFS from "react-native-fs";
 
-export default function CameraCaptureScreen({ navigation }) {
+export default function CameraCaptureScreen({ navigation, route }) {
     const [takingPhoto, setTakingPhoto] = useState(false);
     const cameraRef = useRef(null);
 
@@ -24,6 +24,7 @@ export default function CameraCaptureScreen({ navigation }) {
     const photoOutput = usePhotoOutput();
 
     const { hasPermission, requestPermission } = useCameraPermission();
+    const editingObjectId = route?.params?.editingObjectId;
 
     const savePhotoLocally = async (photoPath) => {
         const folderPath = `${RNFS.DocumentDirectoryPath}/wawa_objects`;
@@ -73,6 +74,7 @@ export default function CameraCaptureScreen({ navigation }) {
                     params: {
                         capturedPhotoUri: savedPhotoUri,
                         capturedAt: Date.now(),
+                        editingObjectId,
                     },
                 });
 
