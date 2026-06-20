@@ -7,15 +7,15 @@ import React, {
     useState,
 } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
-import { Close } from '../icons';
+import Close from '../icons/Close';
+
 
 const SnackbarContext = createContext(null);
 
-// tone → 背景色(指定なしは gray)
 const TONE_COLOR = {
     neutral: '#404040', // gray ← default
-    success: '#16a34a', // green
-    error: '#dc2626',   // red
+    success: '#404040', // green
+    error: '#404040',   // red
 };
 
 export function useSnackbar() {
@@ -107,7 +107,7 @@ function SnackbarView({ text, actionLabel, onAction, showClose, tone, onClose })
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                bottom: 24,
+                bottom: 160,
                 paddingHorizontal: 16,
                 opacity: progress,
                 transform: [{ translateY }],
