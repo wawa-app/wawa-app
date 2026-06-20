@@ -3,7 +3,8 @@ const mongoose = require('mongoose')
 const missionAttemptSchema = new mongoose.Schema({
   // ── References ────────────────────────────────────────
   userId:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  alarmId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Alarm', required: true },
+  // Standalone challenges are not tied to a scheduled alarm.
+  alarmId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Alarm', default: null },
   objectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Object', required: true },
 
   // ── Mission Status ────────────────────────────────────

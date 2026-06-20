@@ -17,6 +17,7 @@ export default function AlarmFlow() {
     const [targetObject, setTargetObject] = useState(null);
     const [candidate, setCandidate] = useState(null);
     const [matched, setMatched] = useState(false);
+    const [completionStats, setCompletionStats] = useState(null);
 
     const target = targetObject?.imageUri || null;
     const targetName = targetObject?.objectName || 'Saved object';
@@ -35,6 +36,7 @@ export default function AlarmFlow() {
 
     const handleStartMission = useCallback(() => {
         // Keep the alarm ringing — only success stops it.
+        setCompletionStats(null);
         setPhase(PHASE.CAPTURING);
     }, []);
 
@@ -53,7 +55,8 @@ export default function AlarmFlow() {
             if (isMatch) {
                 AlarmModule.stopRingtone();
                 try {
-                    await apiClient.post('/api/mission/challenge-success', { objectId: targetObject?.id });
+                    const response = await apiClient.post('/api/mission/challenge-success', { objectId: targetObject?.id });
+                    setCompletionStats(response.data?.stats ?? null);
                 } catch (rewardError) {
                     console.warn('success POST failed:', rewardError?.message);
                 }
@@ -91,7 +94,7 @@ export default function AlarmFlow() {
         case PHASE.COMPARING:
             return <ChallengeComparingScreen target={target} targetName={targetName} candidate={candidate} />;
         case PHASE.RESULT:
-            return <ChallengeResultScreen matched={matched} targetName={targetName} onClose={handleClose} onTryAgain={handleTryAgain} onEmergencyExit={handleEmergencyExit} />;
+            return <ChallengeResultScreen matched={matched} targetName={targetName} onClose={handleClose} onTryAgain={handleTryAgain} onEmergencyExit={handleEmergencyExit} completionStats={completionStats} />;
         case PHASE.RINGING:
         default:
             return <AlarmRingingScreen onStartMission={handleStartMission} />;

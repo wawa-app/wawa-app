@@ -19,6 +19,8 @@ const daysBetweenUtc = (from, to) => {
     return Math.round((startOfUtcDay(to) - startOfUtcDay(from)) / msPerDay)
 }
 
+const utcDayKey = (date) => startOfUtcDay(date).toISOString().slice(0, 10)
+
 // Determine Uni stage based on level (every 5 levels = new stage)
 const getStage = (level) => {
     if (level <= 5)  return 'Baby Uni'
@@ -40,37 +42,42 @@ const applyMissionSuccessRewards = async (userId, completedAt = new Date()) => {
         ? daysBetweenUtc(streak.lastSuccessDate, completedAt)
         : null
 
+    // XP and streak progress are granted at most once per UTC calendar day.
+    const awarded = daysSinceLastSuccess !== 0
     let newCount = streak.currentCount
-    if (daysSinceLastSuccess === 0) {
-        newCount = Math.max(streak.currentCount, 1)
-    } else if (daysSinceLastSuccess === 1) {
+    if (daysSinceLastSuccess === 1) {
         newCount = streak.currentCount + 1
-    } else {
+    } else if (awarded) {
         newCount = 1
     }
 
-    streak.currentCount = newCount
-    streak.longestCount = Math.max(streak.longestCount, newCount)
-    streak.lastSuccessDate = completedAt
-    await streak.save()
+    if (awarded) {
+        streak.currentCount = newCount
+        streak.longestCount = Math.max(streak.longestCount, newCount)
+        streak.lastSuccessDate = completedAt
+        await streak.save()
+    }
 
     let uni = await Uni.findOne({ userId })
     if (!uni) {
         uni = await Uni.create({ userId, avatarKey: 'default' })
     }
 
-    const newExp = uni.exp + EXP_PER_SUCCESS
-    const newLevel = Math.floor(newExp / 100) + 1
-    const newStage = getStage(newLevel)
+    if (awarded) {
+        const newExp = uni.exp + EXP_PER_SUCCESS
+        const newLevel = Math.floor(newExp / 100) + 1
+        const newStage = getStage(newLevel)
 
-    uni.exp = newExp
-    uni.level = newLevel
-    uni.stage = newStage
-    await uni.save()
+        uni.exp = newExp
+        uni.level = newLevel
+        uni.stage = newStage
+        await uni.save()
 
-    await User.findByIdAndUpdate(userId, { $inc: { totalUnlocks: 1 } })
+        await User.findByIdAndUpdate(userId, { $inc: { totalUnlocks: 1 } })
+    }
 
     return {
+        awarded,
         streak: {
             currentCount: streak.currentCount,
             longestCount: streak.longestCount,
@@ -230,11 +237,65 @@ const emergencyOverride = async (req, res) => {
 // Records a successful standalone challenge compare and updates streak/Uni stats
 const recordChallengeSuccess = async (req, res) => {
     try {
-        const stats = await applyMissionSuccessRewards(req.user.userId)
+        const { objectId } = req.body
+        if (!objectId) {
+            return res.status(400).json({ success: false, error: 'MISSING_OBJECT_ID' })
+        }
+
+        const object = await Object.findOne({ _id: objectId, userId: req.user.userId })
+        if (!object) {
+            return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
+        }
+
+        const completedAt = new Date()
+        const completionDay = utcDayKey(completedAt)
+        const existing = await MissionLog.findOne({
+            userId: req.user.userId,
+            isSuccess: true,
+            completionDay,
+        })
+        if (existing) {
+            return res.json({
+                success: true,
+                result: 'success',
+                awarded: false,
+                alreadyCompletedToday: true,
+            })
+        }
+
+        const attempt = await MissionAttempt.create({
+            userId: req.user.userId,
+            objectId,
+            status: 'success',
+        })
+
+        try {
+            await MissionLog.create({
+                userId: req.user.userId,
+                objectId,
+                missionId: attempt._id,
+                isSuccess: true,
+                attemptAt: completedAt,
+                completedAt,
+                completionDay,
+            })
+        } catch (err) {
+            if (err?.code !== 11000) throw err
+            await MissionAttempt.findByIdAndDelete(attempt._id)
+            return res.json({
+                success: true,
+                result: 'success',
+                awarded: false,
+                alreadyCompletedToday: true,
+            })
+        }
+
+        const stats = await applyMissionSuccessRewards(req.user.userId, completedAt)
 
         return res.json({
             success: true,
             result: 'success',
+            awarded: stats.awarded,
             stats,
         })
     } catch (err) {

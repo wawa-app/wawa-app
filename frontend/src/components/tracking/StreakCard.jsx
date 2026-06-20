@@ -8,9 +8,10 @@ import {
 
 import apiClient from "../../api/client";
 
-export default function StreakCard({ variant = "lose" }) {
-    const [streak, setStreak] = useState(0);
-    const [loading, setLoading] = useState(true);
+export default function StreakCard({ variant = "lose", streakCount }) {
+    const hasProvidedStreak = typeof streakCount === "number";
+    const [streak, setStreak] = useState(hasProvidedStreak ? streakCount : 0);
+    const [loading, setLoading] = useState(!hasProvidedStreak);
     const [error, setError] = useState(false);
 
     const fetchStats = async () => {
@@ -44,8 +45,18 @@ export default function StreakCard({ variant = "lose" }) {
     };
 
     useEffect(() => {
+        // The completed mission endpoint already returns the updated streak.
+        // Use it immediately instead of making the success screen wait on a
+        // second network request.
+        if (hasProvidedStreak) {
+            setStreak(streakCount);
+            setError(false);
+            setLoading(false);
+            return;
+        }
+
         fetchStats();
-    }, []);
+    }, [streakCount, hasProvidedStreak]);
 
     const isLose = variant === "lose";
     const title = isLose ? "Day Streak LOSE!" : "Day Streak!";

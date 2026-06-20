@@ -17,6 +17,7 @@ export default function ChallengeResultScreen({
   onClose,
   onTryAgain,
   onEmergencyExit,
+  completionStats,
 }) {
   const [uni, setUni] = React.useState(DEFAULT_UNI);
 
@@ -25,18 +26,27 @@ export default function ChallengeResultScreen({
 
     let isMounted = true;
 
+    const applyUniStats = (nextUni) => {
+      if (!isMounted || !nextUni) return;
+      setUni({
+        stage: nextUni.stage ?? DEFAULT_UNI.stage,
+        level: nextUni.level ?? DEFAULT_UNI.level,
+        exp: nextUni.exp ?? DEFAULT_UNI.exp,
+      });
+    };
+
+    // A newly completed mission has already returned its updated stats.
+    if (completionStats?.uni) {
+      applyUniStats(completionStats.uni);
+      return () => {
+        isMounted = false;
+      };
+    }
+
     const fetchUniStats = async () => {
       try {
         const response = await apiClient.get('/api/users/stats');
-        const nextUni = response.data?.stats?.uni;
-
-        if (isMounted && nextUni) {
-          setUni({
-            stage: nextUni.stage ?? DEFAULT_UNI.stage,
-            level: nextUni.level ?? DEFAULT_UNI.level,
-            exp: nextUni.exp ?? DEFAULT_UNI.exp,
-          });
-        }
+        applyUniStats(response.data?.stats?.uni);
       } catch (error) {
         console.warn(
           '[ChallengeResultScreen] fetchUniStats error:',
@@ -51,7 +61,7 @@ export default function ChallengeResultScreen({
     return () => {
       isMounted = false;
     };
-  }, [matched]);
+  }, [matched, completionStats]);
 
   const currentXp = Math.min(uni.exp % 100, 100);
   const xpProgress = `${currentXp}%`;
@@ -95,7 +105,10 @@ export default function ChallengeResultScreen({
           </Text>
 
           <View className="mt-8">
-            <StreakCard variant="success" />
+            <StreakCard
+              variant="success"
+              streakCount={completionStats?.streak?.currentCount}
+            />
           </View>
 
           <TouchableOpacity className={tw.resultButton} onPress={onClose} activeOpacity={0.85}>
