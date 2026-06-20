@@ -82,7 +82,7 @@ public class AlarmModule extends ReactContextBaseJavaModule {
         }
     }
 
-     @ReactMethod
+    @ReactMethod
     public void stopRingtone() {
         if (currentRingtone != null) {
             currentRingtone.stop();
@@ -96,15 +96,20 @@ public class AlarmModule extends ReactContextBaseJavaModule {
             currentRingtone.stop();
             currentRingtone = null;
         }
-        Activity activity = getCurrentActivity();
+        final Activity activity = getCurrentActivity();
         if (activity instanceof AlarmActivity) {
-            Intent launch = context.getPackageManager()
-                .getLaunchIntentForPackage(context.getPackageName());
-            if (launch != null) {
-                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                context.startActivity(launch);
-            }
-            activity.finish();
+            activity.runOnUiThread(() -> {
+                Intent launch = context.getPackageManager()
+                    .getLaunchIntentForPackage(context.getPackageName());
+                if (launch != null) {
+                    launch.addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK
+                      | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                      | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    activity.startActivity(launch);
+                }
+                activity.finish();
+            });
         }
     }
 }

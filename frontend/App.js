@@ -1,3 +1,4 @@
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -15,6 +16,7 @@ import PasswordResetSuccessScreen from './src/screens/PasswordResetSuccessScreen
 import CameraCaptureScreen from './src/screens/CameraCaptureScreen';
 import NavTabs from './src/navigation/NavTabs';
 import StackHeader from './src/navigation/StackHeader';
+import { SnackbarProvider } from './src/components/common/SnackbarProvider';
 
 //For testing ChallengeCaptureScreen in isolation without auth flow
 
@@ -144,11 +146,15 @@ function RootNavigator() {
 //Root component — wraps app with AuthContext and Navigation
 export default function App() {
     return (
-        <AuthProvider>
-            <NavigationContainer>
-                <RootNavigator />
-            </NavigationContainer>
-        </AuthProvider>
+        <SafeAreaProvider>
+            <AuthProvider>
+                <NavigationContainer>
+                    <SnackbarProvider>
+                        <RootNavigator />
+                    </SnackbarProvider>
+                </NavigationContainer>
+            </AuthProvider>
+        </SafeAreaProvider>
     );
 }
 

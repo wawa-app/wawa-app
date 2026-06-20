@@ -13,6 +13,42 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
     const [meridiem, setMeridiem] = useState('AM')
     const [selectedDays, setSelectedDays] = useState([])
 
+    const handleHourChange = (text) => {
+        const value = text.replace(/[^0-9]/g, '')
+
+        if (value === '') {
+            setHour('')
+            return
+        }
+
+        const number = parseInt(value)
+
+        if (number > 12) {
+            setHour('12')
+        } else if (number < 1) {
+            setHour('1')
+        } else {
+            setHour(value)
+        }
+    }
+
+    const handleMinuteChange = (text) => {
+        const value = text.replace(/[^0-9]/g, '')
+
+        if (value === '') {
+            setMinute('')
+            return
+        }
+
+        const number = parseInt(value)
+
+        if (number > 59) {
+            setMinute('59')
+        } else {
+            setMinute(value)
+        }
+    }
+
     useEffect(() => {
         if (!visible) return
         if (initialValue) {
@@ -37,10 +73,13 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
     }
 
     const handleSave = () => {
+        const safeHour = Math.min(Math.max(parseInt(hour) || 8, 1), 12)
+        const safeMinute = Math.min(Math.max(parseInt(minute) || 0, 0), 59)
+
         onSave({
             label,
-            hour: parseInt(hour) || 8,
-            minute: parseInt(minute) || 0,
+            hour: safeHour,
+            minute: safeMinute,
             meridiem,
             days: selectedDays,
             enabled: true,
@@ -75,12 +114,12 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
                     <View className="flex-row items-start gap-3 mb-6">
                         {/* Hour */}
                         <View className="w-24 gap-2">
-                            <View className="h-20 rounded-2xl bg-[#F2ECE4] items-center justify-center">
+                            <View className="h-20 bg-gray-200 items-center justify-center">
                                 <TextInput
                                     className="w-full text-center text-5xl font-bold text-[#3D2A1C]"
                                     style={{ includeFontPadding: false, textAlignVertical: 'center' }}
                                     value={hour}
-                                    onChangeText={setHour}
+                                    onChangeText={handleHourChange}
                                     keyboardType="numeric"
                                     maxLength={2}
                                 />
@@ -96,12 +135,12 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
 
                         {/* Minutes */}
                         <View className="w-24 gap-2">
-                            <View className="h-20 rounded-2xl bg-[#F2ECE4] items-center justify-center">
+                            <View className="h-20 bg-gray-200 items-center justify-center">
                                 <TextInput
                                     className="w-full text-center text-5xl font-bold text-[#3D2A1C]"
                                     style={{ includeFontPadding: false, textAlignVertical: 'center' }}
                                     value={minute}
-                                    onChangeText={setMinute}
+                                    onChangeText={handleMinuteChange}
                                     keyboardType="numeric"
                                     maxLength={2}
                                 />
@@ -109,7 +148,7 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
                             <Text className="text-base font-semibold text-[#3D2A1C]">Minutes</Text>
                         </View>
                         {/* AM/PM (Period_Selector: 52x80, radius 8, border #3D2A1C, bg Uni-50) */}
-                        <View className="w-[52px] h-20 rounded-lg overflow-hidden border border-[#3D2A1C]">
+                        <View className="w-[52px] h-20 overflow-hidden">
                             <Pressable
                                 onPress={() => setMeridiem('AM')}
                                 className={`flex-1 items-center justify-center ${meridiem === 'AM' ? 'bg-gray-500' : 'bg-gray-50'}`}
