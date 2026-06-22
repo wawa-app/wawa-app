@@ -2,7 +2,14 @@ import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import StreakCard from '../../components/tracking/StreakCard';
+import apiClient from '../../api/client';
 import { challengeTw as tw } from './challengeNativewind';
+
+const DEFAULT_UNI = {
+  stage: 'Baby Uni',
+  level: 1,
+  exp: 0,
+};
 
 export default function ChallengeResultScreen({
   matched,
@@ -10,7 +17,55 @@ export default function ChallengeResultScreen({
   onClose,
   onTryAgain,
   onEmergencyExit,
+  completionStats,
 }) {
+  const [uni, setUni] = React.useState(DEFAULT_UNI);
+
+  React.useEffect(() => {
+    if (!matched) return;
+
+    let isMounted = true;
+
+    const applyUniStats = (nextUni) => {
+      if (!isMounted || !nextUni) return;
+      setUni({
+        stage: nextUni.stage ?? DEFAULT_UNI.stage,
+        level: nextUni.level ?? DEFAULT_UNI.level,
+        exp: nextUni.exp ?? DEFAULT_UNI.exp,
+      });
+    };
+
+    // A newly completed mission has already returned its updated stats.
+    if (completionStats?.uni) {
+      applyUniStats(completionStats.uni);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const fetchUniStats = async () => {
+      try {
+        const response = await apiClient.get('/api/users/stats');
+        applyUniStats(response.data?.stats?.uni);
+      } catch (error) {
+        console.warn(
+          '[ChallengeResultScreen] fetchUniStats error:',
+          error?.response?.status,
+          error?.response?.data || error?.message
+        );
+      }
+    };
+
+    fetchUniStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [matched, completionStats]);
+
+  const currentXp = Math.min(uni.exp % 100, 100);
+  const xpProgress = `${currentXp}%`;
+
   if (matched) {
     return (
       <ScrollView className={tw.screen} contentContainerClassName={tw.resultContent}>
@@ -30,15 +85,15 @@ export default function ChallengeResultScreen({
             </View>
           </View>
 
-          <Text className={tw.levelText}>Elementary Uni (Level: 15)</Text>
+          <Text className={tw.levelText}>{uni.stage} (Level: {uni.level})</Text>
 
           <View className={tw.xpCard}>
             <View className={tw.xpHeader}>
               <Text className={tw.xpLabel}>XP</Text>
-              <Text className={tw.xpValue}>84/100</Text>
+              <Text className={tw.xpValue}>{currentXp}/100</Text>
             </View>
             <View className={tw.xpTrack}>
-              <View className={tw.xpFill} />
+              <View className={tw.xpFill} style={{ width: xpProgress }} />
             </View>
           </View>
 
@@ -50,7 +105,10 @@ export default function ChallengeResultScreen({
           </Text>
 
           <View className="mt-8">
-            <StreakCard variant="success" />
+            <StreakCard
+              variant="success"
+              streakCount={completionStats?.streak?.currentCount}
+            />
           </View>
 
           <TouchableOpacity className={tw.resultButton} onPress={onClose} activeOpacity={0.85}>

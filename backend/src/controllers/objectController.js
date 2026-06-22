@@ -1,5 +1,5 @@
 const Object = require('../models/Object')
-const Alarm  = require('../models/Alarm')
+const Alarm = require('../models/Alarm')
 
 // GET /api/objects — Retrieve all objects for the authenticated user
 const getObjects = async (req, res) => {
@@ -22,11 +22,11 @@ const photoChallenge = async (req, res) => {
         }
 
         // Enforce min 10, max 20 images
-        if (localRef.length < 10 || localRef.length > 20) {
+        if (localRef.length < 1 || localRef.length > 20) {
             return res.status(400).json({
                 success: false,
                 error: 'IMAGE_COUNT_INVALID',
-                message: 'Must provide between 10 and 20 reference images'
+                message: 'Must provide between 1 and 20 reference images'
             })
         }
 
@@ -42,6 +42,59 @@ const photoChallenge = async (req, res) => {
         return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
     }
 }
+
+// PATCH /api/objects/:id — Update an object
+const updateObject = async (req, res) => {
+    try {
+        const { name, localRef, status } = req.body
+
+        const updateData = {}
+
+        if (name !== undefined) {
+            updateData.name = name
+        }
+
+        if (localRef !== undefined) {
+            if (!Array.isArray(localRef) || localRef.length < 1 || localRef.length > 20) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'IMAGE_COUNT_INVALID',
+                    message: 'Must provide between 1 and 20 reference images'
+                })
+            }
+
+            updateData.localRef = localRef
+        }
+
+        if (status !== undefined) {
+            updateData.status = status
+        }
+
+        const object = await Object.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            updateData,
+            {
+                new: true,
+                runValidators: true,
+            }
+        )
+
+        if (!object) {
+            return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
+        }
+
+        return res.status(200).json({ success: true, data: object })
+    } catch (err) {
+        console.error('[objectController.updateObject]', err)
+        return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
+    }
+}
+
+
+
 
 // DELETE /api/objects/:id — Delete an object
 const deleteObject = async (req, res) => {
@@ -64,4 +117,4 @@ const deleteObject = async (req, res) => {
     }
 }
 
-module.exports = { getObjects, photoChallenge, deleteObject }
+module.exports = { getObjects, photoChallenge, updateObject, deleteObject }

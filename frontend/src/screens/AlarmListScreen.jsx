@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, ScrollView, Pressable, NativeModules, ActivityIndicator, Alert } from 'react-native';
 import apiClient from '../api/client';
 import AlarmCard from '../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
 import AlarmMenu from '../components/alarm/AlarmMenu'
 import AlarmEmptyState from '../components/alarm/AlarmEmptyState'
+import { Edit, Delete } from '../components/icons'
+import { useSnackbar } from '../components/common/SnackbarProvider';
+import Button from '../components/common/Button';
+import { getStoredObjectsWithImages } from "../storage/objectStorage";
 
 const { AlarmModule } = NativeModules;
 
+const REQUIRED_OBJECTS = 5
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const toRequestCode = (id) => parseInt(id.slice(-6), 16)
+const isNetworkError = (err) => !err?.response
 
 const mapAlarmFromApi = (a) => {
     const [h24, m] = a.alarmTime.split(':').map(Number)
@@ -71,6 +78,8 @@ export default function AlarmListScreen({ navigation }) {
     const [menuAlarmId, setMenuAlarmId] = useState(null)
     const [editingAlarm, setEditingAlarm] = useState(null)
     const atLimit = alarms.length >= 3
+    const { show } = useSnackbar();
+    const [objectCount, setObjectCount] = useState(null);
 
 
     const closeSheet = () => {
@@ -98,8 +107,10 @@ export default function AlarmListScreen({ navigation }) {
             setAlarms((prev) => prev.map((a) => (a.id === id ? updated : a)))
             syncNative(updated)
             closeSheet()
+            show({ text: 'Alarm updated', tone: 'success', showClose: true })
         } catch (err) {
             console.error('[AlarmListScreen] updateAlarm error:', err?.response?.status, err?.response?.data)
+            if (isNetworkError(err)) show({ text: 'Connection failed', tone: 'error' })
         }
     }
 
@@ -119,13 +130,29 @@ export default function AlarmListScreen({ navigation }) {
                 setAlarms(mapped)
                 mapped.forEach(syncNative)
             } catch (err) {
-                console.error('[AlarmListScreen] fetchAlarms error:', err?.response?.status, err?.response?.data)
+                console.error('[AlarmListScreen] fetchAlarms error:', err?.response?.status, err?.response?.data || err?.message, err)
             } finally {
                 setLoading(false)
             }
         }
         fetchAlarms()
     }, [])
+
+    useFocusEffect(
+        useCallback(() => {
+            let active = true;
+            (async () => {
+                try {
+                    const objects = await getStoredObjectsWithImages();
+                    if (active) setObjectCount(objects.length);
+                } catch (e) {
+                    console.warn('[AlarmListScreen] object count failed:', e?.message);
+                    if (active) setObjectCount(0);
+                }
+            })();
+            return () => { active = false; }
+        }, [])
+    )
 
     // toggle
     const toggleAlarm = async (id) => {
@@ -156,10 +183,13 @@ export default function AlarmListScreen({ navigation }) {
             setAlarms((prev) => [...prev, created])
             syncNative(created)
             setShowSheet(false)
+            show({ text: 'Alarm added', tone: 'success', showClose: true })
         } catch (err) {
             const data = err?.response?.data
             console.error('[AlarmListScreen] createAlarm error:', err?.response?.status, data)
-            if (data?.error?.startsWith('MAX_')) {
+            if (isNetworkError(err)) {
+                show({ text: 'Connection failed', tone: 'error' })
+            } else if (data?.error?.startsWith('MAX_')) {
                 Alert.alert('Limit reached', data.message || 'Alarm limit reached.')
             }
         }
@@ -169,25 +199,72 @@ export default function AlarmListScreen({ navigation }) {
         setMenuAlarmId(id)
     }
 
+    // restore
+    const restoreAlarm = async (alarm) => {
+        try {
+            const res = await apiClient.post('/api/alarms', mapAlarmToApi(alarm))
+            const created = mapAlarmFromApi(res.data.data)
+            setAlarms((prev) => [...prev, created])
+            syncNative(created)
+        } catch (err) {
+            console.error('[AlarmListScreen] restoreAlarm error:', err?.response?.status, err?.response?.data)
+            if (isNetworkError(err)) show({ text: 'Connection failed', tone: 'error' })
+        }
+    }
+
     // delete
     const deleteAlarm = async (id) => {
         const target = alarms.find((a) => a.id === id)
+        if (!target) return
         try {
             await apiClient.delete(`/api/alarms/${id}`)
-            if (target) AlarmModule.cancelAlarm(toRequestCode(target.id))
+            AlarmModule.cancelAlarm(toRequestCode(target.id))
             setAlarms((prev) => prev.filter((a) => a.id !== id))
+            show({
+                text: 'Alarm Is Deleted',
+                actionLabel: 'Undo',
+                onAction: () => restoreAlarm(target),
+                duration: 6000,
+                tone: 'success',
+            })
         } catch (err) {
             console.error('[AlarmListScreen] deleteAlarm error:', err?.response?.status, err?.response?.data)
+            if (isNetworkError(err)) show({ text: 'Connection failed', tone: 'error' })
         } finally {
             setMenuAlarmId(null)
         }
     }
-
+    // Gate: must enroll enough objects before using alarms
+    if (!loading && objectCount !== null && objectCount < REQUIRED_OBJECTS) {
+        return (
+            <View className="flex-1 bg-white px-4 pt-12">
+                <Text className="text-3xl font-bold text-black mt-4 mb-4">Alarms</Text>
+                <Text className="text-xl font-bold text-black mb-3">You should prepare for mission</Text>
+                <Text className="text-black mb-6">
+                    To use the alarm feature, you must prepare for the mission.
+                    Please prepare for the mission on the object list screen.
+                </Text>
+                <Button
+                    title="Move to Objects List"
+                    onPress={() => navigation.navigate('Objects')}
+                    variant="primary"
+                    fullWidth
+                />
+                {/* Disabled FAB */}
+                <Pressable
+                    disabled
+                    className="absolute bottom-6 right-6 w-14 h-14 rounded-full items-center justify-center bg-gray-300"
+                >
+                    <Text className="text-white text-3xl leading-none">+</Text>
+                </Pressable>
+            </View>
+        );
+    }
     return (
         <View className="flex-1 bg-white px-4 pt-12">
             <Text className="text-3xl font-bold text-black mt-4 mb-4">Alarms</Text>
 
-            {loading ? (
+            {(loading || objectCount === null) ? (
                 <View className="flex-1 items-center justify-center">
                     <ActivityIndicator size="large" />
                 </View>
@@ -231,8 +308,10 @@ export default function AlarmListScreen({ navigation }) {
             <AlarmMenu
                 visible={menuAlarmId !== null}
                 onClose={() => setMenuAlarmId(null)}
-                onEdit={() => openEdit(menuAlarmId)}
-                onDelete={() => deleteAlarm(menuAlarmId)}
+                items={[
+                    { label: 'Edit', icon: <Edit width={24} height={24} />, onPress: () => openEdit(menuAlarmId) },
+                    { label: 'Delete', icon: <Delete width={24} height={24} />, onPress: () => deleteAlarm(menuAlarmId) },
+                ]}
             />
         </View>
     )

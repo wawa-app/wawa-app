@@ -2,11 +2,13 @@ const mongoose = require('mongoose')
 
 const objectSchema = new mongoose.Schema({
   // ── Ownership ─────────────────────────────────────────
-  userId:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
   // ── Object Info ───────────────────────────────────────
-  name:       { type: String, required: true, trim: true },   // e.g. "Coffee Machine"
-  localRef:   { type: [String], required: true },             // local image paths array (min 10, max 20 enforced in controller)
+  name: { type: String, required: true, trim: true },   // e.g. "Coffee Machine"
+  localRef: { type: [String], required: true },             // local image paths array (min 10, max 20 enforced in controller)
+
+  status: { type: String, default: 'Enrolled', },
 
 }, { timestamps: true })
 

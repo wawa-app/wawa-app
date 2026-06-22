@@ -14,6 +14,20 @@ const missionLogSchema = new mongoose.Schema({
   attemptAt:       { type: Date, default: Date.now }, // when mission was started
   completedAt:     { type: Date, default: null },     // when mission was completed
 
+  // UTC day on which a successful challenge was completed (YYYY-MM-DD).
+  completionDay:   { type: String, default: null },
+
 }, { timestamps: true })
+
+missionLogSchema.index(
+  { userId: 1, completionDay: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isSuccess: true,
+      completionDay: { $type: 'string' },
+    },
+  }
+)
 
 module.exports = mongoose.model('MissionLog', missionLogSchema)

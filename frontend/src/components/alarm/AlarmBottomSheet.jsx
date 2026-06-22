@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TextInput, Pressable } from 'react-native';
+import WeekDays from './WeekDays'
 
 //tentative
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
@@ -11,6 +12,42 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
     const [minute, setMinute] = useState('00')
     const [meridiem, setMeridiem] = useState('AM')
     const [selectedDays, setSelectedDays] = useState([])
+
+    const handleHourChange = (text) => {
+        const value = text.replace(/[^0-9]/g, '')
+
+        if (value === '') {
+            setHour('')
+            return
+        }
+
+        const number = parseInt(value)
+
+        if (number > 12) {
+            setHour('12')
+        } else if (number < 1) {
+            setHour('1')
+        } else {
+            setHour(value)
+        }
+    }
+
+    const handleMinuteChange = (text) => {
+        const value = text.replace(/[^0-9]/g, '')
+
+        if (value === '') {
+            setMinute('')
+            return
+        }
+
+        const number = parseInt(value)
+
+        if (number > 59) {
+            setMinute('59')
+        } else {
+            setMinute(value)
+        }
+    }
 
     useEffect(() => {
         if (!visible) return
@@ -36,10 +73,13 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
     }
 
     const handleSave = () => {
+        const safeHour = Math.min(Math.max(parseInt(hour) || 8, 1), 12)
+        const safeMinute = Math.min(Math.max(parseInt(minute) || 0, 0), 59)
+
         onSave({
             label,
-            hour: parseInt(hour) || 8,
-            minute: parseInt(minute) || 0,
+            hour: safeHour,
+            minute: safeMinute,
             meridiem,
             days: selectedDays,
             enabled: true,
@@ -71,51 +111,63 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
                     />
 
                     {/* Time */}
-                    <View className="flex-row items-center mb-6">
-                        <TextInput
-                            className="text-4xl font-bold"
-                            value={hour}
-                            onChangeText={setHour}
-                            keyboardType="numeric"
-                            maxLength={2}
-                        />
-                        <Text className="text-4xl font-bold">:</Text>
-                        <TextInput
-                            className="text-4xl font-bold"
-                            value={minute}
-                            onChangeText={setMinute}
-                            keyboardType="numeric"
-                            maxLength={2}
-                        />
-                        <View>
+                    <View className="flex-row items-start gap-3 mb-6">
+                        {/* Hour */}
+                        <View className="w-24 gap-2">
+                            <View className="h-20 bg-gray-200 items-center justify-center">
+                                <TextInput
+                                    className="w-full text-center text-5xl font-bold text-[#3D2A1C]"
+                                    style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+                                    value={hour}
+                                    onChangeText={handleHourChange}
+                                    keyboardType="numeric"
+                                    maxLength={2}
+                                />
+                            </View>
+                            <Text className="text-base font-semibold text-[#3D2A1C]">Hour</Text>
+                        </View>
+
+                        {/* colon */}
+                        <View className="h-20 justify-center gap-2">
+                            <View className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                            <View className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                        </View>
+
+                        {/* Minutes */}
+                        <View className="w-24 gap-2">
+                            <View className="h-20 bg-gray-200 items-center justify-center">
+                                <TextInput
+                                    className="w-full text-center text-5xl font-bold text-[#3D2A1C]"
+                                    style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+                                    value={minute}
+                                    onChangeText={handleMinuteChange}
+                                    keyboardType="numeric"
+                                    maxLength={2}
+                                />
+                            </View>
+                            <Text className="text-base font-semibold text-[#3D2A1C]">Minutes</Text>
+                        </View>
+                        {/* AM/PM (Period_Selector: 52x80, radius 8, border #3D2A1C, bg Uni-50) */}
+                        <View className="w-[52px] h-20 overflow-hidden">
                             <Pressable
                                 onPress={() => setMeridiem('AM')}
-                                className={`px-4 py-3 ${meridiem === 'AM' ? 'bg-black' : 'bg-gray-100'}`}
+                                className={`flex-1 items-center justify-center ${meridiem === 'AM' ? 'bg-gray-500' : 'bg-gray-50'}`}
                             >
-                                <Text className={`font-bold ${meridiem === 'AM' ? 'text-white' : 'text-gray-500'}`}>AM</Text>
+                                <Text className="text-base font-bold text-[#3D2A1C]">AM</Text>
                             </Pressable>
+                            <View className="h-px bg-[#3D2A1C]" />
                             <Pressable
                                 onPress={() => setMeridiem('PM')}
-                                className={`px-4 py-3 ${meridiem === 'PM' ? 'bg-black' : 'bg-gray-100'}`}
+                                className={`flex-1 items-center justify-center ${meridiem === 'PM' ? 'bg-gray-500' : 'bg-gray-50'}`}
                             >
-                                <Text className={`font-bold ${meridiem === 'PM' ? 'text-white' : 'text-gray-500'}`}>PM</Text>
+                                <Text className="text-base font-bold text-[#3D2A1C]">PM</Text>
                             </Pressable>
                         </View>
                     </View>
 
                     {/* Days */}
                     <Text className="text-sm font-bold text-black mb-2">Day of week</Text>
-                    <View className="flex-row justify-between">
-                        {DAYS.map((day, index) => {
-                            const dayName = DAY_NAMES[index]
-                            const isSelected = selectedDays.includes(dayName)
-                            return (
-                                <Pressable key={index} onPress={() => toggleDay(dayName)}>
-                                    <Text>{isSelected ? `[${day}]` : day}</Text>
-                                </Pressable>
-                            )
-                        })}
-                    </View>
+                    <WeekDays selected={selectedDays} onToggle={toggleDay} spread />
 
                 </View>
             </View>

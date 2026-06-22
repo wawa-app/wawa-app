@@ -1,10 +1,12 @@
 import React from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { Text, TouchableOpacity, View } from 'react-native';
 import ChallengeCaptureScreen from './challenge/ChallengeCaptureScreen';
 import ChallengeComparingScreen from './challenge/ChallengeComparingScreen';
 import ChallengeResultScreen from './challenge/ChallengeResultScreen';
 import { getStoredObjectsWithImages, pickRandomObject } from '../storage/objectStorage';
 import { compareImages } from '../utils/vision';
+import apiClient from '../api/client';
 
 export default function ChallengeScreen() {
   const [targetObject, setTargetObject] = React.useState(null);
@@ -12,6 +14,7 @@ export default function ChallengeScreen() {
   const [stage, setStage] = React.useState('capture');
   const [matched, setMatched] = React.useState(false);
   const [loadingTarget, setLoadingTarget] = React.useState(true);
+  const [completionStats, setCompletionStats] = React.useState(null);
 
   const target = targetObject?.imageUri || null;
   const targetName = targetObject?.objectName || 'Saved object';
@@ -29,9 +32,9 @@ export default function ChallengeScreen() {
     }
   }, []);
 
-  React.useEffect(() => {
+  useFocusEffect(React.useCallback(() => {
     loadTarget();
-  }, [loadTarget]);
+  }, [loadTarget]));
 
   const handleCaptured = React.useCallback(async (photoUri) => {
     console.log('Challenge photo captured:', photoUri);
@@ -43,21 +46,38 @@ export default function ChallengeScreen() {
       const result = await compareImages(target, photoUri);
       console.log('Challenge comparison result:', result);
       setMatched(result.match);
+
+      if (result.match) {
+        try {
+          const response = await apiClient.post('/api/mission/challenge-success', {
+            objectId: targetObject?.id,
+          });
+          setCompletionStats(response.data?.stats ?? null);
+        } catch (rewardError) {
+          console.warn(
+            'Challenge matched, but streak update failed:',
+            rewardError?.response?.status,
+            rewardError?.response?.data || rewardError?.message
+          );
+        }
+      }
     } catch (e) {
       console.warn('Challenge comparison failed:', e);
       setMatched(false);
     } finally {
       setStage('result');
     }
-  }, [target]);
+  }, [target, targetObject?.id]);
 
   const handleTryAgain = React.useCallback(() => {
     setCandidate(null);
+    setCompletionStats(null);
     setStage('capture');
   }, []);
 
   const handleClose = React.useCallback(() => {
     setCandidate(null);
+    setCompletionStats(null);
     setStage('capture');
     loadTarget();
   }, [loadTarget]);
@@ -104,6 +124,7 @@ export default function ChallengeScreen() {
         onClose={handleClose}
         onTryAgain={handleTryAgain}
         onEmergencyExit={handleClose}
+        completionStats={completionStats}
       />
     );
   }

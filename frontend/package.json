@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
+    "android": "react-native run-android && npm run grant:perms",
+    "grant:perms": "adb shell appops set com.wawa USE_FULL_SCREEN_INTENT allow && adb shell pm grant com.wawa android.permission.POST_NOTIFICATIONS",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",

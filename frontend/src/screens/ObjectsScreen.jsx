@@ -1,40 +1,24 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
     ScrollView,
     Pressable,
     Modal,
+    StatusBar,
 } from "react-native";
 
+import apiClient from "../api/client";
 import ObjectCard from "../components/ObjectCard.jsx";
 import CautionModal from "../components/objects/CautionModal.jsx";
 import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
-import { loadStoredObjects, saveStoredObjects } from "../storage/objectStorage";
+import { saveStoredObjects } from "../storage/objectStorage";
 
-const initialObjects = [
-    {
-        id: "1",
-        objectName: "Coffee Mug",
-        status: "Enrolled",
-        date: "2026/04/01",
-        imageUri: null,
-    },
-    {
-        id: "2",
-        objectName: "Coffee Mug",
-        status: "Updated",
-        date: "2026/04/01",
-        imageUri: null,
-    },
-    {
-        id: "3",
-        objectName: "Coffee Mug",
-        status: "Updated",
-        date: "2026/04/01",
-        imageUri: null,
-    },
-];
+import EditIcon from "../components/icons/Edit";
+import DeleteIcon from "../components/icons/Delete";
+import CheckIcon from "../components/icons/Check";
+
+const CHECK_DAYS = 30;
 
 function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
     return (
@@ -46,7 +30,7 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
         >
             <Pressable className="flex-1" onPress={onClose}>
                 <View
-                    className="absolute w-[178px] bg-[#FFF7FF] rounded-2xl shadow-lg overflow-hidden"
+                    className="absolute w-[178px] bg-white rounded-2xl shadow-lg overflow-hidden"
                     style={{
                         top: position.top,
                         left: position.left,
@@ -58,15 +42,11 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         className="h-12 px-4 flex-row items-center"
                         onPress={onEdit}
                     >
-                        <Text className="w-8 text-[18px] leading-[20px] text-[#49454F]">
-                            ✎
-                        </Text>
+                        <View className="w-8">
+                            <EditIcon size={20} color="black" />
+                        </View>
 
-                        <Text
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                            className="text-[14px] leading-[20px] tracking-[0.1px] font-geologica-medium text-[#1D1B20]"
-                        >
+                        <Text className="text-sm font-geologica-medium text-black">
                             Edit
                         </Text>
                     </Pressable>
@@ -75,15 +55,11 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         className="h-12 px-4 flex-row items-center"
                         onPress={onDelete}
                     >
-                        <Text className="w-8 text-[18px] leading-[20px] text-[#49454F]">
-                            ▮
-                        </Text>
+                        <View className="w-8">
+                            <DeleteIcon size={20} color="black" />
+                        </View>
 
-                        <Text
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                            className="text-[14px] leading-[20px] tracking-[0.1px] font-geologica-medium text-[#1D1B20]"
-                        >
+                        <Text className="text-sm font-geologica-medium text-black">
                             Delete
                         </Text>
                     </Pressable>
@@ -92,15 +68,11 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         className="h-12 px-4 flex-row items-center"
                         onPress={onMarkAsChecked}
                     >
-                        <Text className="w-8 text-[18px] leading-[20px] text-[#49454F]">
-                            ✓
-                        </Text>
+                        <View className="w-8">
+                            <CheckIcon size={20} color="black" />
+                        </View>
 
-                        <Text
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                            className="text-[14px] leading-[20px] tracking-[0.1px] font-geologica-medium text-[#1D1B20]"
-                        >
+                        <Text className="text-sm font-geologica-medium text-black">
                             Mark as checked
                         </Text>
                     </Pressable>
@@ -111,8 +83,7 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
 }
 
 export default function ObjectsScreen({ navigation, route }) {
-    const [objects, setObjects] = useState(initialObjects);
-    const [objectsLoaded, setObjectsLoaded] = useState(false);
+    const [objects, setObjects] = useState([]);
 
     const [activeMenuId, setActiveMenuId] = useState(null);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -121,49 +92,117 @@ export default function ObjectsScreen({ navigation, route }) {
     const [showAddObjectSheet, setShowAddObjectSheet] = useState(false);
     const [pendingPhotoUri, setPendingPhotoUri] = useState(null);
 
+    const [editingObject, setEditingObject] = useState(null);
+    const [editingObjectId, setEditingObjectId] = useState(null);
+
     const [snackbarMessage, setSnackbarMessage] = useState("");
 
     const cardRefs = useRef({});
 
-    const mustCheckObjects = objects.slice(0, 2);
-    const normalObjects = objects.slice(2);
+    const isOlderThanCheckLimit = useCallback((dateValue) => {
+        if (!dateValue) return false;
 
-    useEffect(() => {
-        const loadObjects = async () => {
-            try {
-                const savedObjects = await loadStoredObjects();
+        const lastUpdatedDate = new Date(dateValue);
 
-                if (savedObjects.length) {
-                    setObjects(savedObjects);
-                }
-            } catch (error) {
-                console.error("[ObjectsScreen] loadObjects error:", error);
-            } finally {
-                setObjectsLoaded(true);
-            }
-        };
+        if (Number.isNaN(lastUpdatedDate.getTime())) {
+            return false;
+        }
 
-        loadObjects();
+        const today = new Date();
+        const differenceInMs = today.getTime() - lastUpdatedDate.getTime();
+        const differenceInDays = differenceInMs / (1000 * 60 * 60 * 24);
+
+        return differenceInDays >= CHECK_DAYS;
     }, []);
 
-    useEffect(() => {
-        const saveObjects = async () => {
-            try {
-                if (!objectsLoaded) return;
+    const formatDate = useCallback((dateValue) => {
+        if (!dateValue) return "";
 
-                await saveStoredObjects(objects);
+        const date = new Date(dateValue);
+
+        if (Number.isNaN(date.getTime())) {
+            return "";
+        }
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}/${month}/${day}`;
+    }, []);
+
+    const formatBackendObject = useCallback(
+        (object) => {
+            const lastUpdatedAt = object.updatedAt || object.createdAt || "";
+
+            return {
+                id: object._id,
+                objectName: object.name,
+                status: object.status || "Enrolled",
+                date: formatDate(lastUpdatedAt),
+                imageUri: object.localRef?.[0] || null,
+                lastUpdatedAt,
+                needsCheck: isOlderThanCheckLimit(lastUpdatedAt),
+            };
+        },
+        [formatDate, isOlderThanCheckLimit]
+    );
+
+    const persistObjects = useCallback(async (nextObjects) => {
+        setObjects(nextObjects);
+        await saveStoredObjects(nextObjects);
+    }, []);
+
+    const clearEditState = useCallback(() => {
+        setEditingObject(null);
+        setEditingObjectId(null);
+
+        navigation.setParams({
+            editingObjectId: undefined,
+        });
+    }, [navigation]);
+
+    const mustCheckObjects = objects.filter((object) => object.needsCheck);
+    const normalObjects = objects.filter((object) => !object.needsCheck);
+
+    const enrolledCount = objects.length;
+    const objectsToCheckCount = mustCheckObjects.length;
+
+    useEffect(() => {
+        const fetchObjects = async () => {
+            try {
+                const response = await apiClient.get("/api/objects");
+
+                const backendObjects = response.data.data.map((object) =>
+                    formatBackendObject(object)
+                );
+
+                await persistObjects(backendObjects);
             } catch (error) {
-                console.error("[ObjectsScreen] saveObjects error:", error);
+                console.error("[ObjectsScreen] fetchObjects error:", error);
             }
         };
 
-        saveObjects();
-    }, [objects, objectsLoaded]);
+        fetchObjects();
+    }, [formatBackendObject, persistObjects]);
 
     useEffect(() => {
         const capturedPhotoUri = route?.params?.capturedPhotoUri;
+        const routeEditingObjectId = route?.params?.editingObjectId;
 
         if (!capturedPhotoUri) return;
+
+        if (routeEditingObjectId) {
+            const objectToEdit = objects.find(
+                (object) => object.id === routeEditingObjectId
+            );
+
+            setEditingObject(objectToEdit || null);
+            setEditingObjectId(routeEditingObjectId);
+        } else {
+            setEditingObject(null);
+            setEditingObjectId(null);
+        }
 
         setPendingPhotoUri(capturedPhotoUri);
         setShowAddObjectSheet(true);
@@ -172,7 +211,13 @@ export default function ObjectsScreen({ navigation, route }) {
             capturedPhotoUri: undefined,
             capturedAt: undefined,
         });
-    }, [route?.params?.capturedAt]);
+    }, [
+        navigation,
+        objects,
+        route?.params?.capturedAt,
+        route?.params?.capturedPhotoUri,
+        route?.params?.editingObjectId,
+    ]);
 
     useEffect(() => {
         if (!snackbarMessage) return;
@@ -204,35 +249,79 @@ export default function ObjectsScreen({ navigation, route }) {
     };
 
     const handleEdit = (id) => {
-        console.log("Edit object:", id);
+        const objectToEdit = objects.find((object) => object.id === id);
+
+        if (!objectToEdit) {
+            closeMenu();
+            return;
+        }
+
+        setEditingObject(objectToEdit);
+        setEditingObjectId(id);
+        setPendingPhotoUri(null);
         closeMenu();
+
+        navigation.setParams({
+            editingObjectId: id,
+        });
+
+        navigation.navigate("CameraCapture", {
+            editingObjectId: id,
+        });
     };
 
-    const handleDelete = (id) => {
-        setObjects((prevObjects) =>
-            prevObjects.filter((object) => object.id !== id)
-        );
+    const handleDelete = async (id) => {
+        try {
+            await apiClient.delete(`/api/objects/${id}`);
 
-        closeMenu();
+            const nextObjects = objects.filter((object) => object.id !== id);
+
+            await persistObjects(nextObjects);
+
+            closeMenu();
+            setSnackbarMessage("Object deleted");
+        } catch (error) {
+            console.error(
+                "[ObjectsScreen] deleteObject error:",
+                error.response?.data || error.message
+            );
+        }
     };
 
-    const handleMarkAsChecked = (id) => {
-        setObjects((prevObjects) =>
-            prevObjects.map((object) =>
-                object.id === id
-                    ? {
-                        ...object,
-                        status: "Updated",
-                        date: "2026/04/01",
-                    }
-                    : object
-            )
-        );
+    const handleMarkAsChecked = async (id) => {
+        try {
+            const response = await apiClient.patch(`/api/objects/${id}`, {
+                status: "Updated",
+            });
 
-        closeMenu();
+            const updatedObject = response.data.data;
+            const formattedObject = formatBackendObject(updatedObject);
+
+            const nextObjects = objects.map((object) =>
+                object.id === id ? formattedObject : object
+            );
+
+            await persistObjects(nextObjects);
+
+            setSnackbarMessage("Object marked as checked");
+            closeMenu();
+        } catch (error) {
+            console.error(
+                "[ObjectsScreen] markAsChecked error:",
+                error.response?.data || error.message
+            );
+        }
     };
 
     const handleAddPress = () => {
+        setEditingObject(null);
+        setEditingObjectId(null);
+        setPendingPhotoUri(null);
+
+        navigation.setParams({
+            editingObjectId: undefined,
+        });
+
         setShowCautionModal(true);
     };
 
@@ -248,89 +337,120 @@ export default function ObjectsScreen({ navigation, route }) {
     const handleCancelAddObject = () => {
         setShowAddObjectSheet(false);
         setPendingPhotoUri(null);
+        clearEditState();
     };
 
-    const handleSaveObject = ({ objectName, imageUri }) => {
-        const newObject = {
-            id: String(Date.now()),
-            objectName,
-            status: "Updated",
-            date: "2026/04/01",
-            imageUri,
-        };
+    const handleSaveObject = async ({ objectName, imageUri }) => {
+        try {
+            const objectIdToUpdate =
+                editingObject?.id || editingObjectId || route?.params?.editingObjectId;
 
-        setObjects((prevObjects) => [...prevObjects, newObject]);
+            if (objectIdToUpdate) {
+                const response = await apiClient.patch(
+                    `/api/objects/${objectIdToUpdate}`,
+                    {
+                        name: objectName,
+                        localRef: [imageUri],
+                    }
+                );
 
-        setShowAddObjectSheet(false);
-        setPendingPhotoUri(null);
-        setSnackbarMessage(`${objectName} is Added`);
+                const savedObject = response.data.data;
+                const formattedObject = formatBackendObject(savedObject);
+
+                const nextObjects = objects.map((object) =>
+                    object.id === objectIdToUpdate ? formattedObject : object
+                );
+
+                await persistObjects(nextObjects);
+
+                setShowAddObjectSheet(false);
+                setPendingPhotoUri(null);
+                clearEditState();
+                setSnackbarMessage(`${objectName} is Updated`);
+
+                return;
+            }
+
+            const response = await apiClient.post("/api/onboarding/photo-challenge", {
+                name: objectName,
+                localRef: [imageUri],
+            });
+
+            const savedObject = response.data.data;
+            const formattedObject = formatBackendObject(savedObject);
+
+            await persistObjects([...objects, formattedObject]);
+
+            setShowAddObjectSheet(false);
+            setPendingPhotoUri(null);
+            clearEditState();
+            setSnackbarMessage(`${objectName} is Added`);
+        } catch (error) {
+            console.error(
+                "[ObjectsScreen] saveObject error:",
+                error.response?.data || error.message
+            );
+        }
     };
 
     return (
         <View className="flex-1 bg-white">
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="dark-content"
+            />
+
             <ScrollView
                 className="flex-1"
                 contentContainerStyle={{ paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Top status/header mock area */}
-                <View className="h-12 bg-white px-6 flex-row items-center justify-between">
-                    <Text className="text-xs text-black">9:30</Text>
-                    <View className="w-6 h-6 rounded-full bg-[#101010]" />
-                    <Text className="text-base text-[#101010]">◢ ▮</Text>
-                </View>
-
-                {/* App header */}
-                <View className="h-[52px] bg-black items-center justify-center">
-                    <Text className="text-white text-[32px] leading-[39px] font-geologica-bold font-bold">
-                        WaWa
-                    </Text>
-                </View>
-
-                {/* Page title section */}
-                <View className="bg-white px-4 py-6">
-                    <Text className="text-[32px] leading-[39px] font-geologica-bold font-bold text-black">
+                <View className="px-4 py-6">
+                    <Text className="text-4xl font-geologica-bold font-bold text-black">
                         Objects
                     </Text>
 
                     <Text className="text-xs text-black mt-1">
-                        <Text className="font-geologica-bold font-bold">12 / 20</Text>{" "}
-                        Enrolled (2 objects you need to check)
+                        <Text className="font-geologica-bold font-bold">
+                            {enrolledCount}
+                        </Text>{" "}
+                        Enrolled ({objectsToCheckCount} objects you need to check)
                     </Text>
                 </View>
 
-                {/* Must check section */}
-                <View className="bg-[#D9D9D9] px-4 py-6">
-                    <Text className="text-base font-geologica-bold font-bold text-black">
-                        Are these objects still near you?
-                    </Text>
+                {mustCheckObjects.length > 0 && (
+                    <View className="px-4 py-6">
+                        <Text className="text-base font-geologica-bold font-bold text-black">
+                            Are these objects still near you?
+                        </Text>
 
-                    <Text className="text-xs text-black mt-2 mb-4">
-                        It looks like it's been over a month since the last update.
-                    </Text>
+                        <Text className="text-xs text-black mt-2 mb-4">
+                            It looks like it's been over a month since the last update.
+                        </Text>
 
-                    <View className="gap-4 items-center">
-                        {mustCheckObjects.map((item) => (
-                            <View
-                                key={item.id}
-                                ref={(ref) => {
-                                    cardRefs.current[item.id] = ref;
-                                }}
-                            >
-                                <ObjectCard
-                                    objectName={item.objectName}
-                                    status={item.status}
-                                    date={item.date}
-                                    imageUri={item.imageUri}
-                                    onMenuPress={() => openMenu(item.id)}
-                                />
-                            </View>
-                        ))}
+                        <View className="gap-4 items-center">
+                            {mustCheckObjects.map((item) => (
+                                <View
+                                    key={item.id}
+                                    ref={(ref) => {
+                                        cardRefs.current[item.id] = ref;
+                                    }}
+                                >
+                                    <ObjectCard
+                                        objectName={item.objectName}
+                                        status={item.status}
+                                        date={item.date}
+                                        imageUri={item.imageUri}
+                                        onMenuPress={() => openMenu(item.id)}
+                                    />
+                                </View>
+                            ))}
+                        </View>
                     </View>
-                </View>
+                )}
 
-                {/* Normal objects list */}
-                <View className="bg-white px-4 pt-6 gap-4 items-center">
+                <View className="px-4 pt-6 gap-4 items-center">
                     {normalObjects.map((item) => (
                         <View
                             key={item.id}
@@ -350,12 +470,11 @@ export default function ObjectsScreen({ navigation, route }) {
                 </View>
             </ScrollView>
 
-            {/* Floating add button */}
             <Pressable
-                className="absolute right-6 bottom-[98px] w-[58px] h-[58px] rounded-full bg-[#101010] items-center justify-center z-10"
+                className="absolute right-6 bottom-[98px] w-[58px] h-[58px] rounded-full bg-black items-center justify-center z-10"
                 onPress={handleAddPress}
             >
-                <Text className="text-white text-[32px] leading-[34px] font-light">
+                <Text className="text-white text-4xl font-light">
                     +
                 </Text>
             </Pressable>
@@ -384,8 +503,8 @@ export default function ObjectsScreen({ navigation, route }) {
             />
 
             {snackbarMessage ? (
-                <View className="absolute right-6 bottom-[150px] bg-[#302D38] px-6 py-4 rounded-sm shadow-lg">
-                    <Text className="text-white text-[14px] leading-[20px] font-geologica-regular">
+                <View className="absolute right-6 bottom-[150px] bg-black px-6 py-4 rounded-sm shadow-lg">
+                    <Text className="text-white text-sm font-geologica-regular">
                         {snackbarMessage}
                     </Text>
                 </View>
