@@ -18,7 +18,8 @@ import android.media.AudioAttributes;
 public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        int alarmId = intent.getIntExtra("alarmId", -1);
+        String alarmId = intent.getStringExtra("alarmId");   // Mongo _id (String)
+        int alarmCode = intent.getIntExtra("alarmCode", -1); // request code (int)
 
         // Wake the device
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
@@ -50,7 +51,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         PendingIntent fullPi = PendingIntent.getActivity(
-            context, alarmId, activityIntent,
+            context, alarmCode, activityIntent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         String channelId = "wawa_alarm";
@@ -71,6 +72,6 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         NotificationManager nm =
             (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.notify(alarmId, b.build());
+        nm.notify(alarmCode, b.build());
     }
 }

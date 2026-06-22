@@ -27,12 +27,15 @@ public class AlarmModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setAlarm(int alarmId, double timestamp) {
+    public void setAlarm(String alarmId, int alarmCode, double timestamp) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, AlarmReceiver.class);
+        // Mongo _id (String, for DB lookup)
         intent.putExtra("alarmId", alarmId);
+        // request code (PendingIntent uniqueness)
+        intent.putExtra("alarmCode", alarmCode);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
-            context, alarmId, intent,
+            context, alarmCode, intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         alarmManager.setAlarmClock(

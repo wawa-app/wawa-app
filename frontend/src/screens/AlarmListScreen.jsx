@@ -65,7 +65,7 @@ const syncNative = (alarm) => {
     const code = toRequestCode(alarm.id)
     if (alarm.enabled) {
         const ts = getNextTimestamp(alarm.hour, alarm.minute, alarm.meridiem, alarm.days)
-        if (ts) AlarmModule.setAlarm(code, ts)
+        if (ts) AlarmModule.setAlarm(alarm.id, code, ts)
     } else {
         AlarmModule.cancelAlarm(code)
     }

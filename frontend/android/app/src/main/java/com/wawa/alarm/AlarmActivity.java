@@ -41,7 +41,7 @@ public class AlarmActivity extends ReactActivity {
             @Override
             protected Bundle getLaunchOptions() {
                 Bundle props = new Bundle();
-                props.putInt("alarmId", getIntent().getIntExtra("alarmId", -1));
+                props.putString("alarmId", getIntent().getStringExtra("alarmId"));
                 return props;
             }
         };
