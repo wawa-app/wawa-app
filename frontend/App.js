@@ -1,3 +1,4 @@
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -20,6 +21,8 @@ import WalkthroughStep2Screen from './src/screens/walkthrough/WalkthroughStep2Sc
 import WalkthroughStep3Screen from './src/screens/walkthrough/WalkthroughStep3Screen';
 import WalkthroughAllDoneScreen from './src/screens/walkthrough/WalkthroughAllDoneScreen';
 import NavTabs from './src/navigation/NavTabs';
+import StackHeader from './src/navigation/StackHeader';
+import { SnackbarProvider } from './src/components/common/SnackbarProvider';
 
 //For testing ChallengeCaptureScreen in isolation without auth flow
 
@@ -120,8 +123,23 @@ function RootNavigator() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             {user ? (
                 <>
-                    <Stack.Screen name="Main" component={NavTabs} />
+                    <Stack.Screen
+                        name="Main"
+                        component={NavTabs}
+                        options={{ headerShown: true, header: () => <StackHeader /> }}
+                    />
+                    {/* Detail / full-screen pages go here.
+                    Build the screen (content only), then add a line below with name + title.
+                    Example:
+                    {/* <Stack.Screen name="ChangeUserName" component={ChangeUserName} options={{ headerShown: true, title: 'Change User Name' }} /> */}
                     <Stack.Screen name="CameraCapture" component={CameraCaptureScreen} />
+                    {/* Walkthrough flow — shown to first-time users after login */}
+                    <Stack.Screen name="WalkthroughIntro" component={WalkthroughIntroScreen} />
+                    <Stack.Screen name="WalkthroughStep1" component={WalkthroughStep1Screen} />
+                    <Stack.Screen name="WalkthroughStep1Camera" component={WalkthroughStep1CameraScreen} />
+                    <Stack.Screen name="WalkthroughStep2" component={WalkthroughStep2Screen} />
+                    <Stack.Screen name="WalkthroughStep3" component={WalkthroughStep3Screen} />
+                    <Stack.Screen name="WalkthroughAllDone" component={WalkthroughAllDoneScreen} />
                 </>
             ) : (
                 <>
@@ -132,12 +150,6 @@ function RootNavigator() {
                     <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
                     <Stack.Screen name="CreateNewPassword" component={CreateNewPasswordScreen} />
                     <Stack.Screen name="PasswordResetSuccess" component={PasswordResetSuccessScreen} />
-                    <Stack.Screen name="WalkthroughIntro" component={WalkthroughIntroScreen} />
-                    <Stack.Screen name="WalkthroughStep1" component={WalkthroughStep1Screen} />
-                    <Stack.Screen name="WalkthroughStep1Camera" component={WalkthroughStep1CameraScreen} />
-                    <Stack.Screen name="WalkthroughStep2" component={WalkthroughStep2Screen} />
-                    <Stack.Screen name="WalkthroughStep3" component={WalkthroughStep3Screen} />
-                    <Stack.Screen name="WalkthroughAllDone" component={WalkthroughAllDoneScreen} />
                 </>
             )}
         </Stack.Navigator>
@@ -147,11 +159,15 @@ function RootNavigator() {
 //Root component — wraps app with AuthContext and Navigation
 export default function App() {
     return (
-        <AuthProvider>
-            <NavigationContainer>
-                <RootNavigator />
-            </NavigationContainer>
-        </AuthProvider>
+        <SafeAreaProvider>
+            <AuthProvider>
+                <NavigationContainer>
+                    <SnackbarProvider>
+                        <RootNavigator />
+                    </SnackbarProvider>
+                </NavigationContainer>
+            </AuthProvider>
+        </SafeAreaProvider>
     );
 }
 

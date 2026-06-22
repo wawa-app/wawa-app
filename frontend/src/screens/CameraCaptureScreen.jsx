@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -17,11 +18,13 @@ import RNFS from "react-native-fs";
 
 export default function CameraCaptureScreen({ navigation, route }) {
     const [takingPhoto, setTakingPhoto] = useState(false);
+    const cameraRef = useRef(null);
 
     const device = useCameraDevice("back");
     const photoOutput = usePhotoOutput();
 
     const { hasPermission, requestPermission } = useCameraPermission();
+    const editingObjectId = route?.params?.editingObjectId;
 
     const savePhotoLocally = async (photoPath) => {
         const folderPath = `${RNFS.DocumentDirectoryPath}/wawa_objects`;
@@ -54,6 +57,36 @@ export default function CameraCaptureScreen({ navigation, route }) {
 
             setTakingPhoto(true);
 
+            if (Platform.OS === "android") {
+                const snapshot = await cameraRef.current?.takeSnapshot();
+                if (!snapshot) {
+                    Alert.alert("Camera Error", "Camera snapshot is not ready yet.");
+                    return;
+                }
+
+                const snapshotPath = await snapshot.saveToTemporaryFileAsync("jpg", 85);
+                const savedPhotoUri = await savePhotoLocally(snapshotPath);
+
+                console.log("[CameraCaptureScreen] saved snapshot uri:", savedPhotoUri);
+
+                if (route?.params?.fromWalkthrough) {
+                    navigation.navigate("WalkthroughStep2", {
+                        capturedPhotoUri: savedPhotoUri,
+                    });
+                } else {
+                    navigation.navigate("Main", {
+                        screen: "Objects",
+                        params: {
+                            capturedPhotoUri: savedPhotoUri,
+                            capturedAt: Date.now(),
+                            editingObjectId,
+                        },
+                    });
+                }
+
+                return;
+            }
+
             const photo = await photoOutput.capturePhotoToFile(
                 {
                     enableShutterSound: false,
@@ -83,7 +116,7 @@ export default function CameraCaptureScreen({ navigation, route }) {
             console.log("[CameraCaptureScreen] saved photo uri:", savedPhotoUri);
 
             // Return to walkthrough if called from walkthrough flow
-            if (route.params?.fromWalkthrough) {
+            if (route?.params?.fromWalkthrough) {
                 navigation.navigate("WalkthroughStep2", {
                     capturedPhotoUri: savedPhotoUri,
                 });
@@ -93,6 +126,7 @@ export default function CameraCaptureScreen({ navigation, route }) {
                     params: {
                         capturedPhotoUri: savedPhotoUri,
                         capturedAt: Date.now(),
+                        editingObjectId,
                     },
                 });
             }
@@ -153,6 +187,7 @@ export default function CameraCaptureScreen({ navigation, route }) {
     return (
         <View className="flex-1 bg-black">
             <Camera
+                ref={cameraRef}
                 style={StyleSheet.absoluteFill}
                 device={device}
                 isActive={true}
