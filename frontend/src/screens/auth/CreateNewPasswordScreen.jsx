@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import apiClient from '../api/client';
-import EyeIcon from '../components/EyeIcon';
-import Button from '../components/common/Button';
+import apiClient from '../../api/client';
+import EyeIcon from '../../components/EyeIcon';
+import Button from '../../components/common/Button';
 
 export default function CreateNewPasswordScreen({ navigation, route }) {
     const { email, otp } = route.params;

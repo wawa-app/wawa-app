@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import Button from '../components/common/Button';
+import Button from '../../components/common/Button';
 
 export default function PasswordResetSuccessScreen({ navigation }) {
     return (
