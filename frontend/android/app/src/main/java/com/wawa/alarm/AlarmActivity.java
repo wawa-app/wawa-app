@@ -37,7 +37,14 @@ public class AlarmActivity extends ReactActivity {
     protected ReactActivityDelegate createReactActivityDelegate() {
         return new DefaultReactActivityDelegate(
             this, getMainComponentName(),
-            DefaultNewArchitectureEntryPoint.getFabricEnabled());
+            DefaultNewArchitectureEntryPoint.getFabricEnabled()) {
+            @Override
+            protected Bundle getLaunchOptions() {
+                Bundle props = new Bundle();
+                props.putString("alarmId", getIntent().getStringExtra("alarmId"));
+                return props;
+            }
+        };
     }
 
     @Override

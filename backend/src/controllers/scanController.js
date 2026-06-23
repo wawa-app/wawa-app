@@ -1,10 +1,10 @@
-const Alarm          = require('../models/Alarm')
-const Object         = require('../models/Object')
+const Alarm = require('../models/Alarm')
+const Object = require('../models/Object')
 const MissionAttempt = require('../models/MissionAttempt')
-const MissionLog     = require('../models/MissionLog')
-const Streak         = require('../models/Streak')
-const Uni            = require('../models/Uni')
-const User           = require('../models/User')
+const MissionLog = require('../models/MissionLog')
+const Streak = require('../models/Streak')
+const Uni = require('../models/Uni')
+const User = require('../models/User')
 
 const EXP_PER_SUCCESS = 10 // MVP: flat EXP per mission success
 
@@ -23,7 +23,7 @@ const utcDayKey = (date) => startOfUtcDay(date).toISOString().slice(0, 10)
 
 // Determine Uni stage based on level (every 5 levels = new stage)
 const getStage = (level) => {
-    if (level <= 5)  return 'Baby Uni'
+    if (level <= 5) return 'Baby Uni'
     if (level <= 10) return 'Child Uni'
     if (level <= 15) return 'Teen Uni'
     if (level <= 20) return 'Adult Uni'
@@ -131,25 +131,26 @@ const verifyMission = async (req, res) => {
 
         // ── TODO: call OpenAI Vision API ──────────────────────────
         // const isSuccess = await callVisionAPI(imageBase64, objectId)
-        const isSuccess = true // placeholder — replace with Vision API result
+        // const isSuccess = true // placeholder — replace with Vision API result
+        const isSuccess = req.body.isSuccess ?? true // front-end Vision result; falls back to true until backend Vision lands
 
         // Create MissionAttempt record
         const attempt = await MissionAttempt.create({
-            userId:   req.user.userId,
+            userId: req.user.userId,
             alarmId,
             objectId,
-            status:   isSuccess ? 'success' : 'failed',
+            status: isSuccess ? 'success' : 'failed',
         })
 
         // Create MissionLog record
         await MissionLog.create({
-            userId:         req.user.userId,
+            userId: req.user.userId,
             objectId,
-            missionId:      attempt._id,
+            missionId: attempt._id,
             timeToComplete: timeToComplete ?? null,
             isSuccess,
-            attemptAt:      new Date(),
-            completedAt:    isSuccess ? new Date() : null,
+            attemptAt: new Date(),
+            completedAt: isSuccess ? new Date() : null,
         })
 
         if (isSuccess) {
@@ -204,19 +205,19 @@ const emergencyOverride = async (req, res) => {
 
         // Create MissionAttempt as failed
         const attempt = await MissionAttempt.create({
-            userId:   req.user.userId,
+            userId: req.user.userId,
             alarmId,
             objectId,
-            status:   'failed',
+            status: 'failed',
         })
 
         // Create MissionLog as not successful
         await MissionLog.create({
-            userId:      req.user.userId,
+            userId: req.user.userId,
             objectId,
-            missionId:   attempt._id,
-            isSuccess:   false,
-            attemptAt:   new Date(),
+            missionId: attempt._id,
+            isSuccess: false,
+            attemptAt: new Date(),
             completedAt: null,
         })
 
