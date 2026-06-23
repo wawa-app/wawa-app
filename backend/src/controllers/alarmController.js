@@ -1,4 +1,5 @@
 const Alarm = require('../models/Alarm')
+const Object = require('../models/Object')
 
 // GET /api/alarms — Retrieve all alarms for the authenticated user
 const getAlarms = async (req, res) => {
@@ -21,6 +22,16 @@ const createAlarm = async (req, res) => {
         }
 
         const userId = req.user.userId
+
+        // Require at least 10 objects before creating an alarm
+        const objectCount = await Object.countDocuments({ userId })
+        if (objectCount < 10) {
+            return res.status(400).json({
+                success: false,
+                error: 'INSUFFICIENT_OBJECTS',
+                message: 'You need at least 10 objects to set an alarm'
+            })
+        }
 
         // Enforce max 3 alarms total
         const existingAlarms = await Alarm.find({ userId })

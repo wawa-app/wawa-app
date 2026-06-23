@@ -6,14 +6,20 @@ import { ActivityIndicator, View } from 'react-native';
 import './global.css';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import LaunchScreen from './src/screens/LaunchScreen';
-import SignUpScreen from './src/screens/SignUpScreen';
-import SignInScreen from './src/screens/SignInScreen';
-import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
-import OtpVerificationScreen from './src/screens/OtpVerificationScreen';
-import CreateNewPasswordScreen from './src/screens/CreateNewPasswordScreen';
-import PasswordResetSuccessScreen from './src/screens/PasswordResetSuccessScreen';
+import LaunchScreen from './src/screens/auth/LaunchScreen';
+import SignUpScreen from './src/screens/auth/SignUpScreen';
+import SignInScreen from './src/screens/auth/SignInScreen';
+import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
+import OtpVerificationScreen from './src/screens/auth/OtpVerificationScreen';
+import CreateNewPasswordScreen from './src/screens/auth/CreateNewPasswordScreen';
+import PasswordResetSuccessScreen from './src/screens/auth/PasswordResetSuccessScreen';
 import CameraCaptureScreen from './src/screens/CameraCaptureScreen';
+import WalkthroughIntroScreen from './src/screens/walkthrough/WalkthroughIntroScreen';
+import WalkthroughStep1Screen from './src/screens/walkthrough/WalkthroughStep1Screen';
+import WalkthroughStep1CameraScreen from './src/screens/walkthrough/WalkthroughStep1CameraScreen';
+import WalkthroughStep2Screen from './src/screens/walkthrough/WalkthroughStep2Screen';
+import WalkthroughStep3Screen from './src/screens/walkthrough/WalkthroughStep3Screen';
+import WalkthroughAllDoneScreen from './src/screens/walkthrough/WalkthroughAllDoneScreen';
 import NavTabs from './src/navigation/NavTabs';
 import StackHeader from './src/navigation/StackHeader';
 import { SnackbarProvider } from './src/components/common/SnackbarProvider';
@@ -125,8 +131,15 @@ function RootNavigator() {
                     {/* Detail / full-screen pages go here.
                     Build the screen (content only), then add a line below with name + title.
                     Example:
-                    {/* <Stack.Screen name="ChangeUserName" component={ChangeUserName}　options={{ headerShown: true, title: 'Change User Name' }} /> */}
+                    {/* <Stack.Screen name="ChangeUserName" component={ChangeUserName} options={{ headerShown: true, title: 'Change User Name' }} /> */}
                     <Stack.Screen name="CameraCapture" component={CameraCaptureScreen} />
+                    {/* Walkthrough flow — shown to first-time users after login */}
+                    <Stack.Screen name="WalkthroughIntro" component={WalkthroughIntroScreen} />
+                    <Stack.Screen name="WalkthroughStep1" component={WalkthroughStep1Screen} />
+                    <Stack.Screen name="WalkthroughStep1Camera" component={WalkthroughStep1CameraScreen} />
+                    <Stack.Screen name="WalkthroughStep2" component={WalkthroughStep2Screen} />
+                    <Stack.Screen name="WalkthroughStep3" component={WalkthroughStep3Screen} />
+                    <Stack.Screen name="WalkthroughAllDone" component={WalkthroughAllDoneScreen} />
                 </>
             ) : (
                 <>

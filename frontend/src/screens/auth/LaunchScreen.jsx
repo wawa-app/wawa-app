@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image } from 'react-native';
-import Button from '../components/common/Button';
+import Button from '../../components/common/Button';
 
 export default function LaunchScreen({ navigation }) {
     return (

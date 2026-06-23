@@ -12,6 +12,9 @@ const userSchema = new mongoose.Schema({
   // streak data is managed in the Streak collection
   totalUnlocks:  { type: Number, default: 0 },         // lifetime mission success count
 
+  // ── Onboarding ────────────────────────────────────────
+  isFirstLogin: { type: Boolean, default: true },      // true until user completes first login
+
   // ── Auth ──────────────────────────────────────────────
   // refreshToken: { type: String, default: null },    // uncomment when Refresh Token is introduced
   resetPasswordOtp:     { type: String,  default: null },

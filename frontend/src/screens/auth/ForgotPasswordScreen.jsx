@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, ActivityIndicator, Alert } from 'react-native';
-import apiClient from '../api/client';
-import Button from '../components/common/Button';
+import apiClient from '../../api/client';
+import Button from '../../components/common/Button';
 
 export default function ForgotPasswordScreen({ navigation }) {
     const [email, setEmail] = useState('');

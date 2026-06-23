@@ -69,14 +69,20 @@ export default function CameraCaptureScreen({ navigation, route }) {
 
                 console.log("[CameraCaptureScreen] saved snapshot uri:", savedPhotoUri);
 
-                navigation.navigate("Main", {
-                    screen: "Objects",
-                    params: {
+                if (route?.params?.fromWalkthrough) {
+                    navigation.navigate("WalkthroughStep2", {
                         capturedPhotoUri: savedPhotoUri,
-                        capturedAt: Date.now(),
-                        editingObjectId,
-                    },
-                });
+                    });
+                } else {
+                    navigation.navigate("Main", {
+                        screen: "Objects",
+                        params: {
+                            capturedPhotoUri: savedPhotoUri,
+                            capturedAt: Date.now(),
+                            editingObjectId,
+                        },
+                    });
+                }
 
                 return;
             }
@@ -109,13 +115,21 @@ export default function CameraCaptureScreen({ navigation, route }) {
 
             console.log("[CameraCaptureScreen] saved photo uri:", savedPhotoUri);
 
-            navigation.navigate("Main", {
-                screen: "Objects",
-                params: {
+            // Return to walkthrough if called from walkthrough flow
+            if (route?.params?.fromWalkthrough) {
+                navigation.navigate("WalkthroughStep2", {
                     capturedPhotoUri: savedPhotoUri,
-                    capturedAt: Date.now(),
-                },
-            });
+                });
+            } else {
+                navigation.navigate("Main", {
+                    screen: "Objects",
+                    params: {
+                        capturedPhotoUri: savedPhotoUri,
+                        capturedAt: Date.now(),
+                        editingObjectId,
+                    },
+                });
+            }
         } catch (error) {
             console.error("[CameraCaptureScreen] take photo error:", error);
 
