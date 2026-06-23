@@ -8,6 +8,7 @@ import {
     Share as RNShare,
     StatusBar,
 } from "react-native";
+import LottieView from "lottie-react-native";
 
 import apiClient from "../api/client";
 import {
@@ -16,6 +17,10 @@ import {
     Trophy,
     Timer,
 } from "../components/icons";
+
+const uniHappy   = require("../assets/animations/UNIIII - Child happy.json");
+const uniNormal  = require("../assets/animations/UNIIII - Child normal.json");
+const uniCry     = require("../assets/animations/UNIIII - Child cry.json");
 
 const DEFAULT_STATS = {
     uni: {
@@ -95,12 +100,19 @@ function getHistorySubtitle(log) {
     return date;
 }
 
-function UniPlaceholder() {
+// mood: 'happy' | 'normal' | 'cry'
+function UniAnimation({ mood = 'normal' }) {
+    const source = mood === 'happy' ? uniHappy
+                 : mood === 'cry'   ? uniCry
+                 : uniNormal;
+
     return (
-        <View className="w-16 h-16 border-2 border-black items-center justify-center">
-            <View className="absolute w-[88px] h-[2px] bg-black rotate-45" />
-            <View className="absolute w-[88px] h-[2px] bg-black -rotate-45" />
-        </View>
+        <LottieView
+            source={source}
+            autoPlay
+            loop
+            style={{ width: 120, height: 120 }}
+        />
     );
 }
 
@@ -146,7 +158,7 @@ function UniSection({ uni }) {
                 />
             </View>
 
-            <UniPlaceholder />
+            <UniAnimation mood="normal" />
 
             <Text className="text-black text-[16px] leading-[20px] font-geologica-bold font-bold text-center">
                 {stage} (Level: {level})
