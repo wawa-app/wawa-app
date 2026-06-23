@@ -40,7 +40,7 @@ const signup = async (req, res) => {
         return res.status(201).json({
             success: true,
             token,
-            user: { id: user._id, email: user.email, username: user.username },
+            user: { id: user._id, email: user.email, username: user.username, isFirstLogin: true },
         })
     } catch (err) {
         console.error('[authController.signup]', err)
@@ -65,10 +65,18 @@ const login = async (req, res) => {
 
         const token = signToken(user._id, user.email)
 
+        // Capture isFirstLogin before updating
+        const isFirstLogin = user.isFirstLogin
+
+        // Mark as no longer first login
+        if (user.isFirstLogin) {
+            await User.findByIdAndUpdate(user._id, { isFirstLogin: false })
+        }
+
         return res.status(200).json({
         success: true,
         token,
-        user: { id: user._id, email: user.email, username: user.username },
+        user: { id: user._id, email: user.email, username: user.username, isFirstLogin },
         })
     } catch (err) {
         console.error('[authController.login]', err)
