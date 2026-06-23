@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }) => {
         await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(user);
+        return { isFirstLogin: user.isFirstLogin ?? false };
     };
 
     const signup = async (email, password) => {
@@ -63,6 +64,7 @@ export const AuthProvider = ({ children }) => {
         await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(user);
+        return { isFirstLogin: user.isFirstLogin ?? true };
     };
 
     const logout = async () => {

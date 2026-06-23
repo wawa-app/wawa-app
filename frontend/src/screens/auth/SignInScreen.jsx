@@ -18,7 +18,10 @@ export default function SignInScreen({ navigation }) {
         }
         try {
             setLoading(true);
-            await login(email, password);
+            const { isFirstLogin } = await login(email, password);
+            if (isFirstLogin) {
+                navigation.navigate('WalkthroughIntro');
+            }
         } catch (err) {
             Alert.alert('Sign In Failed', 'Invalid email or password');
         } finally {

@@ -40,7 +40,7 @@ const signup = async (req, res) => {
         return res.status(201).json({
             success: true,
             token,
-            user: { id: user._id, email: user.email, username: user.username },
+            user: { id: user._id, email: user.email, username: user.username, isFirstLogin: true },
         })
     } catch (err) {
         console.error('[authController.signup]', err)
