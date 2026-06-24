@@ -45,7 +45,9 @@ export async function identifyObject(imageUri) {
             role: 'user',
             content: [
               { type: 'text', text: 'What is the main object in this image?' },
-              { type: 'image_url', image_url: { url: imageData } },
+              // Naming only needs a quick general read of the object. The
+              // harder two-photo match below keeps high detail.
+              { type: 'image_url', image_url: { url: imageData, detail: 'low' } },
             ],
           },
         ],
@@ -88,15 +90,15 @@ export async function compareImages(targetUri, candidateUri) {
       {
         role: 'system',
         content:
-          'You compare two photos and decide whether they show the SAME physical item/object. Be lenient on lighting, angle, distance, and background. Be strict on object identity — different brands, colors, or types are NOT a match. Respond only with valid JSON: {"match": boolean, "reason": string (1 short sentence)}.',
+          'Decide whether two photos show the SAME individual physical object. The photos may be from completely different angles, sides, orientations, distances, crops, lighting, or backgrounds. Treat features hidden by the new angle or crop as unknown, not as a difference. Return match: true when the visible shape, materials, markings, colors, and distinctive details are consistent and there is no clear contradiction. Return match: false only when you can see a clear incompatible difference, such as different text/logo, a clearly different brand, color, shape, or object type. Respond only with valid JSON: {"match": boolean, "reason": string (1 short sentence)}.',
       },
       {
         role: 'user',
         content: [
           { type: 'text', text: 'Image 1 (target):' },
-          { type: 'image_url', image_url: { url: targetData } },
+          { type: 'image_url', image_url: { url: targetData, detail: 'high' } },
           { type: 'text', text: 'Image 2 (candidate):' },
-          { type: 'image_url', image_url: { url: candidateData } },
+          { type: 'image_url', image_url: { url: candidateData, detail: 'high' } },
           { type: 'text', text: 'Do these show the same item?' },
         ],
       },
