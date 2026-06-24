@@ -51,11 +51,15 @@ export async function identifyObject(imageUri) {
             ],
           },
         ],
-        max_tokens: 60,
+        // GPT-5 models use max_completion_tokens; max_tokens is rejected.
+        max_completion_tokens: 60,
       }),
     });
 
-    if (!res.ok) throw new Error(`OpenAI request failed (${res.status})`);
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`OpenAI request failed (${res.status}): ${errorText}`);
+    }
 
     const json = await res.json();
     const content = json?.choices?.[0]?.message?.content;
@@ -103,7 +107,7 @@ export async function compareImages(targetUri, candidateUri) {
         ],
       },
     ],
-    max_tokens: 200,
+    max_completion_tokens: 200,
   };
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
