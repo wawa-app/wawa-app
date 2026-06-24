@@ -14,6 +14,63 @@ async function fileToDataUri(uri) {
   return `data:${mimeFromUri(uri)};base64,${base64}`;
 }
 
+const FALLBACK_OBJECT_NAME = 'Object';
+
+/**
+ * Returns a short, human-readable name for the main object in a photo.
+ * A failed or ambiguous Vision response deliberately resolves to "Object" so
+ * the add-object form is always usable, including when the device is offline.
+ */
+export async function identifyObject(imageUri) {
+  if (!imageUri || !OPENAI_API_KEY) return FALLBACK_OBJECT_NAME;
+
+  try {
+    const imageData = await fileToDataUri(imageUri);
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Identify the single main physical object in the photo. Reply only with JSON in this exact shape: {"name":"short common object name"}. Use a concise generic noun such as "Coffee mug". If the object is unclear, cropped, or not rendered clearly, reply {"name":"Object"}.',
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'What is the main object in this image?' },
+              { type: 'image_url', image_url: { url: imageData } },
+            ],
+          },
+        ],
+        max_tokens: 60,
+      }),
+    });
+
+    if (!res.ok) throw new Error(`OpenAI request failed (${res.status})`);
+
+    const json = await res.json();
+    const content = json?.choices?.[0]?.message?.content;
+    const name = JSON.parse(content || '{}')?.name;
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+
+    // Keep unexpected model output from turning the editable input into a
+    // paragraph or an unusable label.
+    return trimmedName && trimmedName.length <= 80
+      ? trimmedName
+      : FALLBACK_OBJECT_NAME;
+  } catch (error) {
+    console.warn('[vision] object identification failed:', error?.message);
+    return FALLBACK_OBJECT_NAME;
+  }
+}
+
 export async function compareImages(targetUri, candidateUri) {
   if (!OPENAI_API_KEY) {
     throw new Error('Missing OpenAI API key. Add WAWA_OPENAI_API_KEY to .env.');

@@ -225,13 +225,9 @@ export default function CameraCaptureScreen({ navigation, route }) {
                     onPress={handleTakePhoto}
                     disabled={takingPhoto}
                 >
-                    {takingPhoto ? (
-                        <ActivityIndicator color="#000000" />
-                    ) : (
-                        <Text className="text-[28px] leading-[32px] text-black">
-                            📷
-                        </Text>
-                    )}
+                    <Text className="text-[28px] leading-[32px] text-black">
+                        📷
+                    </Text>
                 </Pressable>
             </View>
         </View>

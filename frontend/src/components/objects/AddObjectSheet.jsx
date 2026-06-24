@@ -9,6 +9,7 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { identifyObject } from "../../utils/vision";
 
 export default function AddObjectSheet({
     visible,
@@ -17,17 +18,41 @@ export default function AddObjectSheet({
     onSave,
 }) {
     const [objectName, setObjectName] = useState("");
+    const [isIdentifying, setIsIdentifying] = useState(false);
     const inputRef = useRef(null);
+    const hasUserEditedName = useRef(false);
 
     useEffect(() => {
-        if (visible) {
-            setObjectName("");
+        if (!visible) return undefined;
 
-            setTimeout(() => {
-                inputRef.current?.focus();
-            }, 300);
-        }
-    }, [visible]);
+        let isCurrent = true;
+        hasUserEditedName.current = false;
+        // This is both the immediate placeholder value and the required
+        // fallback when Vision cannot confidently identify the photo.
+        setObjectName("Object");
+        setIsIdentifying(false);
+
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 300);
+
+        if (!imageUri) return () => {
+            isCurrent = false;
+        };
+
+        setIsIdentifying(true);
+        identifyObject(imageUri).then((name) => {
+            if (isCurrent && !hasUserEditedName.current) {
+                setObjectName(name);
+            }
+        }).finally(() => {
+            if (isCurrent) setIsIdentifying(false);
+        });
+
+        return () => {
+            isCurrent = false;
+        };
+    }, [visible, imageUri]);
 
     const handleSave = () => {
         const trimmedName = objectName.trim();
@@ -93,7 +118,10 @@ export default function AddObjectSheet({
                                     ref={inputRef}
                                     className="flex-1 text-[16px] leading-[20px] font-geologica-regular text-black p-0"
                                     value={objectName}
-                                    onChangeText={setObjectName}
+                                    onChangeText={(name) => {
+                                        hasUserEditedName.current = true;
+                                        setObjectName(name);
+                                    }}
                                     placeholder="Coffee Mug"
                                     placeholderTextColor="#49454F"
                                     autoCapitalize="words"
@@ -104,7 +132,10 @@ export default function AddObjectSheet({
                                 {objectName.length > 0 && (
                                     <Pressable
                                         className="w-6 h-6 rounded-full bg-black items-center justify-center"
-                                        onPress={() => setObjectName("")}
+                                        onPress={() => {
+                                            hasUserEditedName.current = true;
+                                            setObjectName("");
+                                        }}
                                     >
                                         <Text className="text-white text-[18px] leading-[20px]">
                                             ×
@@ -112,6 +143,12 @@ export default function AddObjectSheet({
                                     </Pressable>
                                 )}
                             </View>
+
+                            {isIdentifying && (
+                                <Text className="mt-2 text-xs font-geologica-regular text-[#49454F]">
+                                    Identifying object…
+                                </Text>
+                            )}
                         </View>
                     </View>
                 </View>
