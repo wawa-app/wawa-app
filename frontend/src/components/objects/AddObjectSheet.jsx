@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Image,
     Keyboard,
+    KeyboardAvoidingView,
     Modal,
+    Platform,
     Pressable,
     Text,
     TextInput,
     View,
 } from "react-native";
+import { identifyObject } from "../../utils/vision";
 
 export default function AddObjectSheet({
     visible,
@@ -16,12 +19,45 @@ export default function AddObjectSheet({
     onSave,
 }) {
     const [objectName, setObjectName] = useState("");
+    const [isIdentifying, setIsIdentifying] = useState(false);
+    const inputRef = useRef(null);
+    const hasUserEditedName = useRef(false);
 
     useEffect(() => {
-        if (visible) {
-            setObjectName("");
+        if (!visible) return undefined;
+
+        let isCurrent = true;
+        hasUserEditedName.current = false;
+        setObjectName("Object");
+        setIsIdentifying(false);
+
+        const focusTimeout = setTimeout(() => {
+            inputRef.current?.focus();
+        }, 300);
+
+        if (!imageUri) {
+            return () => {
+                isCurrent = false;
+                clearTimeout(focusTimeout);
+            };
         }
-    }, [visible]);
+
+        setIsIdentifying(true);
+        identifyObject(imageUri)
+            .then((name) => {
+                if (isCurrent && !hasUserEditedName.current) {
+                    setObjectName(name);
+                }
+            })
+            .finally(() => {
+                if (isCurrent) setIsIdentifying(false);
+            });
+
+        return () => {
+            isCurrent = false;
+            clearTimeout(focusTimeout);
+        };
+    }, [visible, imageUri]);
 
     const handleCancel = () => {
         Keyboard.dismiss();
@@ -34,7 +70,6 @@ export default function AddObjectSheet({
         if (!trimmedName) return;
 
         Keyboard.dismiss();
-
         onSave({
             objectName: trimmedName,
             imageUri,
@@ -48,69 +83,87 @@ export default function AddObjectSheet({
             animationType="slide"
             onRequestClose={handleCancel}
         >
-            <View className="flex-1 justify-end bg-black/35">
-                <View className="h-[687px] bg-[#FFF7FF] rounded-t-[28px] overflow-hidden">
-                    <View className="h-[67px] px-6 flex-row items-center justify-between">
-                        <Pressable onPress={handleCancel}>
-                            <Text className="text-[16px] leading-[24px] font-geologica-regular text-[#49454F]">
-                                Cancel
+            <KeyboardAvoidingView
+                className="flex-1 justify-end"
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
+                <View className="flex-1 justify-end bg-black/35">
+                    <View className="h-[687px] bg-[#FFF7FF] rounded-t-[28px] overflow-hidden">
+                        <View className="h-[67px] px-6 flex-row items-center justify-between">
+                            <Pressable onPress={handleCancel}>
+                                <Text className="text-[16px] leading-[24px] font-geologica-regular text-[#49454F]">
+                                    Cancel
+                                </Text>
+                            </Pressable>
+
+                            <Text className="text-[20px] leading-[28px] font-geologica-bold text-black">
+                                Add Object
                             </Text>
-                        </Pressable>
 
-                        <Text className="text-[20px] leading-[28px] font-geologica-bold text-black">
-                            Add Object
-                        </Text>
-
-                        <Pressable onPress={handleSave}>
-                            <Text className="text-[16px] leading-[24px] font-geologica-regular text-black">
-                                Save
-                            </Text>
-                        </Pressable>
-                    </View>
-
-                    <View className="px-4">
-                        <View className="w-[328px] h-[231px] self-center bg-[#F2F2F2] overflow-hidden">
-                            {imageUri ? (
-                                <Image
-                                    source={{ uri: imageUri }}
-                                    className="w-full h-full"
-                                    resizeMode="cover"
-                                />
-                            ) : (
-                                <View className="w-full h-full bg-[#F7F7F7]" />
-                            )}
+                            <Pressable onPress={handleSave}>
+                                <Text className="text-[16px] leading-[24px] font-geologica-regular text-black">
+                                    Save
+                                </Text>
+                            </Pressable>
                         </View>
 
-                        <Text className="mt-3 mb-2 text-[16px] leading-[20px] font-geologica-bold text-black">
-                            Name*
-                        </Text>
+                        <View className="px-4">
+                            <View className="w-[328px] h-[231px] self-center bg-[#F2F2F2] overflow-hidden">
+                                {imageUri ? (
+                                    <Image
+                                        source={{ uri: imageUri }}
+                                        className="w-full h-full"
+                                        resizeMode="cover"
+                                    />
+                                ) : (
+                                    <View className="w-full h-full bg-[#F7F7F7]" />
+                                )}
+                            </View>
 
-                        <View className="w-[327px] h-10 self-center bg-white border border-black rounded-lg flex-row items-center px-3">
-                            <TextInput
-                                className="flex-1 text-[16px] leading-[20px] font-geologica-regular text-black p-0"
-                                value={objectName}
-                                onChangeText={setObjectName}
-                                placeholder=""
-                                placeholderTextColor="#49454F"
-                                autoCapitalize="words"
-                                returnKeyType="done"
-                                onSubmitEditing={handleSave}
-                            />
+                            <Text className="mt-3 mb-2 text-[16px] leading-[20px] font-geologica-bold text-black">
+                                Name*
+                            </Text>
 
-                            {objectName.length > 0 && (
-                                <Pressable
-                                    className="w-6 h-6 rounded-full bg-black items-center justify-center"
-                                    onPress={() => setObjectName("")}
-                                >
-                                    <Text className="text-white text-[18px] leading-[20px]">
-                                        ×
-                                    </Text>
-                                </Pressable>
+                            <View className="w-[327px] h-10 self-center bg-white border border-black rounded-lg flex-row items-center px-3">
+                                <TextInput
+                                    ref={inputRef}
+                                    className="flex-1 text-[16px] leading-[20px] font-geologica-regular text-black p-0"
+                                    value={objectName}
+                                    onChangeText={(name) => {
+                                        hasUserEditedName.current = true;
+                                        setObjectName(name);
+                                    }}
+                                    placeholder="Coffee Mug"
+                                    placeholderTextColor="#49454F"
+                                    autoCapitalize="words"
+                                    returnKeyType="done"
+                                    onSubmitEditing={handleSave}
+                                />
+
+                                {objectName.length > 0 && (
+                                    <Pressable
+                                        className="w-6 h-6 rounded-full bg-black items-center justify-center"
+                                        onPress={() => {
+                                            hasUserEditedName.current = true;
+                                            setObjectName("");
+                                        }}
+                                    >
+                                        <Text className="text-white text-[18px] leading-[20px]">
+                                            ×
+                                        </Text>
+                                    </Pressable>
+                                )}
+                            </View>
+
+                            {isIdentifying && (
+                                <Text className="mt-2 text-xs font-geologica-regular text-[#49454F]">
+                                    Identifying object…
+                                </Text>
                             )}
                         </View>
                     </View>
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
