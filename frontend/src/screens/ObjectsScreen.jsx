@@ -18,9 +18,16 @@ import EditIcon from "../components/icons/Edit";
 import DeleteIcon from "../components/icons/Delete";
 import CheckIcon from "../components/icons/Check";
 
-const CHECK_DAYS = 30;
+const CHECK_MINUTES = 1; // TESTING: after 1 minute, object needs check
 
-function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
+function ObjectMenu({
+    position,
+    onClose,
+    onEdit,
+    onDelete,
+    onMarkAsChecked,
+    showMarkAsChecked,
+}) {
     return (
         <Modal
             transparent
@@ -30,7 +37,7 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
         >
             <Pressable className="flex-1" onPress={onClose}>
                 <View
-                    className="absolute w-[178px] bg-white rounded-2xl shadow-lg overflow-hidden"
+                    className="absolute w-[178px] bg-Base-Surface rounded-2xl shadow-lg overflow-hidden"
                     style={{
                         top: position.top,
                         left: position.left,
@@ -43,10 +50,10 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         onPress={onEdit}
                     >
                         <View className="w-8">
-                            <EditIcon size={20} color="black" />
+                            <EditIcon size={20} color="#1A0F07" />
                         </View>
 
-                        <Text className="text-sm font-geologica-medium text-black">
+                        <Text className="text-sm font-geologica-medium text-Base-OnSurface">
                             Edit
                         </Text>
                     </Pressable>
@@ -56,26 +63,28 @@ function ObjectMenu({ position, onClose, onEdit, onDelete, onMarkAsChecked }) {
                         onPress={onDelete}
                     >
                         <View className="w-8">
-                            <DeleteIcon size={20} color="black" />
+                            <DeleteIcon size={20} color="#1A0F07" />
                         </View>
 
-                        <Text className="text-sm font-geologica-medium text-black">
+                        <Text className="text-sm font-geologica-medium text-Base-OnSurface">
                             Delete
                         </Text>
                     </Pressable>
 
-                    <Pressable
-                        className="h-12 px-4 flex-row items-center"
-                        onPress={onMarkAsChecked}
-                    >
-                        <View className="w-8">
-                            <CheckIcon size={20} color="black" />
-                        </View>
+                    {showMarkAsChecked && (
+                        <Pressable
+                            className="h-12 px-4 flex-row items-center"
+                            onPress={onMarkAsChecked}
+                        >
+                            <View className="w-8">
+                                <CheckIcon size={20} color="#1A0F07" />
+                            </View>
 
-                        <Text className="text-sm font-geologica-medium text-black">
-                            Mark as checked
-                        </Text>
-                    </Pressable>
+                            <Text className="text-sm font-geologica-medium text-Base-OnSurface">
+                                Mark as checked
+                            </Text>
+                        </Pressable>
+                    )}
                 </View>
             </Pressable>
         </Modal>
@@ -96,8 +105,17 @@ export default function ObjectsScreen({ navigation, route }) {
     const [editingObjectId, setEditingObjectId] = useState(null);
 
     const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [timeTick, setTimeTick] = useState(Date.now());
 
     const cardRefs = useRef({});
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTimeTick(Date.now());
+        }, 10000);
+
+        return () => clearInterval(timer);
+    }, []);
 
     const isOlderThanCheckLimit = useCallback((dateValue) => {
         if (!dateValue) return false;
@@ -108,11 +126,10 @@ export default function ObjectsScreen({ navigation, route }) {
             return false;
         }
 
-        const today = new Date();
-        const differenceInMs = today.getTime() - lastUpdatedDate.getTime();
-        const differenceInDays = differenceInMs / (1000 * 60 * 60 * 24);
+        const differenceInMs = Date.now() - lastUpdatedDate.getTime();
+        const differenceInMinutes = differenceInMs / (1000 * 60);
 
-        return differenceInDays >= CHECK_DAYS;
+        return differenceInMinutes >= CHECK_MINUTES;
     }, []);
 
     const formatDate = useCallback((dateValue) => {
@@ -142,10 +159,9 @@ export default function ObjectsScreen({ navigation, route }) {
                 date: formatDate(lastUpdatedAt),
                 imageUri: object.localRef?.[0] || null,
                 lastUpdatedAt,
-                needsCheck: isOlderThanCheckLimit(lastUpdatedAt),
             };
         },
-        [formatDate, isOlderThanCheckLimit]
+        [formatDate]
     );
 
     const persistObjects = useCallback(async (nextObjects) => {
@@ -162,8 +178,22 @@ export default function ObjectsScreen({ navigation, route }) {
         });
     }, [navigation]);
 
-    const mustCheckObjects = objects.filter((object) => object.needsCheck);
-    const normalObjects = objects.filter((object) => !object.needsCheck);
+    const objectsWithCheckStatus = objects.map((object) => ({
+        ...object,
+        needsCheck: isOlderThanCheckLimit(object.lastUpdatedAt),
+    }));
+
+    const mustCheckObjects = objectsWithCheckStatus.filter(
+        (object) => object.needsCheck
+    );
+    const normalObjects = objectsWithCheckStatus.filter(
+        (object) => !object.needsCheck
+    );
+
+    const activeMenuObject = objectsWithCheckStatus.find(
+        (object) => object.id === activeMenuId
+    );
+    const activeMenuNeedsCheck = Boolean(activeMenuObject?.needsCheck);
 
     const enrolledCount = objects.length;
     const objectsToCheckCount = mustCheckObjects.length;
@@ -394,7 +424,7 @@ export default function ObjectsScreen({ navigation, route }) {
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-Base-Background">
             <StatusBar
                 translucent
                 backgroundColor="transparent"
@@ -407,25 +437,32 @@ export default function ObjectsScreen({ navigation, route }) {
                 showsVerticalScrollIndicator={false}
             >
                 <View className="px-4 py-6">
-                    <Text className="text-4xl font-geologica-bold font-bold text-black">
+                    <Text className="text-4xl font-geologica-bold font-bold text-Base-OnBackground">
                         Objects
                     </Text>
 
-                    <Text className="text-xs text-black mt-1">
-                        <Text className="font-geologica-bold font-bold">
-                            {enrolledCount}
+                    <Text className="text-xs text-Base-OnBackground mt-1">
+                        <Text className="font-geologica-bold font-bold text-State-Info">
+                            {enrolledCount} / 20
                         </Text>{" "}
-                        Enrolled ({objectsToCheckCount} objects you need to check)
+                        Enrolled{" "}
+                        <Text className="font-geologica-bold font-bold text-State-Error">
+                            ({objectsToCheckCount}
+                        </Text>
+                        <Text className="text-Base-OnBackground">
+                            {" "}
+                            objects you need to check)
+                        </Text>
                     </Text>
                 </View>
 
                 {mustCheckObjects.length > 0 && (
-                    <View className="px-4 py-6">
-                        <Text className="text-base font-geologica-bold font-bold text-black">
+                    <View className="bg-Sunlight-400 px-4 py-6">
+                        <Text className="text-base font-geologica-bold font-bold text-Base-OnBackground">
                             Are these objects still near you?
                         </Text>
 
-                        <Text className="text-xs text-black mt-2 mb-4">
+                        <Text className="text-xs font-geologica-bold text-Base-OnBackground mt-2 mb-4">
                             It looks like it's been over a month since the last update.
                         </Text>
 
@@ -442,6 +479,7 @@ export default function ObjectsScreen({ navigation, route }) {
                                         status={item.status}
                                         date={item.date}
                                         imageUri={item.imageUri}
+                                        needsCheck={item.needsCheck}
                                         onMenuPress={() => openMenu(item.id)}
                                     />
                                 </View>
@@ -463,6 +501,7 @@ export default function ObjectsScreen({ navigation, route }) {
                                 status={item.status}
                                 date={item.date}
                                 imageUri={item.imageUri}
+                                needsCheck={item.needsCheck}
                                 onMenuPress={() => openMenu(item.id)}
                             />
                         </View>
@@ -471,10 +510,10 @@ export default function ObjectsScreen({ navigation, route }) {
             </ScrollView>
 
             <Pressable
-                className="absolute right-6 bottom-[98px] w-[58px] h-[58px] rounded-full bg-black items-center justify-center z-10"
+                className="absolute right-6 bottom-[98px] w-[58px] h-[58px] rounded-full bg-Brand-Primary items-center justify-center z-10"
                 onPress={handleAddPress}
             >
-                <Text className="text-white text-4xl font-light">
+                <Text className="text-Base-OnPrimary text-4xl font-light">
                     +
                 </Text>
             </Pressable>
@@ -486,6 +525,7 @@ export default function ObjectsScreen({ navigation, route }) {
                     onEdit={() => handleEdit(activeMenuId)}
                     onDelete={() => handleDelete(activeMenuId)}
                     onMarkAsChecked={() => handleMarkAsChecked(activeMenuId)}
+                    showMarkAsChecked={activeMenuNeedsCheck}
                 />
             )}
 
@@ -503,8 +543,8 @@ export default function ObjectsScreen({ navigation, route }) {
             />
 
             {snackbarMessage ? (
-                <View className="absolute right-6 bottom-[150px] bg-black px-6 py-4 rounded-sm shadow-lg">
-                    <Text className="text-white text-sm font-geologica-regular">
+                <View className="absolute right-6 bottom-[150px] bg-Base-OnBackground px-6 py-4 rounded-sm shadow-lg">
+                    <Text className="text-Base-Background text-sm font-geologica-regular">
                         {snackbarMessage}
                     </Text>
                 </View>
