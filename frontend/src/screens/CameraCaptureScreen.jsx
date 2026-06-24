@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import {
     Camera,
+    CommonResolutions,
     useCameraDevice,
     useCameraPermission,
     usePhotoOutput,
@@ -21,7 +22,15 @@ export default function CameraCaptureScreen({ navigation, route }) {
     const cameraRef = useRef(null);
 
     const device = useCameraDevice("back");
-    const photoOutput = usePhotoOutput();
+    const photoOutput = usePhotoOutput({
+        // Full 4K photos are unnecessary for object recognition and make the
+        // local copy, Base64 conversion, and upload markedly slower.
+        targetResolution: CommonResolutions.FHD_4_3,
+        quality: 0.78,
+        qualityPrioritization: device?.supportsSpeedQualityPrioritization
+            ? "speed"
+            : "balanced",
+    });
 
     const { hasPermission, requestPermission } = useCameraPermission();
     const editingObjectId = route?.params?.editingObjectId;
@@ -64,7 +73,7 @@ export default function CameraCaptureScreen({ navigation, route }) {
                     return;
                 }
 
-                const snapshotPath = await snapshot.saveToTemporaryFileAsync("jpg", 85);
+                const snapshotPath = await snapshot.saveToTemporaryFileAsync("jpg", 78);
                 const savedPhotoUri = await savePhotoLocally(snapshotPath);
 
                 console.log("[CameraCaptureScreen] saved snapshot uri:", savedPhotoUri);
