@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
     Image,
+    Keyboard,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -27,38 +28,48 @@ export default function AddObjectSheet({
 
         let isCurrent = true;
         hasUserEditedName.current = false;
-        // This is both the immediate placeholder value and the required
-        // fallback when Vision cannot confidently identify the photo.
         setObjectName("Object");
         setIsIdentifying(false);
 
-        setTimeout(() => {
+        const focusTimeout = setTimeout(() => {
             inputRef.current?.focus();
         }, 300);
 
-        if (!imageUri) return () => {
-            isCurrent = false;
-        };
+        if (!imageUri) {
+            return () => {
+                isCurrent = false;
+                clearTimeout(focusTimeout);
+            };
+        }
 
         setIsIdentifying(true);
-        identifyObject(imageUri).then((name) => {
-            if (isCurrent && !hasUserEditedName.current) {
-                setObjectName(name);
-            }
-        }).finally(() => {
-            if (isCurrent) setIsIdentifying(false);
-        });
+        identifyObject(imageUri)
+            .then((name) => {
+                if (isCurrent && !hasUserEditedName.current) {
+                    setObjectName(name);
+                }
+            })
+            .finally(() => {
+                if (isCurrent) setIsIdentifying(false);
+            });
 
         return () => {
             isCurrent = false;
+            clearTimeout(focusTimeout);
         };
     }, [visible, imageUri]);
+
+    const handleCancel = () => {
+        Keyboard.dismiss();
+        onCancel();
+    };
 
     const handleSave = () => {
         const trimmedName = objectName.trim();
 
         if (!trimmedName) return;
 
+        Keyboard.dismiss();
         onSave({
             objectName: trimmedName,
             imageUri,
@@ -70,7 +81,7 @@ export default function AddObjectSheet({
             transparent
             visible={visible}
             animationType="slide"
-            onRequestClose={onCancel}
+            onRequestClose={handleCancel}
         >
             <KeyboardAvoidingView
                 className="flex-1 justify-end"
@@ -79,7 +90,7 @@ export default function AddObjectSheet({
                 <View className="flex-1 justify-end bg-black/35">
                     <View className="h-[687px] bg-[#FFF7FF] rounded-t-[28px] overflow-hidden">
                         <View className="h-[67px] px-6 flex-row items-center justify-between">
-                            <Pressable onPress={onCancel}>
+                            <Pressable onPress={handleCancel}>
                                 <Text className="text-[16px] leading-[24px] font-geologica-regular text-[#49454F]">
                                     Cancel
                                 </Text>
