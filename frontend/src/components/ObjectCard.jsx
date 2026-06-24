@@ -9,7 +9,7 @@ import {
 import CalendarIcon from "./icons/Calendar";
 import UpdateIcon from "./icons/Update";
 
-const ObjectCard = ({
+const ObjectCardContent = ({
     objectName,
     date,
     status,
@@ -19,8 +19,8 @@ const ObjectCard = ({
     const isEnrolled = status === "Enrolled";
 
     return (
-        <View className="w-[328px] h-[120px] p-4 rounded-lg border border-[#191919] bg-[#C1C1C1] flex-row items-center relative">
-            <View className="w-[88px] h-[88px] rounded-2xl overflow-hidden bg-[#F2F2F2]">
+        <>
+            <View className="w-[88px] h-[88px] rounded-lg overflow-hidden bg-Neutral-Gray-200">
                 {imageUri ? (
                     <Image
                         source={{ uri: imageUri }}
@@ -28,25 +28,25 @@ const ObjectCard = ({
                         resizeMode="cover"
                     />
                 ) : (
-                    <View className="w-full h-full bg-[#F7F7F7]" />
+                    <View className="w-full h-full bg-Neutral-Gray-200" />
                 )}
             </View>
 
             <View className="flex-1 ml-4">
-                <Text className="text-[18px] leading-[24px] font-geologica-bold font-semibold text-black mb-2">
+                <Text className="text-[18px] leading-[24px] font-geologica text-Base-OnSurface mb-2">
                     {objectName}
                 </Text>
 
                 <View className="flex-row items-center">
                     <View className="w-5 h-5 items-center justify-center mr-2">
                         {isEnrolled ? (
-                            <CalendarIcon size={16} color="#4A4A4A" />
+                            <CalendarIcon size={16} color="#1A0F07" />
                         ) : (
-                            <UpdateIcon size={16} color="#4A4A4A" />
+                            <UpdateIcon size={16} color="#1A0F07" />
                         )}
                     </View>
 
-                    <Text className="text-xs text-[#4A4A4A]">
+                    <Text className="text-xs font-geologica-bold text-Base-OnSurface">
                         {status} {date}
                     </Text>
                 </View>
@@ -56,10 +56,45 @@ const ObjectCard = ({
                 className="absolute top-3 right-3"
                 onPress={onMenuPress}
             >
-                <Text className="text-2xl text-black leading-6">
+                <Text className="text-2xl text-Base-OnSurface leading-6">
                     ⋮
                 </Text>
             </TouchableOpacity>
+        </>
+    );
+};
+
+const ObjectCard = ({
+    objectName,
+    date,
+    status,
+    imageUri,
+    onMenuPress,
+    needsCheck = false,
+}) => {
+    if (needsCheck) {
+        return (
+            <View className="w-[328px] h-[120px] p-4 rounded-2xl bg-State-Warn flex-row items-center relative">
+                <ObjectCardContent
+                    objectName={objectName}
+                    date={date}
+                    status={status}
+                    imageUri={imageUri}
+                    onMenuPress={onMenuPress}
+                />
+            </View>
+        );
+    }
+
+    return (
+        <View className="w-[328px] h-[120px] p-4 rounded-2xl border border-Base-OnBackground bg-Base-Surface flex-row items-center relative">
+            <ObjectCardContent
+                objectName={objectName}
+                date={date}
+                status={status}
+                imageUri={imageUri}
+                onMenuPress={onMenuPress}
+            />
         </View>
     );
 };
