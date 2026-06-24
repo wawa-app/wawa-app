@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
     View,
     Text,
@@ -17,10 +18,11 @@ import {
     Trophy,
     Timer,
 } from "../components/icons";
+import { useScroll } from "../context/ScrollContext";
 
-const uniHappy   = require("../assets/animations/UNIIII - Child happy.json");
-const uniNormal  = require("../assets/animations/UNIIII - Child normal.json");
-const uniCry     = require("../assets/animations/UNIIII - Child cry.json");
+const uniHappy = require("../assets/animations/UNIIII - Child happy.json");
+const uniNormal = require("../assets/animations/UNIIII - Child normal.json");
+const uniCry = require("../assets/animations/UNIIII - Child cry.json");
 
 const DEFAULT_STATS = {
     uni: {
@@ -103,8 +105,8 @@ function getHistorySubtitle(log) {
 // mood: 'happy' | 'normal' | 'cry'
 function UniAnimation({ mood = 'normal' }) {
     const source = mood === 'happy' ? uniHappy
-                 : mood === 'cry'   ? uniCry
-                 : uniNormal;
+        : mood === 'cry' ? uniCry
+            : uniNormal;
 
     return (
         <LottieView
@@ -279,11 +281,15 @@ function MissionHistorySection({ logs }) {
 }
 
 export default function TrackingScreen() {
+    const { setScrolled } = useScroll()
     const [stats, setStats] = useState(DEFAULT_STATS);
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
+    const handleScroll = (e) => {
+        setScrolled(e.nativeEvent.contentOffset.y > 0)
+    }
 
     const fetchTrackingData = async () => {
         try {
@@ -317,6 +323,12 @@ export default function TrackingScreen() {
             setLoading(false);
         }
     };
+
+    useFocusEffect(
+        useCallback(() => {
+            return () => setScrolled(false)
+        }, [setScrolled])
+    )
 
     useEffect(() => {
         fetchTrackingData();
@@ -392,12 +404,10 @@ export default function TrackingScreen() {
                 barStyle="dark-content"
             />
 
-
-
-
-
             <ScrollView
                 className="flex-1"
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
                 contentContainerStyle={{
                     paddingHorizontal: 24,
                     paddingTop: 32,
