@@ -12,10 +12,10 @@ import Close from '../icons/Close';
 
 const SnackbarContext = createContext(null);
 
-const TONE_COLOR = {
-    neutral: '#404040', // gray ← default
-    success: '#404040', // green
-    error: '#404040',   // red
+const TONE_BG = {
+    neutral: 'bg-[#404040]',
+    success: 'bg-State-Success',
+    error: 'bg-State-Error',
 };
 
 export function useSnackbar() {
@@ -67,7 +67,7 @@ export function SnackbarProvider({ children }) {
 
 function SnackbarView({ text, actionLabel, onAction, showClose, tone, onClose }) {
     const wrapAction = !!actionLabel && actionLabel.length > 10;
-    const bgColor = TONE_COLOR[tone] ?? TONE_COLOR.neutral;
+    const bgClass = TONE_BG[tone] ?? TONE_BG.neutral;
 
     const progress = useRef(new Animated.Value(0)).current;
     useEffect(() => {
@@ -90,13 +90,15 @@ function SnackbarView({ text, actionLabel, onAction, showClose, tone, onClose })
 
     const ActionBtn = actionLabel ? (
         <Pressable onPress={handleAction} hitSlop={8}>
-            <Text className="text-white font-semibold">{actionLabel}</Text>
+            <Text className="text-Base-Surface text-label-large font-geologica-medium">
+                {actionLabel}
+            </Text>
         </Pressable>
     ) : null;
 
     const CloseBtn = showClose ? (
         <Pressable onPress={onClose} hitSlop={8} className="ml-4">
-            <Close width={20} height={20} color="#fff" />
+            <Close width={20} height={20} color="#FFF8E1" />
         </Pressable>
     ) : null;
 
@@ -107,16 +109,31 @@ function SnackbarView({ text, actionLabel, onAction, showClose, tone, onClose })
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                bottom: 160,
+                bottom: 200,
                 paddingHorizontal: 16,
+                alignItems: 'center',
                 opacity: progress,
                 transform: [{ translateY }],
             }}
         >
-            <View className="px-4 py-3" style={{ backgroundColor: bgColor }}>
+            <View
+                className={`px-4 py-3 ${bgClass}`}
+                style={{
+                    alignSelf: 'stretch',
+                    minHeight: 48,
+                    borderRadius: 4,
+                    shadowColor: '#1A0F07',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.12,
+                    shadowRadius: 8,
+                    elevation: 4,
+                }}
+            >
                 {wrapAction ? (
                     <View>
-                        <Text className="text-white text-base">{text}</Text>
+                        <Text className="text-Base-Surface text-body-medium font-geologica">
+                            {text}
+                        </Text>
                         <View className="mt-3 flex-row items-center justify-end">
                             {ActionBtn}
                             {CloseBtn}
@@ -124,7 +141,9 @@ function SnackbarView({ text, actionLabel, onAction, showClose, tone, onClose })
                     </View>
                 ) : (
                     <View className="flex-row items-center">
-                        <Text className="flex-1 text-white text-base">{text}</Text>
+                        <Text className="flex-1 text-Base-Surface text-body-medium font-geologica">
+                            {text}
+                        </Text>
                         {actionLabel ? <View className="ml-4">{ActionBtn}</View> : null}
                         {CloseBtn}
                     </View>
