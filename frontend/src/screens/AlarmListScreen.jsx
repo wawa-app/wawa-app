@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, ScrollView, Pressable, NativeModules, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, NativeModules, ActivityIndicator, Alert } from 'react-native';
 import apiClient from '../api/client';
 import AlarmCard from '../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
@@ -261,8 +261,8 @@ export default function AlarmListScreen({ navigation }) {
         );
     }
     return (
-        <View className="flex-1 bg-white px-4 pt-12">
-            <Text className="text-3xl font-bold text-black mt-4 mb-4">Alarms</Text>
+        <View className="flex-1 bg-Base-Background px-4 pt-12">
+            <Text className="text-headline-large font-geologica-bold text-Base-OnBackground">Alarms</Text>
 
             {(loading || objectCount === null) ? (
                 <View className="flex-1 items-center justify-center">
@@ -271,7 +271,7 @@ export default function AlarmListScreen({ navigation }) {
             ) : alarms.length === 0 ? (
                 <AlarmEmptyState />
             ) : (
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <View className="gap-Space-spacing-lg mt-Space-spacing-xl">
                     {alarms.map((alarm) => (
                         <AlarmCard
                             key={alarm.id}
@@ -280,7 +280,7 @@ export default function AlarmListScreen({ navigation }) {
                             onMenu={() => openMenu(alarm.id)}
                         />
                     ))}
-                </ScrollView>
+                </View>
             )}
 
             {/* FAB */}
