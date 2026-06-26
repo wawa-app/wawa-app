@@ -70,6 +70,12 @@ const syncNative = (alarm) => {
     }
 }
 
+const toMinutes = (alarm) => {
+    let h24 = alarm.hour % 12
+    if (alarm.meridiem === 'PM') h24 += 12
+    return h24 * 60 + alarm.minute
+}
+
 export default function AlarmListScreen({ navigation }) {
     const [alarms, setAlarms] = useState([])
     const [loading, setLoading] = useState(true)
@@ -260,7 +266,7 @@ export default function AlarmListScreen({ navigation }) {
                 <AlarmEmptyState />
             ) : (
                 <View className="gap-Space-spacing-lg mt-Space-spacing-xl">
-                    {alarms.map((alarm) => (
+                    {[...alarms].sort((a, b) => toMinutes(a) - toMinutes(b)).map((alarm) => (
                         <AlarmCard
                             key={alarm.id}
                             alarm={alarm}

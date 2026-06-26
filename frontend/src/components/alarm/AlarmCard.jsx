@@ -69,7 +69,7 @@ export default function AlarmCard({ alarm, onToggle, onMenu, onEdit, onDelete })
             {/* Week, toggle */}
             <View className="flex-row justify-between items-center w-full mt-auto">
                 <Text className="text-label-large font-geologica-medium text-Base-OnSurface">
-                    {days.join(', ')}
+                    {days.length === 7 ? 'Everyday' : days.join(', ')}
                 </Text>
                 <Toggle value={enabled} onValueChange={onToggle} />
             </View>
