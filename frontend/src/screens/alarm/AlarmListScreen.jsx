@@ -4,9 +4,7 @@ import { View, Text, Pressable, NativeModules, ActivityIndicator, Alert } from '
 import apiClient from '../../api/client';
 import AlarmCard from '../../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../../components/alarm/AlarmBottomSheet'
-import AlarmMenu from '../../components/alarm/AlarmMenu'
 import AlarmEmptyState from '../../components/alarm/AlarmEmptyState'
-import { Edit, Delete } from '../../components/icons'
 import { useSnackbar } from '../../components/common/SnackbarProvider';
 import Button from '../../components/common/Button';
 import Fab from '../../components/common/Fab';
@@ -76,7 +74,6 @@ export default function AlarmListScreen({ navigation }) {
     const [alarms, setAlarms] = useState([])
     const [loading, setLoading] = useState(true)
     const [showSheet, setShowSheet] = useState(false)
-    const [menuAlarmId, setMenuAlarmId] = useState(null)
     const [editingAlarm, setEditingAlarm] = useState(null)
     const atLimit = alarms.length >= 3
     const { show } = useSnackbar();
@@ -92,7 +89,6 @@ export default function AlarmListScreen({ navigation }) {
         const target = alarms.find((a) => a.id === id)
         if (!target) return
         setEditingAlarm(target)
-        setMenuAlarmId(null)
         setShowSheet(true)
     }
 
@@ -196,10 +192,6 @@ export default function AlarmListScreen({ navigation }) {
         }
     }
 
-    const openMenu = (id) => {
-        setMenuAlarmId(id)
-    }
-
     // restore
     const restoreAlarm = async (alarm) => {
         try {
@@ -231,8 +223,6 @@ export default function AlarmListScreen({ navigation }) {
         } catch (err) {
             console.error('[AlarmListScreen] deleteAlarm error:', err?.response?.status, err?.response?.data)
             if (isNetworkError(err)) show({ text: 'Connection failed', tone: 'error' })
-        } finally {
-            setMenuAlarmId(null)
         }
     }
     // Gate: must enroll enough objects before using alarms
@@ -275,7 +265,8 @@ export default function AlarmListScreen({ navigation }) {
                             key={alarm.id}
                             alarm={alarm}
                             onToggle={() => toggleAlarm(alarm.id)}
-                            onMenu={() => openMenu(alarm.id)}
+                            onEdit={() => openEdit(alarm.id)}
+                            onDelete={() => deleteAlarm(alarm.id)}
                         />
                     ))}
                 </View>
@@ -300,16 +291,6 @@ export default function AlarmListScreen({ navigation }) {
                 onClose={closeSheet}
                 onSave={handleSheetSave}
                 initialValue={editingAlarm}
-            />
-
-            {/* menu*/}
-            <AlarmMenu
-                visible={menuAlarmId !== null}
-                onClose={() => setMenuAlarmId(null)}
-                items={[
-                    { label: 'Edit', icon: <Edit width={24} height={24} />, onPress: () => openEdit(menuAlarmId) },
-                    { label: 'Delete', icon: <Delete width={24} height={24} />, onPress: () => deleteAlarm(menuAlarmId) },
-                ]}
             />
         </View>
     )

@@ -1,10 +1,15 @@
-import React from 'react';
-import { View, Text, Pressable } from 'react-native';
-import Menu from '../icons/Menu'
+import React, { useState } from 'react'; import { View, Text, Pressable } from 'react-native';
+import { Menu } from 'react-native-paper';
+import MenuIcon from '../icons/Menu';
+import { Edit, Delete } from '../icons';
 import Toggle from '../common/Toggle'
 
-export default function AlarmCard({ alarm, onToggle, onMenu }) {
+export default function AlarmCard({ alarm, onToggle, onMenu, onEdit, onDelete }) {
     const { label, hour, minute, meridiem, days, enabled } = alarm
+    const [menuVisible, setMenuVisible] = useState(false)
+
+    const openMenu = () => setMenuVisible(true)
+    const closeMenu = () => setMenuVisible(false)
 
     return (
         <View className={`w-full p-4 rounded-Radius-radius-sm ${enabled ? 'bg-Base-Surface' : 'bg-Neutral-Gray-300'}`}
@@ -14,9 +19,41 @@ export default function AlarmCard({ alarm, onToggle, onMenu }) {
                 <Text className="text-label-large font-geologica-medium text-Base-OnSurface">
                     {label || 'Label'}
                 </Text>
-                <Pressable onPress={onMenu} hitSlop={8} className="w-Size-size-icon-md h-Size-size-icon-md items-center justify-center">
-                    <Menu width={24} height={24} />
-                </Pressable>
+
+                <Menu
+                    visible={menuVisible}
+                    onDismiss={closeMenu}
+                    anchor={
+                        <Pressable onPress={openMenu} hitSlop={8} className="w-Size-size-icon-md h-Size-size-icon-md items-center justify-center">
+                            <MenuIcon width={24} height={24} />
+                        </Pressable>
+                    }
+                    anchorPosition="bottom"
+                    contentStyle={{
+                        backgroundColor: '#FFF8E1',
+                        borderRadius: 16,
+                        paddingVertical: 10,
+                        width: 127,
+                        marginRight: 0
+                    }}
+                >
+                    <Menu.Item
+                        onPress={() => { closeMenu(); onEdit(); }}
+                        title="Edit"
+                        leadingIcon={() => <Edit width={20} height={20} color="#1A0F07" />}
+                        titleStyle={{ fontFamily: 'Geologica-Medium', fontSize: 14, lineHeight: 20, color: '#1A0F07' }}
+                        style={{ height: 44 }}     // Figma: wrapper height
+                        dense
+                    />
+                    <Menu.Item
+                        onPress={() => { closeMenu(); onDelete(); }}
+                        title="Delete"
+                        leadingIcon={() => <Delete width={20} height={20} color="#1A0F07" />}
+                        titleStyle={{ fontFamily: 'Geologica-Medium', fontSize: 14, lineHeight: 20, color: '#1A0F07' }}
+                        style={{ height: 44 }}
+                        dense
+                    />
+                </Menu>
             </View>
 
             {/* Time */}
