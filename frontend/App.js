@@ -23,6 +23,7 @@ import WalkthroughAllDoneScreen from './src/screens/walkthrough/WalkthroughAllDo
 import NavTabs from './src/navigation/NavTabs';
 import StackHeader from './src/navigation/StackHeader';
 import { SnackbarProvider } from './src/components/common/SnackbarProvider';
+import { ScrollProvider } from './src/context/ScrollContext';
 
 //For testing ChallengeCaptureScreen in isolation without auth flow
 
@@ -163,7 +164,9 @@ export default function App() {
             <AuthProvider>
                 <NavigationContainer>
                     <SnackbarProvider>
-                        <RootNavigator />
+                        <ScrollProvider>
+                            <RootNavigator />
+                        </ScrollProvider>
                     </SnackbarProvider>
                 </NavigationContainer>
             </AuthProvider>

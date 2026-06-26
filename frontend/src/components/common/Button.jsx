@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Pressable, Text } from 'react-native'
 
 export default function Button({
@@ -5,45 +6,56 @@ export default function Button({
     onPress,
     variant = 'primary',
     size = 'medium',
+    shape = 'square',
     disabled = false,
-    fullWidth = false,
+    fullWidth = true,
 }) {
+    const [pressed, setPressed] = useState(false)
+
     const variants = {
-        primary: 'bg-black',
-        secondary: 'bg-gray-300',
-        outline: 'border border-gray-400 bg-transparent',
+        primary: { base: 'bg-Brand-Primary', pressed: 'bg-Uni-700', text: 'text-Base-OnPrimary' },
+        secondary: { base: 'bg-Brand-Secondary', pressed: 'bg-Sunlight-800', text: 'text-Base-OnSecondary' },
+        filled: { base: 'bg-Brand-Primary', pressed: 'bg-Uni-700', text: 'text-Base-OnPrimary' },
+        tonal: { base: 'bg-Brand-Secondary', pressed: 'bg-Sunlight-800', text: 'text-Base-OnSecondary' },
+        outline: { base: 'border border-Neutral-Gray-400 bg-transparent', pressed: 'border border-Brand-Primary bg-Uni-50', text: 'text-Base-OnSurface' },
+        text: { base: 'bg-transparent', pressed: 'bg-Uni-50', text: 'text-Brand-Primary' },
+        'text-variant': { base: 'bg-transparent', pressed: 'bg-Neutral-Gray-300', text: 'text-Base-OnSurface' },
     }
-    const textColor = {
-        primary: 'text-white',
-        secondary: 'text-gray-900',
-        outline: 'text-gray-900',
-    }
+
     const sizes = {
-        xsmall: 'h-8 px-3',
-        small: 'h-10 px-4',
-        medium: 'h-14 px-6',
+        xsmall: 'py-1.5 px-3',   // padding 6px 12px
+        small: 'py-2.5 px-4',    // padding 10px 16px
+        medium: 'py-4 px-6',     // padding 16px 24px
     }
     const textSizes = {
-        xsmall: 'text-sm',
-        small: 'text-sm',
-        medium: 'text-base',
+        xsmall: 'text-label-small font-geologica-medium',   // 11px
+        small: 'text-label-large font-geologica-medium',    // 14px
+        medium: 'text-label-large font-geologica-bold',     // 14px
     }
+    const shapeStyle = {
+        round: 'rounded-full',
+        square: 'rounded-2xl',
+    }
+
+    const v = variants[variant] ?? variants.primary
+    const bgClass = disabled ? 'bg-Neutral-Gray-300' : pressed ? v.pressed : v.base
+    const textClass = disabled ? 'text-State-Disable' : v.text
 
     return (
         <Pressable
             onPress={onPress}
             disabled={disabled}
+            onPressIn={() => setPressed(true)}
+            onPressOut={() => setPressed(false)}
             className={`
-                rounded-2xl
-                justify-center
-                items-center
+                flex-row justify-center items-center
                 ${sizes[size]}
-                ${variants[variant]}
+                ${shapeStyle[shape]}
                 ${fullWidth ? 'w-full' : ''}
-                ${disabled ? 'opacity-50' : ''}
+                ${bgClass}
             `}
         >
-            <Text className={`text-base ${textColor[variant]}`}>
+            <Text className={`${textSizes[size]} ${textClass}`}>
                 {title}
             </Text>
         </Pressable>

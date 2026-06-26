@@ -7,4 +7,4 @@ export const OPENAI_API_KEY = (
   EXPO_PUBLIC_OPENAI_API_KEY ||
   ''
 ).trim();
-export const OPENAI_MODEL = 'gpt-4o-mini';
+export const OPENAI_MODEL = 'gpt-5.4-mini';
