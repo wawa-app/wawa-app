@@ -9,6 +9,7 @@ import AlarmEmptyState from '../../components/alarm/AlarmEmptyState'
 import { Edit, Delete } from '../../components/icons'
 import { useSnackbar } from '../../components/common/SnackbarProvider';
 import Button from '../../components/common/Button';
+import Fab from '../../components/common/Fab';
 import { getStoredObjectsWithImages } from "../../storage/objectStorage";
 
 const { AlarmModule } = NativeModules;
@@ -251,17 +252,14 @@ export default function AlarmListScreen({ navigation }) {
                     fullWidth
                 />
                 {/* Disabled FAB */}
-                <Pressable
-                    disabled
-                    className="absolute bottom-6 right-6 w-14 h-14 rounded-full items-center justify-center bg-gray-300"
-                >
-                    <Text className="text-white text-3xl leading-none">+</Text>
-                </Pressable>
+                <View className="absolute bottom-6 right-6">
+                    <Fab disabled />
+                </View>
             </View>
         );
     }
     return (
-        <View className="flex-1 bg-Base-Background px-4 pt-12">
+        <View className="flex-1 bg-Base-Background px-Space-spacing-lg pt-Space-spacing-xl">
             <Text className="text-headline-large font-geologica-bold text-Base-OnBackground">Alarms</Text>
 
             {(loading || objectCount === null) ? (
@@ -284,17 +282,17 @@ export default function AlarmListScreen({ navigation }) {
             )}
 
             {/* FAB */}
-            <Pressable
-                onPress={() => {
-                    if (atLimit) return
-                    setEditingAlarm(null)
-                    setShowSheet(true)
-                }}
-                disabled={atLimit}
-                className={`absolute bottom-6 right-6 w-14 h-14 rounded-full items-center justify-center ${atLimit ? 'bg-gray-300' : 'bg-black'}`}
-            >
-                <Text className="text-white text-3xl leading-none">+</Text>
-            </Pressable>
+            <View className="absolute bottom-6 right-6">
+                <Fab
+                    onPress={() => {
+                        setEditingAlarm(null)
+                        setShowSheet(true)
+                    }}
+                    variant="primary"
+                    size="regular"
+                    disabled={atLimit}
+                />
+            </View>
 
             {/* sheet */}
             <AlarmBottomSheet
