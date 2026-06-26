@@ -11,20 +11,22 @@ const DAYS = [
     { name: 'Sat', letter: 'S' },
 ];
 
-export default function WeekDays({ selected = [], onToggle, size = 32, spread = false }) {
+const SHADOW_SM = '0px 1px 3px 0px rgba(26, 15, 7, 0.08)';
+
+export default function WeekDays({ selected = [], onToggle, spread = false }) {
     return (
-        <View className={`flex-row items-center ${spread ? 'w-full justify-between' : 'gap-3'}`}>
-            {DAYS.map((d) => {
+        <View className={`flex-row items-center ${spread ? 'w-full justify-between' : ''}`} style={spread ? undefined : { gap: 12 }}>
+            {DAYS.map((d, i) => {
                 const active = selected.includes(d.name);
                 const Wrapper = onToggle ? Pressable : View;
                 return (
                     <Wrapper
-                        key={d.name}
+                        key={`${d.name}-${i}`}
                         onPress={onToggle ? () => onToggle(d.name) : undefined}
-                        style={{ width: size, height: size, borderRadius: size / 2 }}
-                        className={`items-center justify-center ${active ? 'bg-black' : 'bg-gray-200'}`}
+                        className={`items-center justify-center ${active ? 'bg-Brand-Primary' : 'bg-Base-Surface'}`}
+                        style={{ width: 36, height: 36, borderRadius: 18, boxShadow: SHADOW_SM }}
                     >
-                        <Text className={`text-xs ${active ? 'text-white' : 'text-gray-500'}`}>
+                        <Text className="text-label-large font-geologica-medium text-Base-OnPaper">
                             {d.letter}
                         </Text>
                     </Wrapper>
