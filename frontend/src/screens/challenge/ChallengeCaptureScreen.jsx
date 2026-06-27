@@ -9,6 +9,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { challengeTw as tw, cameraFrameStyle, captureControlsStyle } from './challengeNativewind';
 
+const CHANGE_TARGET_LIMIT = 3;
+
 export default function ChallengeCaptureScreen({
   target,
   targetName = 'Saved object',
@@ -19,9 +21,16 @@ export default function ChallengeCaptureScreen({
   const [facing] = useState('back');
   const [isCapturing, setIsCapturing] = useState(false);
   const [isChangingTarget, setIsChangingTarget] = useState(false);
+  const [changeTargetCount, setChangeTargetCount] = useState(0);
   const cameraRef = useRef(null);
   const device = useCameraDevice(facing);
   const photoOutput = usePhotoOutput({ quality: 0.85 });
+  const hasReachedChangeLimit = changeTargetCount >= CHANGE_TARGET_LIMIT;
+  const changeTargetLabel = hasReachedChangeLimit
+    ? 'Change limit reached'
+    : isChangingTarget
+      ? 'Changing...'
+      : 'Change object';
 
   const handleCapture = async () => {
     if (!device || isCapturing) return;
@@ -49,10 +58,11 @@ export default function ChallengeCaptureScreen({
   };
 
   const handleChangeTarget = async () => {
-    if (isChangingTarget) return;
+    if (isChangingTarget || hasReachedChangeLimit) return;
     setIsChangingTarget(true);
     try {
       await onChangeTarget();
+      setChangeTargetCount((count) => Math.min(count + 1, CHANGE_TARGET_LIMIT));
     } finally {
       setIsChangingTarget(false);
     }
@@ -88,7 +98,7 @@ export default function ChallengeCaptureScreen({
             <Image source={{ uri: target }} className={tw.targetImage} resizeMode="cover" />
           ) : (
             <View className={tw.targetPlaceholder}>
-              <Ionicons name="image" size={28} color="#111" />
+              <Ionicons name="image" size={28} color="#3D2A1C" />
             </View>
           )}
         </View>
@@ -97,13 +107,13 @@ export default function ChallengeCaptureScreen({
           <Text className={tw.targetLabel}>Targeting</Text>
           <Text className={tw.targetNameWithButton}>{targetName}</Text>
           <TouchableOpacity
-            className={tw.changeObjectButton}
+            className={`${tw.changeObjectButton} ${hasReachedChangeLimit ? 'opacity-50' : ''}`}
             onPress={handleChangeTarget}
-            disabled={isChangingTarget}
+            disabled={isChangingTarget || hasReachedChangeLimit}
             activeOpacity={0.8}
           >
             <Text className={tw.changeObjectText}>
-              {isChangingTarget ? 'Changing...' : 'Change object'}
+              {changeTargetLabel}
             </Text>
           </TouchableOpacity>
         </View>
@@ -122,7 +132,7 @@ export default function ChallengeCaptureScreen({
             />
           ) : (
             <View className={tw.comparingFallback}>
-              <Ionicons name="camera" size={34} color="#111" />
+              <Ionicons name="camera" size={34} color="#3D2A1C" />
             </View>
           )}
         </View>

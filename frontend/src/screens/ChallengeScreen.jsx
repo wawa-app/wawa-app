@@ -82,6 +82,22 @@ export default function ChallengeScreen() {
     loadTarget();
   }, [loadTarget]);
 
+  const handleEmergencyExit = React.useCallback(async () => {
+    try {
+      await apiClient.patch('/api/mission/emergency', {
+        objectId: targetObject?.id,
+      });
+    } catch (err) {
+      console.warn(
+        'Challenge emergency exit failed:',
+        err?.response?.status,
+        err?.response?.data || err?.message
+      );
+    } finally {
+      handleClose();
+    }
+  }, [handleClose, targetObject?.id]);
+
   if (loadingTarget && stage === 'capture') {
     return (
       <View className="flex-1 bg-white items-center justify-center px-6">
@@ -123,7 +139,7 @@ export default function ChallengeScreen() {
         targetName={targetName}
         onClose={handleClose}
         onTryAgain={handleTryAgain}
-        onEmergencyExit={handleClose}
+        onEmergencyExit={handleEmergencyExit}
         completionStats={completionStats}
       />
     );
