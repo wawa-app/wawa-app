@@ -9,7 +9,11 @@ export default function StackHeader() {
 
     return (
         <View
-            style={{ paddingTop: insets.top + 13, paddingBottom: 12 }}
+            style={{
+                paddingTop: insets.top + 13,
+                paddingBottom: 12,
+                boxShadow: '0px 1px 3px 0px rgba(26, 15, 7, 0.08)',
+            }}
             className={`flex-col items-center justify-center ${scrolled ? 'bg-Base-Surface' : 'bg-Base-Background'
                 }`}
         >

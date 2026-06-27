@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
+<<<<<<< HEAD:frontend/src/screens/AlarmRingingScreen.jsx
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Button from '../components/common/Button';
 import UniAlarm from '../assets/uni/uni-alarm';
+=======
+import Button from '../../components/common/Button';
+>>>>>>> develop:frontend/src/screens/alarm/AlarmRingingScreen.jsx
 
 const WEEKDAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
 const MONTHS = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',

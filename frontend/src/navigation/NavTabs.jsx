@@ -9,7 +9,7 @@ import {
     Profile,
 } from '../components/icons';
 
-import AlarmListScreen from '../screens/AlarmListScreen.jsx';
+import AlarmListScreen from '../screens/alarm/AlarmListScreen.jsx';
 import ObjectsScreen from '../screens/ObjectsScreen.jsx';
 import TrackingScreen from '../screens/TrackingScreen.jsx';
 import ProfileScreen from '../screens/ProfileScreen.jsx';

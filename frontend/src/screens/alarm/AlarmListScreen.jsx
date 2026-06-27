@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, ScrollView, Pressable, NativeModules, ActivityIndicator, Alert } from 'react-native';
-import apiClient from '../api/client';
-import AlarmCard from '../components/alarm/AlarmCard';
-import AlarmBottomSheet from '../components/alarm/AlarmBottomSheet'
-import AlarmMenu from '../components/alarm/AlarmMenu'
-import AlarmEmptyState from '../components/alarm/AlarmEmptyState'
-import { Edit, Delete } from '../components/icons'
-import { useSnackbar } from '../components/common/SnackbarProvider';
-import Button from '../components/common/Button';
-import { getStoredObjectsWithImages } from "../storage/objectStorage";
+import { View, Text, Pressable, NativeModules, ActivityIndicator, Alert } from 'react-native';
+import apiClient from '../../api/client';
+import AlarmCard from '../../components/alarm/AlarmCard';
+import AlarmBottomSheet from '../../components/alarm/AlarmBottomSheet'
+import AlarmEmptyState from '../../components/alarm/AlarmEmptyState'
+import { useSnackbar } from '../../components/common/SnackbarProvider';
+import Button from '../../components/common/Button';
+import Fab from '../../components/common/Fab';
+import { getStoredObjectsWithImages } from "../../storage/objectStorage";
 
 const { AlarmModule } = NativeModules;
 
@@ -71,11 +70,16 @@ const syncNative = (alarm) => {
     }
 }
 
+const toMinutes = (alarm) => {
+    let h24 = alarm.hour % 12
+    if (alarm.meridiem === 'PM') h24 += 12
+    return h24 * 60 + alarm.minute
+}
+
 export default function AlarmListScreen({ navigation }) {
     const [alarms, setAlarms] = useState([])
     const [loading, setLoading] = useState(true)
     const [showSheet, setShowSheet] = useState(false)
-    const [menuAlarmId, setMenuAlarmId] = useState(null)
     const [editingAlarm, setEditingAlarm] = useState(null)
     const atLimit = alarms.length >= 3
     const { show } = useSnackbar();
@@ -91,7 +95,6 @@ export default function AlarmListScreen({ navigation }) {
         const target = alarms.find((a) => a.id === id)
         if (!target) return
         setEditingAlarm(target)
-        setMenuAlarmId(null)
         setShowSheet(true)
     }
 
@@ -195,10 +198,6 @@ export default function AlarmListScreen({ navigation }) {
         }
     }
 
-    const openMenu = (id) => {
-        setMenuAlarmId(id)
-    }
-
     // restore
     const restoreAlarm = async (alarm) => {
         try {
@@ -230,8 +229,6 @@ export default function AlarmListScreen({ navigation }) {
         } catch (err) {
             console.error('[AlarmListScreen] deleteAlarm error:', err?.response?.status, err?.response?.data)
             if (isNetworkError(err)) show({ text: 'Connection failed', tone: 'error' })
-        } finally {
-            setMenuAlarmId(null)
         }
     }
     // Gate: must enroll enough objects before using alarms
@@ -264,18 +261,15 @@ export default function AlarmListScreen({ navigation }) {
                     />
                 </View>
                 {/* Disabled FAB */}
-                <Pressable
-                    disabled
-                    className="absolute bottom-6 right-6 w-14 h-14 rounded-full items-center justify-center bg-gray-300"
-                >
-                    <Text className="text-white text-3xl leading-none">+</Text>
-                </Pressable>
+                <View className="absolute bottom-6 right-6">
+                    <Fab disabled />
+                </View>
             </View>
         );
     }
     return (
-        <View className="flex-1 bg-white px-4 pt-12">
-            <Text className="text-3xl font-bold text-black mt-4 mb-4">Alarms</Text>
+        <View className="flex-1 bg-Base-Background px-Space-spacing-lg pt-Space-spacing-xl">
+            <Text className="text-headline-large font-geologica-bold text-Base-OnBackground">Alarms</Text>
 
             {(loading || objectCount === null) ? (
                 <View className="flex-1 items-center justify-center">
@@ -284,30 +278,31 @@ export default function AlarmListScreen({ navigation }) {
             ) : alarms.length === 0 ? (
                 <AlarmEmptyState />
             ) : (
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    {alarms.map((alarm) => (
+                <View className="gap-Space-spacing-lg mt-Space-spacing-xl">
+                    {[...alarms].sort((a, b) => toMinutes(a) - toMinutes(b)).map((alarm) => (
                         <AlarmCard
                             key={alarm.id}
                             alarm={alarm}
                             onToggle={() => toggleAlarm(alarm.id)}
-                            onMenu={() => openMenu(alarm.id)}
+                            onEdit={() => openEdit(alarm.id)}
+                            onDelete={() => deleteAlarm(alarm.id)}
                         />
                     ))}
-                </ScrollView>
+                </View>
             )}
 
             {/* FAB */}
-            <Pressable
-                onPress={() => {
-                    if (atLimit) return
-                    setEditingAlarm(null)
-                    setShowSheet(true)
-                }}
-                disabled={atLimit}
-                className={`absolute bottom-6 right-6 w-14 h-14 rounded-full items-center justify-center ${atLimit ? 'bg-gray-300' : 'bg-black'}`}
-            >
-                <Text className="text-white text-3xl leading-none">+</Text>
-            </Pressable>
+            <View className="absolute bottom-6 right-6">
+                <Fab
+                    onPress={() => {
+                        setEditingAlarm(null)
+                        setShowSheet(true)
+                    }}
+                    variant="primary"
+                    size="regular"
+                    disabled={atLimit}
+                />
+            </View>
 
             {/* sheet */}
             <AlarmBottomSheet
@@ -315,16 +310,6 @@ export default function AlarmListScreen({ navigation }) {
                 onClose={closeSheet}
                 onSave={handleSheetSave}
                 initialValue={editingAlarm}
-            />
-
-            {/* menu*/}
-            <AlarmMenu
-                visible={menuAlarmId !== null}
-                onClose={() => setMenuAlarmId(null)}
-                items={[
-                    { label: 'Edit', icon: <Edit width={24} height={24} />, onPress: () => openEdit(menuAlarmId) },
-                    { label: 'Delete', icon: <Delete width={24} height={24} />, onPress: () => deleteAlarm(menuAlarmId) },
-                ]}
             />
         </View>
     )

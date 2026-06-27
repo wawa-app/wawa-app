@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TextInput, Pressable } from 'react-native';
 import WeekDays from './WeekDays'
+import { Label, Close } from '../icons'
 
 //tentative
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
@@ -12,6 +13,7 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
     const [minute, setMinute] = useState('00')
     const [meridiem, setMeridiem] = useState('AM')
     const [selectedDays, setSelectedDays] = useState([])
+    const [labelFocused, setLabelFocused] = useState(false)
 
     const handleHourChange = (text) => {
         const value = text.replace(/[^0-9]/g, '')
@@ -89,86 +91,131 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
     return (
         <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
             <View className="flex-1 justify-end bg-black/40">
-                <View className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
 
-                    {/* header */}
-                    <View className="flex-row items-center justify-between mb-6">
-                        <Pressable onPress={onClose}>
-                            <Text className="text-gray-500 text-lg">Cancel</Text>
-                        </Pressable>
-                        <Text className="text-black text-xl font-bold">Set alarm</Text>
-                        <Pressable onPress={handleSave}>
-                            <Text className="text-black text-lg font-semibold">Save</Text>
-                        </Pressable>
-                    </View>
+                {/* sheet body */}
+                <View
+                    className="bg-Base-Paper items-start"
+                    style={{ height: 572, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}
+                >
+                    {/* scroll content */}
+                    <View className="w-full items-center gap-Space-spacing-xl px-Space-spacing-lg pt-Space-spacing-xl">
 
-                    {/* Label */}
-                    <Text className="text-sm font-bold text-black mb-2">Label</Text>
-                    <TextInput
-                        placeholder="Label"
-                        value={label}
-                        onChangeText={setLabel}
-                    />
-
-                    {/* Time */}
-                    <View className="flex-row items-start gap-3 mb-6">
-                        {/* Hour */}
-                        <View className="w-24 gap-2">
-                            <View className="h-20 bg-gray-200 items-center justify-center">
-                                <TextInput
-                                    className="w-full text-center text-5xl font-bold text-[#3D2A1C]"
-                                    style={{ includeFontPadding: false, textAlignVertical: 'center' }}
-                                    value={hour}
-                                    onChangeText={handleHourChange}
-                                    keyboardType="numeric"
-                                    maxLength={2}
-                                />
-                            </View>
-                            <Text className="text-base font-semibold text-[#3D2A1C]">Hour</Text>
-                        </View>
-
-                        {/* colon */}
-                        <View className="h-20 justify-center gap-2">
-                            <View className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                            <View className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                        </View>
-
-                        {/* Minutes */}
-                        <View className="w-24 gap-2">
-                            <View className="h-20 bg-gray-200 items-center justify-center">
-                                <TextInput
-                                    className="w-full text-center text-5xl font-bold text-[#3D2A1C]"
-                                    style={{ includeFontPadding: false, textAlignVertical: 'center' }}
-                                    value={minute}
-                                    onChangeText={handleMinuteChange}
-                                    keyboardType="numeric"
-                                    maxLength={2}
-                                />
-                            </View>
-                            <Text className="text-base font-semibold text-[#3D2A1C]">Minutes</Text>
-                        </View>
-                        {/* AM/PM (Period_Selector: 52x80, radius 8, border #3D2A1C, bg Uni-50) */}
-                        <View className="w-[52px] h-20 overflow-hidden">
-                            <Pressable
-                                onPress={() => setMeridiem('AM')}
-                                className={`flex-1 items-center justify-center ${meridiem === 'AM' ? 'bg-gray-500' : 'bg-gray-50'}`}
-                            >
-                                <Text className="text-base font-bold text-[#3D2A1C]">AM</Text>
+                        {/* header */}
+                        <View className="flex-row items-center justify-between self-stretch">
+                            <Pressable onPress={onClose}>
+                                <Text className="text-label-large font-geologica-medium text-Neutral-Gray-500">Cancel</Text>
                             </Pressable>
-                            <View className="h-px bg-[#3D2A1C]" />
-                            <Pressable
-                                onPress={() => setMeridiem('PM')}
-                                className={`flex-1 items-center justify-center ${meridiem === 'PM' ? 'bg-gray-500' : 'bg-gray-50'}`}
-                            >
-                                <Text className="text-base font-bold text-[#3D2A1C]">PM</Text>
+                            <Text className="text-title-large font-geologica-bold text-Base-OnPaper">Set alarm</Text>
+                            <Pressable onPress={handleSave}>
+                                <Text className="text-label-large font-geologica-medium text-Base-OnPaper">Save</Text>
                             </Pressable>
                         </View>
+
+                        {/* Label */}
+                        <View className="self-stretch gap-Space-spacing-sm">
+                            <Text className="text-label-large font-geologica-medium text-Base-OnPaper">Label</Text>
+
+                            <View
+                                className="flex-row items-center self-stretch bg-Neutral-brandWarm-50"
+                                style={{
+                                    height: 56,
+                                    paddingHorizontal: 16,
+                                    gap: 16,
+                                    borderRadius: 8,
+                                    borderWidth: labelFocused ? 2 : 1,
+                                    borderColor: labelFocused ? '#FF6D00' : '#3D2A1C',
+                                }}
+                            >
+                                <Label width={24} height={24} />
+                                <TextInput
+                                    placeholder="Label"
+                                    placeholderTextColor="rgba(38,28,20,0.38)"
+                                    value={label}
+                                    onChangeText={setLabel}
+                                    onFocus={() => setLabelFocused(true)}
+                                    onBlur={() => setLabelFocused(false)}
+                                    className="flex-1 text-label-large font-geologica-medium text-Base-OnPaper"
+                                    style={{ padding: 0 }}
+                                />
+                                {label.length > 0 && (
+                                    <Pressable onPress={() => setLabel('')} hitSlop={8}>
+                                        <Close width={24} height={24} />
+                                    </Pressable>
+                                )}
+                            </View>
+                        </View>
+
+                        {/* Time */}
+                        <View className="flex-row items-start self-stretch" style={{ gap: 8 }}>
+                            {/* Hour */}
+                            <View className="flex-1 gap-Space-spacing-sm">
+                                <View
+                                    className="items-center justify-center self-stretch bg-Neutral-Gray-300"
+                                    style={{ height: 72, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8 }}
+                                >
+                                    <TextInput
+                                        className="w-full text-center text-display-medium font-geologica-black text-Base-OnSurface"
+                                        style={{ padding: 0, includeFontPadding: false, textAlignVertical: 'center' }}
+                                        value={hour}
+                                        onChangeText={handleHourChange}
+                                        keyboardType="numeric"
+                                        maxLength={2}
+                                    />
+                                </View>
+                                <Text className="text-label-large font-geologica-medium text-Base-OnPaper">Hour</Text>
+                            </View>
+
+                            {/* colon */}
+                            <View className="items-center justify-center gap-Space-spacing-sm" style={{ height: 72, width: 24 }}>
+                                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#5E5E5E' }} />
+                                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#5E5E5E' }} />
+                            </View>
+
+                            {/* Minutes */}
+                            <View className="flex-1 gap-Space-spacing-sm">
+                                <View
+                                    className="items-center justify-center self-stretch bg-Neutral-Gray-300"
+                                    style={{ height: 72, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8 }}
+                                >
+                                    <TextInput
+                                        className="w-full text-center text-display-medium font-geologica-black text-Base-OnSurface"
+                                        style={{ padding: 0, includeFontPadding: false, textAlignVertical: 'center' }}
+                                        value={minute}
+                                        onChangeText={handleMinuteChange}
+                                        keyboardType="numeric"
+                                        maxLength={2}
+                                    />
+                                </View>
+                                <Text className="text-label-large font-geologica-medium text-Base-OnPaper">Minutes</Text>
+                            </View>
+
+                            {/* AM/PM */}
+                            <View
+                                className="overflow-hidden"
+                                style={{ width: 52, height: 80, borderRadius: 8, borderWidth: 1, borderColor: '#3D2A1C' }}
+                            >
+                                <Pressable
+                                    onPress={() => setMeridiem('AM')}
+                                    className={`flex-1 items-center justify-center ${meridiem === 'AM' ? 'bg-Brand-Primary' : 'bg-Uni-50'}`}
+                                    style={{ borderBottomWidth: 1, borderBottomColor: '#261C14' }}
+                                >
+                                    <Text className="text-label-large font-geologica-medium text-Base-OnPaper">AM</Text>
+                                </Pressable>
+                                <Pressable
+                                    onPress={() => setMeridiem('PM')}
+                                    className={`flex-1 items-center justify-center ${meridiem === 'PM' ? 'bg-Brand-Primary' : 'bg-Uni-50'}`}
+                                >
+                                    <Text className="text-label-large font-geologica-medium text-Base-OnPaper">PM</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+
+                        {/* Days */}
+                        <View className="self-stretch gap-Space-spacing-sm">
+                            <Text className="text-label-large font-geologica-medium text-Base-OnPaper">Day of week</Text>
+                            <WeekDays selected={selectedDays} onToggle={toggleDay} spread />
+                        </View>
                     </View>
-
-                    {/* Days */}
-                    <Text className="text-sm font-bold text-black mb-2">Day of week</Text>
-                    <WeekDays selected={selectedDays} onToggle={toggleDay} spread />
-
                 </View>
             </View>
         </Modal>
