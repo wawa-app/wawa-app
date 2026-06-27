@@ -12,7 +12,7 @@ import { getStoredObjectsWithImages } from "../../storage/objectStorage";
 
 const { AlarmModule } = NativeModules;
 
-const REQUIRED_OBJECTS = 10
+const REQUIRED_OBJECTS = 5
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const toRequestCode = (id) => parseInt(id.slice(-6), 16)

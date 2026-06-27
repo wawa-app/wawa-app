@@ -47,7 +47,7 @@ export default function Button({
             disabled={disabled}
             onPressIn={() => setPressed(true)}
             onPressOut={() => setPressed(false)}
-            onLayout={(e) => console.log('[Button height]', size, e.nativeEvent.layout.height)}
+            // onLayout={(e) => console.log('[Button height]', size, e.nativeEvent.layout.height)}
             className={`
                 flex-row justify-center items-center
                 ${sizes[size]}
