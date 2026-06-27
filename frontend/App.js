@@ -3,6 +3,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
 import './global.css';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -161,15 +162,17 @@ function RootNavigator() {
 export default function App() {
     return (
         <SafeAreaProvider>
-            <AuthProvider>
-                <NavigationContainer>
-                    <SnackbarProvider>
-                        <ScrollProvider>
-                            <RootNavigator />
-                        </ScrollProvider>
-                    </SnackbarProvider>
-                </NavigationContainer>
-            </AuthProvider>
+            <PaperProvider>
+                <AuthProvider>
+                    <NavigationContainer>
+                        <SnackbarProvider>
+                            <ScrollProvider>
+                                <RootNavigator />
+                            </ScrollProvider>
+                        </SnackbarProvider>
+                    </NavigationContainer>
+                </AuthProvider>
+            </PaperProvider>
         </SafeAreaProvider>
     );
 }

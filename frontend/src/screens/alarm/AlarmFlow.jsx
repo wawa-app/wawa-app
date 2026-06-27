@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { NativeModules } from 'react-native';
 import AlarmRingingScreen from './AlarmRingingScreen';
-import ChallengeCaptureScreen from './challenge/ChallengeCaptureScreen';
-import ChallengeComparingScreen from './challenge/ChallengeComparingScreen';
-import ChallengeResultScreen from './challenge/ChallengeResultScreen';
-import { getStoredObjectsWithImages, pickRandomObject } from '../storage/objectStorage';
-import { compareImages } from '../utils/vision';
-import apiClient from '../api/client';
+import ChallengeCaptureScreen from '../challenge/ChallengeCaptureScreen';
+import ChallengeComparingScreen from '../challenge/ChallengeComparingScreen';
+import ChallengeResultScreen from '../challenge/ChallengeResultScreen';
+import { getStoredObjectsWithImages, pickRandomObject } from '../../storage/objectStorage';
+import { compareImages } from '../../utils/vision';
+import apiClient from '../../api/client';
 
 const { AlarmModule } = NativeModules;
 
