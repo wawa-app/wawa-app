@@ -13,7 +13,7 @@ import { getStoredObjectsWithImages } from "../storage/objectStorage";
 
 const { AlarmModule } = NativeModules;
 
-const REQUIRED_OBJECTS = 3
+const REQUIRED_OBJECTS = 10
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const toRequestCode = (id) => parseInt(id.slice(-6), 16)
@@ -239,17 +239,30 @@ export default function AlarmListScreen({ navigation }) {
         return (
             <View className="flex-1 bg-white px-4 pt-12">
                 <Text className="text-3xl font-bold text-black mt-4 mb-4">Alarms</Text>
-                <Text className="text-xl font-bold text-black mb-3">You should prepare for mission</Text>
-                <Text className="text-black mb-6">
-                    To use the alarm feature, you must prepare for the mission.
-                    Please prepare for the mission on the object list screen.
-                </Text>
-                <Button
-                    title="Move to Objects List"
-                    onPress={() => navigation.navigate('Objects')}
-                    variant="primary"
-                    fullWidth
-                />
+                <View className="justify-center gap-Space-spacing-xxl">
+                    <View className="items-center">
+                        <Text
+                            className="text-title-large font-geologica-bold text-center mb-Space-spacing-lg"
+                            style={{ color: '#000' }}
+                        >
+                            You should prepare for mission
+                        </Text>
+                        <Text
+                            className="text-body-large font-geologica text-center"
+                            style={{ color: '#000' }}
+                        >
+                            To use the alarm feature, you must prepare for the mission.
+                            Please prepare for the mission on the object list screen.
+                        </Text>
+                    </View>
+
+                    <Button
+                        title="Move to Objects List"
+                        onPress={() => navigation.navigate('Objects')}
+                        variant="primary"
+                        fullWidth
+                    />
+                </View>
                 {/* Disabled FAB */}
                 <Pressable
                     disabled
