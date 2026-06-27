@@ -30,7 +30,7 @@ export default function Button({
     const textSizes = {
         xsmall: 'text-label-small font-geologica-medium',   // 11px
         small: 'text-label-large font-geologica-medium',    // 14px
-        medium: 'text-label-large font-geologica-bold',     // 14px
+        medium: 'text-label-large font-geologica-medium',     // 14px
     }
     const shapeStyle = {
         round: 'rounded-full',
