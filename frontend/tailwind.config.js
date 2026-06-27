@@ -7,6 +7,7 @@ module.exports = {
       // Typography
       fontFamily: {
         geologica: ['Geologica-Regular'],          // 400
+        'geologica-light': ['Geologica-Light'],    // 300
         'geologica-medium': ['Geologica-Medium'],  // 500
         'geologica-bold': ['Geologica-Bold'],      // 700
         'geologica-black': ['Geologica-Black'],    // 900

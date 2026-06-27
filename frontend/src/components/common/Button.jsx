@@ -23,9 +23,9 @@ export default function Button({
     }
 
     const sizes = {
-        xsmall: 'py-1.5 px-3',   // padding 6px 12px
-        small: 'py-2.5 px-4',    // padding 10px 16px
-        medium: 'py-4 px-6',     // padding 16px 24px
+        xsmall: 'h-[32px] py-1.5 px-3',   // padding 6px 12px
+        small: 'h-[40px] py-2.5 px-4',    // padding 10px 16px
+        medium: 'h-[52px] px-6',     // padding 16px 24px
     }
     const textSizes = {
         xsmall: 'text-label-small font-geologica-medium',   // 11px
@@ -47,6 +47,7 @@ export default function Button({
             disabled={disabled}
             onPressIn={() => setPressed(true)}
             onPressOut={() => setPressed(false)}
+            onLayout={(e) => console.log('[Button height]', size, e.nativeEvent.layout.height)}
             className={`
                 flex-row justify-center items-center
                 ${sizes[size]}

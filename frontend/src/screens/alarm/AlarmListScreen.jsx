@@ -234,18 +234,18 @@ export default function AlarmListScreen({ navigation }) {
     // Gate: must enroll enough objects before using alarms
     if (!loading && objectCount !== null && objectCount < REQUIRED_OBJECTS) {
         return (
-            <View className="flex-1 bg-white px-4 pt-12">
-                <Text className="text-3xl font-bold text-black mt-4 mb-4">Alarms</Text>
+            <View className="flex-1 bg-Base-Background px-Space-spacing-lg pt-Space-spacing-xl">
+                <Text className="text-headline-large font-geologica-bold text-Base-OnBackground">Alarms</Text>
                 <View className="justify-center gap-Space-spacing-xxl">
                     <View className="items-center">
                         <Text
-                            className="text-title-large font-geologica-bold text-center mb-Space-spacing-lg"
+                            className="text-title-large font-geologica-bold text-center mb-Space-spacing-lg mt-Space-spacing-xl"
                             style={{ color: '#000' }}
                         >
                             You should prepare for mission
                         </Text>
                         <Text
-                            className="text-body-large font-geologica text-center"
+                            className="text-body-large font-geologica-light text-center"
                             style={{ color: '#000' }}
                         >
                             To use the alarm feature, you must prepare for the mission.
