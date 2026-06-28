@@ -109,6 +109,21 @@ function ChallengeCaptureOnly() {
     );
 }
 
+// Redirects first-time users to Walkthrough, returning users to Main.
+// Registered as the first screen in the user stack so it's always the
+// initial destination after login / signup.
+function HomeRedirector({ navigation }) {
+    const { isFirstLogin } = useAuth();
+    React.useEffect(() => {
+        if (isFirstLogin) {
+            navigation.replace('WalkthroughIntro');
+        } else {
+            navigation.replace('Main');
+        }
+    }, []);
+    return <View style={{ flex: 1, backgroundColor: '#fff' }} />;
+}
+
 function RootNavigator() {
     const { user, loading } = useAuth();
 
@@ -122,9 +137,12 @@ function RootNavigator() {
     }
 
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator
+            screenOptions={{ headerShown: false }}
+        >
             {user ? (
                 <>
+                    <Stack.Screen name="HomeRedirector" component={HomeRedirector} />
                     <Stack.Screen
                         name="Main"
                         component={NavTabs}

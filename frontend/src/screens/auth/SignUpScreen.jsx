@@ -18,10 +18,7 @@ export default function SignUpScreen({ navigation }) {
         }
         try {
             setLoading(true);
-            const { isFirstLogin } = await signup(email, password);
-            if (isFirstLogin) {
-                navigation.navigate('WalkthroughIntro');
-            }
+            await signup(email, password);
         } catch (err) {
             const code = err.response?.data?.error;
             if (code === 'EMAIL_ALREADY_EXISTS') {
