@@ -21,6 +21,7 @@ function PasswordInput({ placeholder, value, onChangeText }) {
                 <EyeIcon color={show ? '#1A0F07' : '#A29789'} />
             </TouchableOpacity>
         </View>
+    );
 }
 
 function Requirement({ met, label }) {
