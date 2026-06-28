@@ -59,13 +59,14 @@ export default function StreakCard({ variant = "lose", streakCount }) {
     }, [streakCount, hasProvidedStreak]);
 
     const isLose = variant === "lose";
-    const title = isLose ? "Day Streak LOSE!" : "Day Streak!";
+    const title = isLose ? "Day Streak LOSE!" : "Day Streak COUNT!";
+    const cardBg = isLose ? "bg-[#315A84]" : "bg-[#E65B00]";
 
     const totalDays = 7;
     const filledDays = Math.min(streak, totalDays);
 
     return (
-        <View className="w-[265px] max-w-[280px] bg-[#315A84] border border-[#191919] rounded-[28px] px-4 py-6 items-center justify-center">
+        <View className={`w-[265px] max-w-[280px] ${cardBg} border border-[#191919] rounded-[28px] px-4 py-6 items-center justify-center`}>
 
             {loading ? (
                 <ActivityIndicator color="#FFFFFF" />

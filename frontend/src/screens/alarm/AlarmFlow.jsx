@@ -96,7 +96,7 @@ export default function AlarmFlow({ alarmId }) {
         setFailedCount((prev) => prev + 1)
         setMatched(false)
         setPhase(PHASE.RESULT)
-    }, [target, recordAttempt, targetObject?.id])
+    }, [target, recordAttempt])
 
     const handleChangeTarget = useCallback(async () => { await loadTarget(); }, [loadTarget])
 
@@ -116,9 +116,18 @@ export default function AlarmFlow({ alarmId }) {
         setPhase(PHASE.CAPTURING)
     }, [failedCount])
 
-    const handleEmergencyExit = useCallback(() => {
-        AlarmModule.dismissAndReturn()
-    }, [])
+    const handleEmergencyExit = useCallback(async () => {
+        try {
+            await apiClient.patch('/api/mission/emergency', {
+                alarmId: resolvedAlarmId,
+                objectId: targetObject?.id,
+            })
+        } catch (err) {
+            console.warn('emergency exit failed:', err?.response?.status, err?.response?.data || err?.message)
+        } finally {
+            AlarmModule.dismissAndReturn()
+        }
+    }, [resolvedAlarmId, targetObject?.id])
 
     switch (phase) {
         case PHASE.CAPTURING:

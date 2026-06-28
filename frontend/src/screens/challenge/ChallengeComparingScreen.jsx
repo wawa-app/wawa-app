@@ -70,7 +70,7 @@ export default function ChallengeComparingScreen({
             <Image source={{ uri: target }} className={tw.targetImage} resizeMode="cover" />
           ) : (
             <View className={tw.targetPlaceholder}>
-              <Ionicons name="image" size={28} color="#111" />
+              <Ionicons name="image" size={28} color="#3D2A1C" />
             </View>
           )}
         </View>
@@ -87,7 +87,7 @@ export default function ChallengeComparingScreen({
             <Image source={{ uri: candidate }} className={tw.comparingCandidateImage} resizeMode="cover" />
           ) : (
             <View className={tw.comparingFallback}>
-              <Ionicons name="image" size={34} color="#111" />
+              <Ionicons name="image" size={34} color="#3D2A1C" />
             </View>
           )}
 

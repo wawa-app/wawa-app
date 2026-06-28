@@ -21,6 +21,28 @@ const daysBetweenUtc = (from, to) => {
 
 const utcDayKey = (date) => startOfUtcDay(date).toISOString().slice(0, 10)
 
+const getMissionRewardStats = async (userId) => {
+    const [streak, uni] = await Promise.all([
+        Streak.findOne({ userId }),
+        Uni.findOne({ userId }),
+    ])
+
+    return {
+        awarded: false,
+        streak: {
+            currentCount: streak?.currentCount ?? 0,
+            longestCount: streak?.longestCount ?? 0,
+            lastSuccessDate: streak?.lastSuccessDate ?? null,
+        },
+        uni: {
+            avatarKey: uni?.avatarKey ?? 'default',
+            level: uni?.level ?? 1,
+            stage: uni?.stage ?? 'Baby Uni',
+            exp: uni?.exp ?? 0,
+        },
+    }
+}
+
 // Determine Uni stage based on level (every 5 levels = new stage)
 const getStage = (level) => {
     if (level <= 5) return 'Baby Uni'
@@ -188,14 +210,19 @@ const changeObject = async (req, res) => {
 }
 
 // PATCH /api/mission/emergency
-// Forces alarm off, logs as emergency, resets current streak to 0
+// Logs an emergency exit and breaks the current streak.
 const emergencyOverride = async (req, res) => {
     try {
         const { alarmId, objectId } = req.body
+        if (!objectId) {
+            return res.status(400).json({ success: false, error: 'MISSING_OBJECT_ID' })
+        }
 
-        const alarm = await Alarm.findOne({ _id: alarmId, userId: req.user.userId })
-        if (!alarm) {
-            return res.status(404).json({ success: false, error: 'ALARM_NOT_FOUND' })
+        if (alarmId) {
+            const alarm = await Alarm.findOne({ _id: alarmId, userId: req.user.userId })
+            if (!alarm) {
+                return res.status(404).json({ success: false, error: 'ALARM_NOT_FOUND' })
+            }
         }
 
         const object = await Object.findOne({ _id: objectId, userId: req.user.userId })
@@ -203,10 +230,12 @@ const emergencyOverride = async (req, res) => {
             return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
         }
 
+        const attemptAt = new Date()
+
         // Create MissionAttempt as failed
         const attempt = await MissionAttempt.create({
             userId: req.user.userId,
-            alarmId,
+            alarmId: alarmId || null,
             objectId,
             status: 'failed',
         })
@@ -217,17 +246,25 @@ const emergencyOverride = async (req, res) => {
             objectId,
             missionId: attempt._id,
             isSuccess: false,
-            attemptAt: new Date(),
+            attemptAt,
             completedAt: null,
         })
 
-        // Reset current streak to 0
+        // Reset current streak to 0 and clear the last success date so the next
+        // successful mission can start a fresh streak at 1.
         await Streak.findOneAndUpdate(
             { userId: req.user.userId },
-            { $set: { currentCount: 0 } }
+            { $set: { currentCount: 0, lastSuccessDate: null } },
+            { upsert: true, setDefaultsOnInsert: true }
         )
 
-        return res.json({ success: true, message: 'Emergency override logged, streak reset' })
+        const stats = await getMissionRewardStats(req.user.userId)
+
+        return res.json({
+            success: true,
+            message: 'Emergency override logged, streak reset',
+            stats,
+        })
     } catch (err) {
         console.error('[scanController.emergencyOverride]', err)
         return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
@@ -256,11 +293,13 @@ const recordChallengeSuccess = async (req, res) => {
             completionDay,
         })
         if (existing) {
+            const stats = await getMissionRewardStats(req.user.userId)
             return res.json({
                 success: true,
                 result: 'success',
                 awarded: false,
                 alreadyCompletedToday: true,
+                stats,
             })
         }
 
@@ -283,11 +322,13 @@ const recordChallengeSuccess = async (req, res) => {
         } catch (err) {
             if (err?.code !== 11000) throw err
             await MissionAttempt.findByIdAndDelete(attempt._id)
+            const stats = await getMissionRewardStats(req.user.userId)
             return res.json({
                 success: true,
                 result: 'success',
                 awarded: false,
                 alreadyCompletedToday: true,
+                stats,
             })
         }
 
