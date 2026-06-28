@@ -2,39 +2,41 @@ import React from 'react';
 import { View, Text, Image } from 'react-native';
 import Button from '../../components/common/Button';
 
+const uniCharacter = require('../../assets/images/Uni.png');
+const waLogo = require('../../assets/images/WA.png');
+
 export default function LaunchScreen({ navigation }) {
     return (
-        <View className="flex-1 bg-white items-center">
-
-            {/* Status bar */}
-            <View className="h-6 self-stretch" />
-
-            {/* Header zone */}
-            <View className="h-16 self-stretch" />
+        <View className="flex-1 bg-Base-Background items-center">
 
             {/* Top spacer */}
             <View className="flex-1" />
 
-            {/* Content frame: w-328px h-454px, gap-40px */}
-            <View className="w-[328px] h-[454px] flex-col justify-center items-center">
+            {/* Content */}
+            <View className="items-center px-8">
 
-                {/* Logo + WaWa name */}
-                <View className="items-center mb-[40px]">
+                {/* Uni character */}
+                <Image
+                    source={uniCharacter}
+                    style={{ width: 180, height: 180 }}
+                    resizeMode="contain"
+                />
 
-                    {/* Logo placeholder — replace with actual image later */}
-                    <View className="w-14 h-14 border-2 border-black items-center justify-center mb-[32px]">
-                        <Text className="text-3xl text-[#1a1a1a]">✕</Text>
-                    </View>
+                {/* WA logo */}
+                <Image
+                    source={waLogo}
+                    style={{ width: 120, height: 47 }}
+                    resizeMode="contain"
+                    className="mt-6"
+                />
 
-                    {/* App name */}
-                    <Text className="text-[48px] font-medium text-black text-center leading-[48px] self-stretch">
-                        WaWa
-                    </Text>
-
-                </View>
+                {/* Title */}
+                <Text className="text-[22px] font-bold text-Base-OnBackground text-center mt-3">
+                    WAys to WAke up
+                </Text>
 
                 {/* Description */}
-                <Text className="text-[14px] font-light text-black text-center leading-[14px]">
+                <Text className="text-[14px] font-geologica-regular text-Base-OnBackground text-center mt-4 leading-[22px]">
                     WaWa is a challenge-based alarm app that helps users build a reliable morning routine through visual search missions, smart image recognition, habit tracking, and rewards.
                 </Text>
 
@@ -43,12 +45,13 @@ export default function LaunchScreen({ navigation }) {
             {/* Bottom spacer */}
             <View className="flex-1" />
 
-            {/* Button pinned to bottom */}
-            <View className="w-[296px] pb-[101px]">
+            {/* Get Started button */}
+            <View style={{ paddingHorizontal: 34, paddingBottom: 104, width: '100%' }}>
                 <Button
                     title="Get Started"
                     onPress={() => navigation.navigate('SignUp')}
                     fullWidth
+                    shape="round"
                 />
             </View>
 

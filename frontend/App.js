@@ -15,6 +15,10 @@ import OtpVerificationScreen from './src/screens/auth/OtpVerificationScreen';
 import CreateNewPasswordScreen from './src/screens/auth/CreateNewPasswordScreen';
 import PasswordResetSuccessScreen from './src/screens/auth/PasswordResetSuccessScreen';
 import CameraCaptureScreen from './src/screens/CameraCaptureScreen';
+import ChangeUserNameScreen from './src/screens/profile/ChangeUserNameScreen';
+import ChangePasswordScreen from './src/screens/profile/ChangePasswordScreen';
+import PasswordUpdatedScreen from './src/screens/profile/PasswordUpdatedScreen';
+import DeleteAccountScreen from './src/screens/profile/DeleteAccountScreen';
 import WalkthroughIntroScreen from './src/screens/walkthrough/WalkthroughIntroScreen';
 import WalkthroughStep1Screen from './src/screens/walkthrough/WalkthroughStep1Screen';
 import WalkthroughStep1CameraScreen from './src/screens/walkthrough/WalkthroughStep1CameraScreen';
@@ -153,6 +157,11 @@ function RootNavigator() {
                     Example:
                     {/* <Stack.Screen name="ChangeUserName" component={ChangeUserName} options={{ headerShown: true, title: 'Change User Name' }} /> */}
                     <Stack.Screen name="CameraCapture" component={CameraCaptureScreen} />
+                    {/* Profile sub-screens */}
+                    <Stack.Screen name="ChangeUserName" component={ChangeUserNameScreen} />
+                    <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+                    <Stack.Screen name="PasswordUpdated" component={PasswordUpdatedScreen} />
+                    <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
                     {/* Walkthrough flow — shown to first-time users after login */}
                     <Stack.Screen name="WalkthroughIntro" component={WalkthroughIntroScreen} />
                     <Stack.Screen name="WalkthroughStep1" component={WalkthroughStep1Screen} />
