@@ -7,11 +7,13 @@ module.exports = {
       // Typography
       fontFamily: {
         geologica: ['Geologica-Regular'],          // 400
+        'geologica-light': ['Geologica-Light'],    // 300
         'geologica-medium': ['Geologica-Medium'],  // 500
         'geologica-bold': ['Geologica-Bold'],      // 700
         'geologica-black': ['Geologica-Black'],    // 900
       },
       fontSize: {
+        'display-extra-large': ['96px', { lineHeight: '108px', letterSpacing: '0.25px' }], // font-geologica-black
         'display-medium': ['40px', { lineHeight: '48px' }],  // font-geologica-black
         'display-small': ['36px', { lineHeight: '44px' }],   // font-geologica-bold
         'headline-large': ['32px', { lineHeight: '40px' }],  // font-geologica-bold

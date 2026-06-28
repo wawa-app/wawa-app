@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context'
 import Button from '../../components/common/Button';
+import UniAlarm from '../../assets/uni/uni-alarm';
 
 const WEEKDAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
 const MONTHS = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
@@ -24,19 +26,27 @@ export default function AlarmRingingScreen({ onStartMission }) {
     }, [])
 
     return (
-        <View className="flex-1 bg-background justify-between py-20 px-6">
-            <View className="items-center mt-16">
-                <Text className="text-on-background text-8xl">{formatTime(now)}</Text>
-                <Text className="text-on-surface text-xl tracking-widest mt-2">{formatDate(now)}</Text>
-            </View>
+        <SafeAreaView className="flex-1 bg-Base-Background">
+            <View className="flex-1 justify-between py-Space-spacing-3xl px-Space-spacing-xxl">
+                <View className="items-center gap-Space-spacing-sm">
+                    <Text className="text-Brand-Primary font-geologica-black text-display-extra-large text-center">
+                        {formatTime(now)}
+                    </Text>
+                    <Text className="text-Uni-400 font-geologica-bold text-title-large text-center">
+                        {formatDate(now)}
+                    </Text>
 
-            <Button
-                title="Start mission"
-                onPress={onStartMission}
-                variant="primary"
-                size="medium"
-                fullWidth
-            />
-        </View>
+                    <UniAlarm width={280} height={280} />
+                </View>
+
+                <Button
+                    title="Start Mission"
+                    onPress={onStartMission}
+                    variant="primary"
+                    size="medium"
+                    fullWidth
+                />
+            </View>
+        </SafeAreaView>
     )
 }

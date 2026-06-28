@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, TextInput, Pressable } from 'react-native';
+import { Modal, View, Text, TextInput, Pressable, Keyboard } from 'react-native';
 import WeekDays from './WeekDays'
 import { Label, Close } from '../icons'
 
@@ -51,11 +51,27 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
         }
     }
 
+    const padHourOnBlur = () => {
+        if (hour === '') {
+            setHour('12')
+            return
+        }
+        setHour(String(parseInt(hour)).padStart(2, '0'))
+    }
+
+    const padMinuteOnBlur = () => {
+        if (minute === '') {
+            setMinute('00')
+            return
+        }
+        setMinute(String(parseInt(minute)).padStart(2, '0'))
+    }
+
     useEffect(() => {
         if (!visible) return
         if (initialValue) {
             setLabel(initialValue.label || '')
-            setHour(String(initialValue.hour))
+            setHour(String(initialValue.hour).padStart(2, '0'))
             setMinute(String(initialValue.minute).padStart(2, '0'))
             setMeridiem(initialValue.meridiem || 'AM')
             setSelectedDays(initialValue.days || [])
@@ -69,6 +85,7 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
     }, [visible])
 
     const toggleDay = (dayName) => {
+        Keyboard.dismiss()
         setSelectedDays((prev) =>
             prev.includes(dayName) ? prev.filter((d) => d !== dayName) : [...prev, dayName]
         )
@@ -158,6 +175,7 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
                                         style={{ padding: 0, includeFontPadding: false, textAlignVertical: 'center' }}
                                         value={hour}
                                         onChangeText={handleHourChange}
+                                        onBlur={padHourOnBlur}
                                         keyboardType="numeric"
                                         maxLength={2}
                                     />
@@ -182,6 +200,7 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
                                         style={{ padding: 0, includeFontPadding: false, textAlignVertical: 'center' }}
                                         value={minute}
                                         onChangeText={handleMinuteChange}
+                                        onBlur={padMinuteOnBlur}
                                         keyboardType="numeric"
                                         maxLength={2}
                                     />
@@ -195,14 +214,14 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
                                 style={{ width: 52, height: 80, borderRadius: 8, borderWidth: 1, borderColor: '#3D2A1C' }}
                             >
                                 <Pressable
-                                    onPress={() => setMeridiem('AM')}
+                                    onPress={() => { Keyboard.dismiss(); setMeridiem('AM') }}
                                     className={`flex-1 items-center justify-center ${meridiem === 'AM' ? 'bg-Brand-Primary' : 'bg-Uni-50'}`}
                                     style={{ borderBottomWidth: 1, borderBottomColor: '#261C14' }}
                                 >
                                     <Text className="text-label-large font-geologica-medium text-Base-OnPaper">AM</Text>
                                 </Pressable>
                                 <Pressable
-                                    onPress={() => setMeridiem('PM')}
+                                    onPress={() => { Keyboard.dismiss(); setMeridiem('PM') }}
                                     className={`flex-1 items-center justify-center ${meridiem === 'PM' ? 'bg-Brand-Primary' : 'bg-Uni-50'}`}
                                 >
                                     <Text className="text-label-large font-geologica-medium text-Base-OnPaper">PM</Text>
