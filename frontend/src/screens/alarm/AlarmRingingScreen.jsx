@@ -35,10 +35,8 @@ export default function AlarmRingingScreen({ onStartMission }) {
                     <Text className="text-Uni-400 font-geologica-bold text-title-large text-center">
                         {formatDate(now)}
                     </Text>
-                </View>
 
-                <View className="items-center">
-                    <UniAlarm width={200} height={200} />
+                    <UniAlarm width={280} height={280} />
                 </View>
 
                 <Button
