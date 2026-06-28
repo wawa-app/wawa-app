@@ -80,24 +80,34 @@ export default function ChangePasswordScreen({ navigation }) {
                 </Text>
             </View>
 
+            {/* Divider */}
             <View className="h-[1px] bg-Neutral-Gray-300 mx-6 mb-6" />
 
             {/* Fields card */}
             <View className="mx-6 bg-Base-Paper rounded-2xl p-4 gap-4">
                 <View>
-                    <Text className="text-[14px] font-geologica-regular text-Base-OnBackground mb-2">Current Password</Text>
+                    <Text className="text-[14px] font-geologica-regular text-Base-OnBackground mb-2">
+                        Current Password
+                    </Text>
                     <PasswordInput placeholder="Enter current password" value={current} onChangeText={setCurrent} />
                 </View>
                 <View>
-                    <Text className="text-[14px] font-geologica-regular text-Base-OnBackground mb-2">New Password</Text>
+                    <Text className="text-[14px] font-geologica-regular text-Base-OnBackground mb-2">
+                        New Password
+                    </Text>
                     <PasswordInput placeholder="Enter new password" value={newPass} onChangeText={setNewPass} />
                 </View>
                 <View>
-                    <Text className="text-[14px] font-geologica-regular text-Base-OnBackground mb-2">Confirm New Password</Text>
+                    <Text className="text-[14px] font-geologica-regular text-Base-OnBackground mb-2">
+                        Confirm New Password
+                    </Text>
                     <PasswordInput placeholder="Confirm new password" value={confirm} onChangeText={setConfirm} />
                 </View>
+                {/* Requirements */}
                 <View>
-                    <Text className="text-[12px] font-bold text-Base-OnBackground">Password requirements:</Text>
+                    <Text className="text-[12px] font-bold text-Base-OnBackground">
+                        Password requirements:
+                    </Text>
                     <Requirement met={hasLength} label="At least 5 characters" />
                     <Requirement met={hasNumberSymbol} label="Include a number & symbol" />
                 </View>
@@ -105,6 +115,7 @@ export default function ChangePasswordScreen({ navigation }) {
 
             <View className="flex-1" />
 
+            {/* Save button */}
             <View className="px-6 pb-[60px]">
                 {loading
                     ? <ActivityIndicator color="#FF6D00" />

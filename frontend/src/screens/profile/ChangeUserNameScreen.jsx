@@ -41,6 +41,7 @@ export default function ChangeUserNameScreen({ navigation }) {
                 </Text>
             </View>
 
+            {/* Divider */}
             <View className="h-[1px] bg-Neutral-Gray-300 mx-6 mb-6" />
 
             {/* Content */}

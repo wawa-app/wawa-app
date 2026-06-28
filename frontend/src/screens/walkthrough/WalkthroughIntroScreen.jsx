@@ -84,7 +84,7 @@ export default function WalkthroughIntroScreen({ navigation }) {
                 />
                 <Text
                     className="text-[14px] font-bold text-black text-center mt-4 leading-[27px]"
-                    onPress={() => navigation.navigate('Home')}
+                    onPress={() => navigation.navigate('Main')}
                 >
                     Skip
                 </Text>

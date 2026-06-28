@@ -25,6 +25,7 @@ export default function DeleteAccountScreen({ navigation }) {
                             await logout();
                         } catch (err) {
                             Alert.alert('Error', err.response?.data?.message ?? 'Failed to delete account.');
+                        } finally {
                             setLoading(false);
                         }
                     },
@@ -35,15 +36,20 @@ export default function DeleteAccountScreen({ navigation }) {
 
     return (
         <View className="flex-1 bg-Base-Background items-center justify-center px-6">
+            {/* Warning circle */}
             <View className="w-32 h-32 rounded-full bg-Base-Paper items-center justify-center mb-6">
                 <Warning size={72} />
             </View>
+
+            {/* Text */}
             <Text className="text-[24px] font-bold text-Base-OnBackground text-center mb-4">
                 Delete Your Account
             </Text>
             <Text className="text-[16px] font-geologica-regular text-Base-OnBackground text-center mb-16">
                 This section cannot be undone. All your data will be automatically deleted.
             </Text>
+
+            {/* Buttons */}
             <View className="w-full gap-3">
                 {loading
                     ? <ActivityIndicator color="#FF6D00" />

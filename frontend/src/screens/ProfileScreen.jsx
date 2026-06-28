@@ -33,6 +33,7 @@ export default function ProfileScreen({ navigation }) {
                 <Logo width={80} height={31} />
             </View>
 
+            {/* Divider */}
             <View className="h-[1px] bg-Neutral-Gray-300 mx-6" />
 
             {/* Title + Logout */}
@@ -45,7 +46,7 @@ export default function ProfileScreen({ navigation }) {
                 </TouchableOpacity>
             </View>
 
-            {/* Hello username + edit */}
+            {/* Hello username */}
             <TouchableOpacity
                 onPress={() => navigation.navigate('ChangeUserName')}
                 activeOpacity={0.7}
