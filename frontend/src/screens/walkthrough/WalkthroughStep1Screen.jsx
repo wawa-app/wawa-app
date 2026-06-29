@@ -1,94 +1,105 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import Stepper from '../../components/common/Stepper';
+import Svg, { Path, G } from 'react-native-svg';
+import Stepper, { WALKTHROUGH_STEPS } from '../../components/common/Stepper';
 import Button from '../../components/common/Button';
 
-// Place the object on a table
-const FrameIcon = () => (
+import { Mask, Rect, Circle } from 'react-native-svg';
+
+const ListIcon = () => (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-        <Path d="M3 6.75C3 5.75544 3.39509 4.80161 4.09835 4.09835C4.80161 3.39509 5.75544 3 6.75 3H17.25C18.2446 3 19.1984 3.39509 19.9016 4.09835C20.6049 4.80161 21 5.75544 21 6.75V17.25C21 18.2446 20.6049 19.1984 19.9016 19.9016C19.1984 20.6049 18.2446 21 17.25 21H6.75C5.75544 21 4.80161 20.6049 4.09835 19.9016C3.39509 19.1984 3 18.2446 3 17.25V6.75ZM6.75 4.5C6.15326 4.5 5.58097 4.73705 5.15901 5.15901C4.73705 5.58097 4.5 6.15326 4.5 6.75V17.25C4.5 17.8467 4.73705 18.419 5.15901 18.841C5.58097 19.2629 6.15326 19.5 6.75 19.5H17.25C17.8467 19.5 18.419 19.2629 18.841 18.841C19.2629 18.419 19.5 17.8467 19.5 17.25V6.75C19.5 6.15326 19.2629 5.58097 18.841 5.15901C18.419 4.73705 17.8467 4.5 17.25 4.5H6.75ZM7.875 7.5C7.77554 7.5 7.68016 7.53951 7.60983 7.60983C7.53951 7.68016 7.5 7.77554 7.5 7.875V9.75C7.5 9.94891 7.42098 10.1397 7.28033 10.2803C7.13968 10.421 6.94891 10.5 6.75 10.5C6.55109 10.5 6.36032 10.421 6.21967 10.2803C6.07902 10.1397 6 9.94891 6 9.75V7.875C6 6.84 6.84 6 7.875 6H9.75C9.94891 6 10.1397 6.07902 10.2803 6.21967C10.421 6.36032 10.5 6.55109 10.5 6.75C10.5 6.94891 10.421 7.13968 10.2803 7.28033C10.1397 7.42098 9.94891 7.5 9.75 7.5H7.875ZM7.5 16.125C7.5 16.332 7.668 16.5 7.875 16.5H9.75C9.94891 16.5 10.1397 16.579 10.2803 16.7197C10.421 16.8603 10.5 17.0511 10.5 17.25C10.5 17.4489 10.421 17.6397 10.2803 17.7803C10.1397 17.921 9.94891 18 9.75 18H7.875C6.84 18 6 17.16 6 16.125V14.25C6 14.0511 6.07902 13.8603 6.21967 13.7197C6.36032 13.579 6.55109 13.5 6.75 13.5C6.94891 13.5 7.13968 13.579 7.28033 13.7197C7.42098 13.8603 7.5 14.0511 7.5 14.25V16.125ZM16.125 7.5C16.2245 7.5 16.3198 7.53951 16.3902 7.60983C16.4605 7.68016 16.5 7.77554 16.5 7.875V9.75C16.5 9.94891 16.579 10.1397 16.7197 10.2803C16.8603 10.421 17.0511 10.5 17.25 10.5C17.4489 10.5 17.6397 10.421 17.7803 10.2803C17.921 10.1397 18 9.94891 18 9.75V7.875C18 6.84 17.16 6 16.125 6H14.25C14.0511 6 13.8603 6.07902 13.7197 6.21967C13.579 6.36032 13.5 6.55109 13.5 6.75C13.5 6.94891 13.579 7.13968 13.7197 7.28033C13.8603 7.42098 14.0511 7.5 14.25 7.5H16.125ZM16.5 16.125C16.5 16.2245 16.4605 16.3198 16.3902 16.3902C16.3198 16.4605 16.2245 16.5 16.125 16.5H14.25C14.0511 16.5 13.8603 16.579 13.7197 16.7197C13.579 16.8603 13.5 17.0511 13.5 17.25C13.5 17.4489 13.579 17.6397 13.7197 17.7803C13.8603 17.921 14.0511 18 14.25 18H16.125C17.16 18 18 17.16 18 16.125V14.25C18 14.0511 17.921 13.8603 17.7803 13.7197C17.6397 13.579 17.4489 13.5 17.25 13.5C17.0511 13.5 16.8603 13.579 16.7197 13.7197C16.579 13.8603 16.5 14.0511 16.5 14.25V16.125Z" fill="black"/>
+        <Mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+            <Rect width="24" height="24" fill="#D9D9D9" />
+        </Mask>
+        <G mask="url(#m1)">
+            <Path d="M6 17H18" stroke="#1A0F07" strokeWidth="2" strokeLinecap="round" />
+            <Path d="M6 12H18" stroke="#1A0F07" strokeWidth="2" strokeLinecap="round" />
+            <Path d="M9 7L18 7" stroke="#1A0F07" strokeWidth="2" strokeLinecap="round" />
+            <Circle cx="6" cy="7" r="1" fill="#1A0F07" />
+        </G>
     </Svg>
 );
 
-// Ensure that you have good lightening
-const LightIcon = () => (
-    <Svg width={21} height={21} viewBox="0 0 21 21" fill="none">
-        <Path d="M0 3.75C0 2.75544 0.395088 1.80161 1.09835 1.09835C1.80161 0.395088 2.75544 0 3.75 0H14.25C15.2446 0 16.1984 0.395088 16.9016 1.09835C17.6049 1.80161 18 2.75544 18 3.75V6.9C17.5204 6.65501 17.018 6.45757 16.5 6.3105V3.75C16.5 3.15326 16.2629 2.58097 15.841 2.15901C15.419 1.73705 14.8467 1.5 14.25 1.5H3.75C3.15326 1.5 2.58097 1.73705 2.15901 2.15901C1.73705 2.58097 1.5 3.15326 1.5 3.75V14.25C1.5 14.8467 1.73705 15.419 2.15901 15.841C2.58097 16.2629 3.15326 16.5 3.75 16.5H6.3105C6.4595 17.024 6.656 17.524 6.9 18H3.75C2.75544 18 1.80161 17.6049 1.09835 16.9016C0.395088 16.1984 0 15.2446 0 14.25V3.75ZM15 4.875V6.033C14.501 5.98827 13.999 5.98827 13.5 6.033V4.875C13.5 4.77554 13.4605 4.68016 13.3902 4.60983C13.3198 4.53951 13.2245 4.5 13.125 4.5H11.25C11.0511 4.5 10.8603 4.42098 10.7197 4.28033C10.579 4.13968 10.5 3.94891 10.5 3.75C10.5 3.55109 10.579 3.36032 10.7197 3.21967C10.8603 3.07902 11.0511 3 11.25 3H13.125C14.16 3 15 3.84 15 4.875ZM4.875 13.5H6.033C5.98827 13.999 5.98827 14.501 6.033 15H4.875C3.84 15 3 14.16 3 13.125V11.25C3 11.0511 3.07902 10.8603 3.21967 10.7197C3.36032 10.579 3.55109 10.5 3.75 10.5C3.94891 10.5 4.13968 10.579 4.28033 10.7197C4.42098 10.8603 4.5 11.0511 4.5 11.25V13.125C4.5 13.332 4.668 13.5 4.875 13.5ZM4.875 4.5C4.77554 4.5 4.68016 4.53951 4.60983 4.60983C4.53951 4.68016 4.5 4.77554 4.5 4.875V6.75C4.5 6.94891 4.42098 7.13968 4.28033 7.28033C4.13968 7.42098 3.94891 7.5 3.75 7.5C3.55109 7.5 3.36032 7.42098 3.21967 7.28033C3.07902 7.13968 3 6.94891 3 6.75V4.875C3 3.84 3.84 3 4.875 3H6.75C6.94891 3 7.13968 3.07902 7.28033 3.21967C7.42098 3.36032 7.5 3.55109 7.5 3.75C7.5 3.94891 7.42098 4.13968 7.28033 4.28033C7.13968 4.42098 6.94891 4.5 6.75 4.5H4.875ZM14.25 9C15.6424 9 16.9777 9.55312 17.9623 10.5377C18.9469 11.5223 19.5 12.8576 19.5 14.25C19.5 15.6424 18.9469 16.9777 17.9623 17.9623C16.9777 18.9469 15.6424 19.5 14.25 19.5C12.8576 19.5 11.5223 18.9469 10.5377 17.9623C9.55312 16.9777 9 15.6424 9 14.25C9 12.8576 9.55312 11.5223 10.5377 10.5377C11.5223 9.55312 12.8576 9 14.25 9ZM14.25 21C16.0402 21 17.7571 20.2888 19.023 19.023C20.2888 17.7571 21 16.0402 21 14.25C21 12.4598 20.2888 10.7429 19.023 9.47703C17.7571 8.21116 16.0402 7.5 14.25 7.5C12.4598 7.5 10.7429 8.21116 9.47703 9.47703C8.21116 10.7429 7.5 12.4598 7.5 14.25C7.5 16.0402 8.21116 17.7571 9.47703 19.023C10.7429 20.2888 12.4598 21 14.25 21ZM18 14.25C18 15.2446 17.6049 16.1984 16.9016 16.9016C16.1984 17.6049 15.2446 18 14.25 18C13.2554 18 12.3016 17.6049 11.5983 16.9016C10.8951 16.1984 10.5 15.2446 10.5 14.25C10.5 13.2554 10.8951 12.3016 11.5983 11.5983C12.3016 10.8951 13.2554 10.5 14.25 10.5C15.2446 10.5 16.1984 10.8951 16.9016 11.5983C17.6049 12.3016 18 13.2554 18 14.25Z" fill="black"/>
-    </Svg>
-);
-
-// Keep the objects within a frame
 const ScanIcon = () => (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-        <Path fillRule="evenodd" clipRule="evenodd" d="M7.00002 2V5H19V17H22V19H19V22H17V19H5V2H7.00002ZM9.797 12.905L6.99997 15.8948V17H17V16.4715L14.864 14.336L13.0465 16.1544L9.797 12.905ZM17 7.00002H7.00002L6.99997 12.9679L9.74998 10.0294L13.046 13.326L14.8647 11.5077L17 13.643V7.00002ZM13.5 8C14.3284 8 15 8.67158 15 9.5C15 10.3284 14.3284 11 13.5 11C12.6716 11 12 10.3284 12 9.5C12 8.67158 12.6716 8 13.5 8ZM5 5V7.00002H2V5H5Z" fill="black"/>
+        <Mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+            <Rect width="24" height="24" fill="#D9D9D9" />
+        </Mask>
+        <G mask="url(#m2)">
+            <Path d="M3.80762 8.76709V5.25977C3.80762 4.98362 4.03147 4.75977 4.30762 4.75977H7.80762" stroke="#1A0F07" strokeWidth="1.5" strokeLinecap="round" />
+            <Path d="M20.2422 8.76709V5.25977C20.2422 4.98362 20.0183 4.75977 19.7422 4.75977H16.2422" stroke="#1A0F07" strokeWidth="1.5" strokeLinecap="round" />
+            <Path d="M20.2422 15.5698V19.0771C20.2422 19.3533 20.0183 19.5771 19.7422 19.5771H16.2422" stroke="#1A0F07" strokeWidth="1.5" strokeLinecap="round" />
+            <Path d="M3.80762 15.5698V19.0771C3.80762 19.3533 4.03147 19.5771 4.30762 19.5771H7.80762" stroke="#1A0F07" strokeWidth="1.5" strokeLinecap="round" />
+            <Path d="M3 12H21" stroke="#1A0F07" strokeWidth="1.5" strokeLinecap="round" />
+        </G>
+    </Svg>
+);
+
+const ImageIcon = () => (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+        <Mask id="m3" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+            <Rect width="24" height="24" fill="#D9D9D9" />
+        </Mask>
+        <G mask="url(#m3)">
+            <Path d="M17.5 4.5C19.1569 4.5 20.5 5.84315 20.5 7.5V16.5C20.5 18.1569 19.1569 19.5 17.5 19.5H6.5C4.84315 19.5 3.5 18.1569 3.5 16.5V7.5C3.5 5.84315 4.84315 4.5 6.5 4.5H17.5ZM11.917 14.9766C11.5189 15.5734 10.7009 15.7136 10.127 15.2832L7.19336 13.082L5.0498 16.4062C5.03447 16.43 5.01746 16.4522 5 16.4736V16.5C5 17.3284 5.67157 18 6.5 18H17.5L17.6533 17.9922C18.4097 17.9154 19 17.2767 19 16.5V15.2568C18.9088 15.2086 18.8252 15.1424 18.7578 15.0557L15.0469 10.2812L11.917 14.9766ZM6.5 6C5.67157 6 5 6.67157 5 7.5V13.7178L6.0791 12.0449L6.15723 11.9355C6.57399 11.4188 7.33509 11.3141 7.87891 11.7217L10.8154 13.9238L13.9912 9.16113L14.0859 9.03613C14.5574 8.48846 15.4041 8.45778 15.9141 8.96973L16.0176 9.08789L19 12.9229V7.5C19 6.72334 18.4097 6.08461 17.6533 6.00781L17.5 6H6.5Z" fill="#1A0F07" />
+        </G>
     </Svg>
 );
 
 const TIPS = [
-    { icon: <FrameIcon />, text: 'Place the object on a table' },
-    { icon: <LightIcon />, text: 'Ensure that you have good lightening' },
-    { icon: <ScanIcon />, text: 'Keep the objects within a frame' },
+    { icon: <ListIcon />, text: 'Keep object in place' },
+    { icon: <ScanIcon />, text: 'Ensure that you have good lightening' },
+    { icon: <ImageIcon />, text: 'Keep the objects within a frame' },
 ];
 
 export default function WalkthroughStep1Screen({ navigation }) {
     return (
-        <View className="flex-1 bg-white">
+        <View style={{ flex: 1, backgroundColor: '#FFFBF0' }}>
 
             {/* Status bar */}
-            <View className="h-6" />
-
-            {/* Header zone */}
-            <View className="h-16" />
+            <View style={{ height: 24 }} />
 
             {/* Stepper */}
-            <Stepper currentStep={1} />
+            <View style={{ paddingTop: 24 }}>
+                <Stepper currentStep={1} steps={WALKTHROUGH_STEPS} />
+            </View>
 
-            {/* gap: 17px */}
-            <View className="h-[17px]" />
+            {/* gap: 24px */}
+            <View style={{ height: 24 }} />
 
             {/* Content frame */}
-            <View className="px-8">
+            <View style={{ paddingHorizontal: 16 }}>
 
                 {/* Title */}
-                <Text className="text-[24px] font-bold text-black text-center leading-[24px]">
+                <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 24, lineHeight: 32 }}>
                     Let's prepare for mission
                 </Text>
 
                 {/* gap: 9px */}
-                <View className="h-[9px]" />
+                <View style={{ height: 9 }} />
 
                 {/* Subtitle */}
-                <Text className="text-[14px] font-normal text-black text-center leading-[14px]">
+                <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20 }}>
                     Take 10 photos of your objects
                 </Text>
 
+
                 {/* gap: 40px */}
-                <View className="h-[40px]" />
+                <View style={{ height: 40 }} />
 
                 {/* Tips card */}
-                <View
-                    style={{
-                        height: 246,
-                        borderRadius: 12,
-                        backgroundColor: '#D9D9D9',
-                        paddingHorizontal: 16,
-                        paddingVertical: 24,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: 32,
-                    }}
-                >
+                <View style={{ borderRadius: 12, paddingHorizontal: 16, paddingVertical: 24, gap: 32, backgroundColor: '#FFE0B2' }}>
+
                     {/* Tips title */}
-                    <Text className="text-[18px] font-semibold text-black text-center" style={{ lineHeight: 20.16 }}>
+                    <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 20, lineHeight: 28 }}>
                         Tips for capture
                     </Text>
 
                     {/* Tip items */}
                     {TIPS.map((tip, index) => (
-                        <View key={index} className="flex-row items-center self-stretch" style={{ gap: 16 }}>
+                        <View key={index} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                             {tip.icon}
-                            <Text className="flex-1 text-[15px] font-normal text-black" style={{ lineHeight: 16.8 }}>
+                            <Text style={{ flex: 1, color: '#1A0F07', fontFamily: 'Geologica-Light', fontSize: 15 }}>
                                 {tip.text}
                             </Text>
                         </View>
@@ -98,14 +109,15 @@ export default function WalkthroughStep1Screen({ navigation }) {
             </View>
 
             {/* Bottom spacer */}
-            <View className="flex-1" />
+            <View style={{ flex: 1 }} />
 
             {/* Button pinned to bottom */}
-            <View className="w-[296px] self-center pb-[101px]">
+            <View style={{ paddingHorizontal: 34, paddingBottom: 104 }}>
                 <Button
                     title="Go to Setting"
                     onPress={() => navigation.navigate('WalkthroughStep2')}
                     fullWidth
+                    shape="square"
                 />
             </View>
 

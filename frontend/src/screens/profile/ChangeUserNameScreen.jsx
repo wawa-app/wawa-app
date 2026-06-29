@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { Back } from '../../components/icons';
+import AppBar from '../../components/common/AppBar';
 import Button from '../../components/common/Button';
 import apiClient from '../../api/client';
 
 export default function ChangeUserNameScreen({ navigation }) {
     const { user, setUser } = useAuth();
     const [username, setUsername] = useState(user?.username ?? '');
+    const isChanged = username.trim() !== (user?.username ?? '');
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
@@ -31,38 +32,34 @@ export default function ChangeUserNameScreen({ navigation }) {
 
     return (
         <View className="flex-1 bg-Base-Background">
-            {/* Header */}
-            <View className="flex-row items-center px-4 pt-14 pb-4">
-                <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} className="mr-3">
-                    <Back size={24} />
-                </TouchableOpacity>
-                <Text className="text-[20px] font-bold text-Base-OnBackground">
-                    Change User Name
-                </Text>
-            </View>
+            <AppBar title="Change User Name" onBack={() => navigation.goBack()} />
 
-            {/* Divider */}
-            <View className="h-[1px] bg-Neutral-Gray-300 mx-6 mb-6" />
+            {/* gap: 96px */}
+            <View style={{ height: 96 }} />
 
             {/* Content */}
-            <View className="flex-1 px-6">
-                <Text className="text-[14px] font-geologica-regular text-Base-OnBackground mb-2">
+            <View style={{ width: 292, alignSelf: 'center' }}>
+                <Text style={{ color: '#1A0F07', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, marginBottom: 8 }}>
                     User Name
                 </Text>
-                <TextInput
-                    value={username}
-                    onChangeText={setUsername}
-                    placeholder="Enter username"
-                    placeholderTextColor="#A29789"
-                    className="w-full h-12 border border-Neutral-Gray-400 rounded-lg px-4 text-[14px] text-Base-OnBackground bg-Base-Surface"
-                />
+                <View style={{ height: 56, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#C4B8AE', borderRadius: 8, paddingHorizontal: 16, backgroundColor: '#FFF3CD' }}>
+                    <TextInput
+                        style={{ flex: 1, fontSize: 14, color: '#1A0F07' }}
+                        value={username}
+                        onChangeText={setUsername}
+                        placeholder="Enter username"
+                        placeholderTextColor="#A29789"
+                    />
+                </View>
             </View>
 
+            <View className="flex-1" />
+
             {/* Save button */}
-            <View className="px-6 pb-[60px]">
+            <View style={{ width: 292, alignSelf: 'center', paddingBottom: 104 }}>
                 {loading
                     ? <ActivityIndicator color="#FF6D00" />
-                    : <Button title="Save User Name" onPress={handleSave} fullWidth shape="round" />
+                    : <Button title="Save User Name" onPress={handleSave} fullWidth shape="square" variant={isChanged ? 'primary' : 'secondary'} />
                 }
             </View>
         </View>

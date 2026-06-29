@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Warning } from '../../components/icons';
+import AppBar from '../../components/common/AppBar';
 import Button from '../../components/common/Button';
 import apiClient from '../../api/client';
 
@@ -35,32 +36,60 @@ export default function DeleteAccountScreen({ navigation }) {
     };
 
     return (
-        <View className="flex-1 bg-Base-Background items-center justify-center px-6">
-            {/* Warning circle */}
-            <View className="w-32 h-32 rounded-full bg-Base-Paper items-center justify-center mb-6">
-                <Warning size={72} />
+        <View style={{ flex: 1, backgroundColor: '#FFFBF0' }}>
+            <AppBar title="Delete Account" onBack={() => navigation.goBack()} />
+
+            {/* gap: 208px */}
+            <View style={{ height: 208 }} />
+
+            {/* Warning icon in circle frame */}
+            <View style={{ alignItems: 'center' }}>
+                <View style={{
+                    padding: 19,
+                    borderRadius: 55,
+                    borderWidth: 0.1,
+                    borderColor: '#595858',
+                    backgroundColor: '#FFE0B2',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}>
+                    <Warning size={72} />
+                </View>
             </View>
 
-            {/* Text */}
-            <Text className="text-[24px] font-bold text-Base-OnBackground text-center mb-4">
-                Delete Your Account
-            </Text>
-            <Text className="text-[16px] font-geologica-regular text-Base-OnBackground text-center mb-16">
-                This section cannot be undone. All your data will be automatically deleted.
-            </Text>
+            {/* gap: 16px */}
+            <View style={{ height: 16 }} />
+
+            {/* Text container */}
+            <View style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, alignSelf: 'center' }}>
+                <Text style={{ height: 33, alignSelf: 'stretch', color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24 }}>
+                    Delete Your Account
+                </Text>
+                <View style={{ width: 304, height: 48, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24 }}>
+                        This section cannot be undone. All your data will be automatically deleted.
+                    </Text>
+                </View>
+            </View>
+
+            <View style={{ flex: 1 }} />
 
             {/* Buttons */}
-            <View className="w-full gap-3">
+            <View style={{ width: 292, alignSelf: 'center', paddingBottom: 104, gap: 12 }}>
                 {loading
                     ? <ActivityIndicator color="#FF6D00" />
-                    : <Button title="Delete Account" onPress={handleDelete} fullWidth shape="round" />
+                    : <Button title="Delete Account" onPress={handleDelete} fullWidth shape="square" />
                 }
-                <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-                    <Text className="text-center text-[14px] font-geologica-regular text-Base-OnBackground">
-                        Want to keep your account?{' '}
-                        <Text className="text-Brand-Primary font-geologica-bold">Cancel</Text>
+                <View style={{ alignItems: 'center', gap: 4 }}>
+                    <Text style={{ textAlign: 'center', color: '#1A0F07', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20 }}>
+                        Want to keep your account?
                     </Text>
-                </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+                        <Text style={{ textAlign: 'center', color: '#2664F2', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }}>
+                            Cancel
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );

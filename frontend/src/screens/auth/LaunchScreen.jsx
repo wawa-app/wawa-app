@@ -7,7 +7,7 @@ const waLogo = require('../../assets/images/WA.png');
 
 export default function LaunchScreen({ navigation }) {
     return (
-        <View className="flex-1 bg-Base-Background items-center">
+        <View style={{ flex: 1, backgroundColor: '#FFFBF0', alignItems: 'center' }}>
 
             {/* Top spacer */}
             <View className="flex-1" />
@@ -51,7 +51,7 @@ export default function LaunchScreen({ navigation }) {
                     title="Get Started"
                     onPress={() => navigation.navigate('SignUp')}
                     fullWidth
-                    shape="round"
+                    shape="square"
                 />
             </View>
 
