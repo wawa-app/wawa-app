@@ -102,11 +102,9 @@ function getHistorySubtitle(log) {
     return date;
 }
 
-// mood: 'happy' | 'normal' | 'cry'
-function UniAnimation({ mood = 'normal' }) {
-    const source = mood === 'happy' ? uniHappy
-        : mood === 'cry' ? uniCry
-            : uniNormal;
+function UniAnimation({ mood = "normal" }) {
+    const source =
+        mood === "happy" ? uniHappy : mood === "cry" ? uniCry : uniNormal;
 
     return (
         <LottieView
@@ -133,11 +131,11 @@ function ShareButton({ message }) {
         <TouchableOpacity
             onPress={handleShare}
             activeOpacity={0.7}
-            className="flex-row items-center"
+            className="h-6 flex-row items-center justify-center"
         >
-            <ShareIcon size={20} color="#000000" />
+            <ShareIcon size={16} color="#E85A00" />
 
-            <Text className="ml-1 text-[12px] leading-[15px] text-black font-geologica-regular">
+            <Text className="ml-2 text-[#E85A00] text-[12px] leading-[16px] font-geologica-regular">
                 Share
             </Text>
         </TouchableOpacity>
@@ -145,41 +143,41 @@ function ShareButton({ message }) {
 }
 
 function UniSection({ uni }) {
-    const stage = uni?.stage ?? "Baby Uni";
-    const level = uni?.level ?? 1;
-    const exp = uni?.exp ?? 0;
+    const stage = uni?.stage ?? DEFAULT_STATS.uni.stage;
+    const level = uni?.level ?? DEFAULT_STATS.uni.level;
+    const exp = uni?.exp ?? DEFAULT_STATS.uni.exp;
 
     const currentXp = Math.min(exp % 100, 100);
     const xpProgress = `${currentXp}%`;
 
     return (
-        <View className="w-full h-[240px] bg-[#D9D9D9] rounded-lg p-4 items-center gap-4">
+        <View className="w-full h-[316px] bg-[#FFF3C7] rounded-lg px-4 py-4 items-center">
             <View className="w-full flex-row justify-end">
-                <ShareButton
-                    message={`My WaWa Uni is ${stage} at level ${level}!`}
-                />
+                <ShareButton message={`My WaWa Uni is ${stage} at level ${level}!`} />
             </View>
 
-            <UniAnimation mood="normal" />
+            <View className="mt-4 w-[120px] h-[120px] items-center justify-center">
+                <UniAnimation mood="normal" />
+            </View>
 
-            <Text className="text-black text-[16px] leading-[20px] font-geologica-bold font-bold text-center">
+            <Text className="mt-4 text-[#1A0F0A] text-[16px] leading-[24px] font-geologica-regular text-center">
                 {stage} (Level: {level})
             </Text>
 
-            <View className="w-full bg-[#868686] rounded-xl p-4 gap-2">
-                <View className="flex-row justify-between items-center">
-                    <Text className="text-white text-[12px] leading-[15px] font-geologica-bold font-bold">
+            <View className="mt-4 w-full h-[68px] bg-[#FFCC80] rounded-xl px-4 py-3 justify-center">
+                <View className="w-full flex-row justify-between items-center">
+                    <Text className="text-[#1A0F0A] text-[12px] leading-[16px] font-geologica-bold font-bold">
                         XP
                     </Text>
 
-                    <Text className="text-white text-[12px] leading-[15px] font-geologica-bold font-bold">
+                    <Text className="text-[#1A0F0A] text-[12px] leading-[16px] font-geologica-bold font-bold">
                         {currentXp}/100
                     </Text>
                 </View>
 
-                <View className="w-full h-4 bg-[#D9D9D9] rounded-full overflow-hidden">
+                <View className="mt-2 w-full h-4 bg-[#FFF3E1] rounded-full overflow-hidden">
                     <View
-                        className="h-full bg-[#4D4D4D] rounded-full"
+                        className="h-full bg-[#E85A00] rounded-full"
                         style={{ width: xpProgress }}
                     />
                 </View>
@@ -187,56 +185,60 @@ function UniSection({ uni }) {
         </View>
     );
 }
+function StreakStatItem({ icon, value, label }) {
+    return (
+        <View className="items-center justify-center min-w-[72px]">
+            <View className="w-12 h-12 items-center justify-center">
+                {icon}
+            </View>
+
+            <Text className="mt-1 text-[#1A0F0A] text-[18px] leading-[24px] font-geologica-regular text-center">
+                {value}
+            </Text>
+
+            <Text className="mt-1 text-[#1A0F0A] text-[12px] leading-[16px] font-geologica-regular text-center">
+                {label}
+            </Text>
+        </View>
+    );
+}
 
 function StreakInfoSection({ current, best, averageTime }) {
     return (
-        <View className="w-full bg-[#E6E6E6] rounded-lg p-4 gap-4">
-            <View className="w-full flex-row items-start justify-between">
-                <Text className="text-black text-[16px] leading-[20px] font-geologica-bold font-bold">
+        <View className="w-full bg-[#FFF3C7] rounded-lg px-4 py-4">
+            <View className="w-full flex-row items-center justify-between">
+                <Text
+                    numberOfLines={1}
+                    className="flex-1 text-[#1A0F0A] text-[24px] leading-[32px] font-geologica-bold font-bold"
+                >
                     Your Streak
                 </Text>
 
-                <ShareButton
-                    message={`My WaWa streak is ${current} days. My best streak is ${best} days!`}
-                />
+                <View className="ml-4">
+                    <ShareButton
+                        message={`My WaWa streak is ${current} days. My best streak is ${best} days!`}
+                    />
+                </View>
             </View>
 
-            <View className="w-full flex-row items-center justify-between">
-                <View className="items-center justify-center">
-                    <StreakIcon size={32} color="#333333" />
+            <View className="mt-6 w-full h-24 flex-row items-center justify-between">
+                <StreakStatItem
+                    icon={<StreakIcon size={40} color="#E85A00" />}
+                    value={current}
+                    label="Current"
+                />
 
-                    <Text className="mt-3 text-black text-[16px] leading-[20px] font-geologica-bold font-bold">
-                        {current}
-                    </Text>
+                <StreakStatItem
+                    icon={<Trophy size={40} color="#E85A00" />}
+                    value={best}
+                    label="Best"
+                />
 
-                    <Text className="text-[#333333] text-[12px] leading-[15px] font-geologica-regular">
-                        Current
-                    </Text>
-                </View>
-
-                <View className="items-center justify-center">
-                    <Trophy size={32} color="#333333" />
-
-                    <Text className="mt-3 text-black text-[16px] leading-[20px] font-geologica-bold font-bold">
-                        {best}
-                    </Text>
-
-                    <Text className="text-[#333333] text-[12px] leading-[15px] font-geologica-regular">
-                        Best
-                    </Text>
-                </View>
-
-                <View className="items-center justify-center">
-                    <Timer size={32} color="#333333" />
-
-                    <Text className="mt-3 text-black text-[16px] leading-[20px] font-geologica-bold font-bold">
-                        {averageTime}
-                    </Text>
-
-                    <Text className="text-[#333333] text-[12px] leading-[15px] font-geologica-regular">
-                        Average time
-                    </Text>
-                </View>
+                <StreakStatItem
+                    icon={<Timer size={40} color="#E85A00" />}
+                    value={averageTime}
+                    label="Average time"
+                />
             </View>
         </View>
     );
@@ -245,14 +247,14 @@ function StreakInfoSection({ current, best, averageTime }) {
 function MissionHistorySection({ logs }) {
     return (
         <View className="w-full gap-3">
-            <Text className="text-black text-[16px] leading-[20px] font-geologica-bold font-bold">
+            <Text className="text-[#1A0F0A] text-[24px] leading-[32px] font-geologica-bold font-bold">
                 Recent mission history
             </Text>
 
-            <View className="w-full border border-black rounded-lg bg-white overflow-hidden">
+            <View className="w-full rounded-lg bg-[#FFF3C7] overflow-hidden">
                 {logs.length === 0 ? (
                     <View className="p-4">
-                        <Text className="text-black text-[14px] font-geologica-regular">
+                        <Text className="text-[#1A0F0A] text-[14px] leading-[20px] font-geologica-regular">
                             No mission history yet.
                         </Text>
                     </View>
@@ -261,15 +263,15 @@ function MissionHistorySection({ logs }) {
                         <View
                             key={log?._id ?? index}
                             className={`p-4 ${index !== logs.length - 1
-                                ? "border-b border-[#D9D9D9]"
+                                ? "border-b border-[#FFCC80]"
                                 : ""
                                 }`}
                         >
-                            <Text className="text-black text-[14px] leading-[18px] font-geologica-bold font-bold">
+                            <Text className="text-[#1A0F0A] text-[16px] leading-[24px] font-geologica-bold font-bold">
                                 {getHistoryTitle(log)}
                             </Text>
 
-                            <Text className="mt-1 text-[#4D4A50] text-[12px] leading-[15px] font-geologica-regular">
+                            <Text className="mt-1 text-[#4D3A2A] text-[12px] leading-[16px] font-geologica-regular">
                                 {getHistorySubtitle(log)}
                             </Text>
                         </View>
@@ -281,15 +283,16 @@ function MissionHistorySection({ logs }) {
 }
 
 export default function TrackingScreen() {
-    const { setScrolled } = useScroll()
+    const { setScrolled } = useScroll();
+
     const [stats, setStats] = useState(DEFAULT_STATS);
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
     const handleScroll = (e) => {
-        setScrolled(e.nativeEvent.contentOffset.y > 0)
-    }
+        setScrolled(e.nativeEvent.contentOffset.y > 0);
+    };
 
     const fetchTrackingData = async () => {
         try {
@@ -326,9 +329,9 @@ export default function TrackingScreen() {
 
     useFocusEffect(
         useCallback(() => {
-            return () => setScrolled(false)
+            return () => setScrolled(false);
         }, [setScrolled])
-    )
+    );
 
     useEffect(() => {
         fetchTrackingData();
@@ -342,19 +345,17 @@ export default function TrackingScreen() {
 
     if (loading) {
         return (
-            <View className="flex-1 bg-white">
+            <View className="flex-1 bg-[#FFF9EF]">
                 <StatusBar
                     translucent
                     backgroundColor="transparent"
                     barStyle="dark-content"
                 />
 
-
-
                 <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator color="#000000" />
+                    <ActivityIndicator color="#E85A00" />
 
-                    <Text className="mt-3 text-black text-[14px] font-geologica-regular">
+                    <Text className="mt-3 text-[#1A0F0A] text-[14px] leading-[20px] font-geologica-regular">
                         Loading tracking...
                     </Text>
                 </View>
@@ -364,30 +365,28 @@ export default function TrackingScreen() {
 
     if (error) {
         return (
-            <View className="flex-1 bg-white">
+            <View className="flex-1 bg-[#FFF9EF]">
                 <StatusBar
                     translucent
                     backgroundColor="transparent"
                     barStyle="dark-content"
                 />
 
-
-
                 <View className="flex-1 px-6 items-center justify-center">
-                    <Text className="text-black text-[22px] leading-[28px] font-geologica-bold font-bold text-center">
+                    <Text className="text-[#1A0F0A] text-[24px] leading-[32px] font-geologica-bold font-bold text-center">
                         Unable to load tracking
                     </Text>
 
-                    <Text className="mt-2 text-[#4D4A50] text-[14px] leading-[20px] font-geologica-regular text-center">
+                    <Text className="mt-2 text-[#4D3A2A] text-[14px] leading-[20px] font-geologica-regular text-center">
                         Please check your connection and try again.
                     </Text>
 
                     <TouchableOpacity
                         onPress={fetchTrackingData}
                         activeOpacity={0.8}
-                        className="mt-6 bg-black rounded-2xl h-12 px-6 items-center justify-center"
+                        className="mt-6 bg-[#E85A00] rounded-2xl h-12 px-6 items-center justify-center"
                     >
-                        <Text className="text-white text-[14px] font-geologica-bold font-bold">
+                        <Text className="text-white text-[14px] leading-[20px] font-geologica-bold font-bold">
                             Retry
                         </Text>
                     </TouchableOpacity>
@@ -397,7 +396,7 @@ export default function TrackingScreen() {
     }
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-[#FFF9EF]">
             <StatusBar
                 translucent
                 backgroundColor="transparent"
@@ -409,17 +408,17 @@ export default function TrackingScreen() {
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
                 contentContainerStyle={{
-                    paddingHorizontal: 24,
-                    paddingTop: 32,
-                    paddingBottom: 120,
+                    paddingHorizontal: 16,
+                    paddingTop: 24,
+                    paddingBottom: 104,
                 }}
                 showsVerticalScrollIndicator={false}
             >
-                <Text className="text-black text-[32px] leading-[39px] font-geologica-bold font-bold mb-8">
+                <Text className="text-[#1A0F0A] text-[32px] leading-[40px] font-geologica-bold font-bold mb-8">
                     Tracking
                 </Text>
 
-                <View className="gap-4">
+                <View className="w-full gap-4">
                     <UniSection uni={uni} />
 
                     <StreakInfoSection
