@@ -152,6 +152,15 @@ export default function AlarmListScreen({ navigation }) {
                     console.warn('[AlarmListScreen] object count failed:', e?.message);
                     if (active) setObjectCount(0);
                 }
+                try {
+                    const res = await apiClient.get('/api/alarms');
+                    if (!active) return;
+                    const mapped = (res.data.data || []).map(mapAlarmFromApi);
+                    setAlarms(mapped);
+                    mapped.forEach(syncNative);
+                } catch (err) {
+                    console.error('[AlarmListScreen] refetch error:', err?.response?.status);
+                }
             })();
             return () => { active = false; }
         }, [])

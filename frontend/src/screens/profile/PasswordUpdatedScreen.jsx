@@ -1,9 +1,8 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import Svg, { Mask, Rect, G, Path } from 'react-native-svg';
-import Stepper, { WALKTHROUGH_STEPS } from '../../components/common/Stepper';
+import AppBar from '../../components/common/AppBar';
 import Button from '../../components/common/Button';
-import { useAuth } from '../../context/AuthContext';
 
 const CheckIcon = () => (
     <Svg width={72} height={72} viewBox="0 0 72 72" fill="none">
@@ -21,22 +20,13 @@ const CheckIcon = () => (
     </Svg>
 );
 
-export default function WalkthroughAllDoneScreen({ navigation }) {
-    const { setIsFirstLogin } = useAuth();
-
+export default function PasswordUpdatedScreen({ navigation }) {
     return (
         <View style={{ flex: 1, backgroundColor: '#FFFBF0' }}>
+            <AppBar title="Change Password" onBack={() => navigation.navigate('Main', { screen: 'Profile' })} />
 
-            {/* Status bar */}
-            <View style={{ height: 24 }} />
-
-            {/* Stepper — all steps completed */}
-            <View style={{ paddingTop: 24 }}>
-                <Stepper currentStep={4} steps={WALKTHROUGH_STEPS} />
-            </View>
-
-            {/* gap: 160px */}
-            <View style={{ height: 160 }} />
+            {/* gap: 208px */}
+            <View style={{ height: 208 }} />
 
             {/* Check icon in circle frame */}
             <View style={{ alignItems: 'center' }}>
@@ -53,34 +43,30 @@ export default function WalkthroughAllDoneScreen({ navigation }) {
                 </View>
             </View>
 
-            {/* gap: 24px */}
-            <View style={{ height: 24 }} />
+            {/* gap: 16px */}
+            <View style={{ height: 16 }} />
 
-            {/* Text content */}
-            <Text style={{ height: 33, textAlignVertical: 'center', alignSelf: 'stretch', color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24 }}>
-                You're all set!
-            </Text>
+            {/* Text container */}
+            <View style={{ width: 322, height: 89, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, alignSelf: 'center' }}>
+                <Text style={{ height: 33, alignSelf: 'stretch', color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24 }}>
+                    Your Password Was Successfully Updated
+                </Text>
+                <Text style={{ alignSelf: 'stretch', color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24 }}>
+                    WaWa now is ready for a new challenge
+                </Text>
+            </View>
 
-            <Text style={{ alignSelf: 'stretch', color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24 }}>
-                WaWa now is ready for a new challenge
-            </Text>
-
-            {/* Bottom spacer */}
             <View style={{ flex: 1 }} />
 
             {/* Button */}
-            <View style={{ paddingHorizontal: 34, paddingBottom: 104 }}>
+            <View style={{ width: 292, alignSelf: 'center', paddingBottom: 104 }}>
                 <Button
-                    title="Go to Home"
-                    onPress={() => {
-                        setIsFirstLogin(false);
-                        navigation.navigate('Main');
-                    }}
+                    title="Back to Account"
+                    onPress={() => navigation.navigate('Main', { screen: 'Profile' })}
                     fullWidth
                     shape="square"
                 />
             </View>
-
         </View>
     );
 }

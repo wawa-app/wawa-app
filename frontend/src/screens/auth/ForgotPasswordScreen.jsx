@@ -29,44 +29,38 @@ export default function ForgotPasswordScreen({ navigation }) {
     };
 
     return (
-        <View className="flex-1 bg-white items-center">
-
-            {/* Status bar */}
-            <View className="h-6 self-stretch" />
-
-            {/* Header zone */}
-            <View className="h-16 self-stretch" />
+        <View className="flex-1 bg-Base-Background items-center">
 
             {/* Top spacer */}
-            <View className="flex-1" />
+            <View style={{ height: 232 }} />
 
-            {/* Content frame: w-296px */}
-            <View className="w-[296px]">
+            {/* Content frame */}
+            <View style={{ width: '100%', paddingHorizontal: 34 }}>
 
                 {/* Title */}
-                <Text className="text-[24px] font-bold text-black text-center leading-[28.8px] tracking-[-0.48px] mb-[15px]">
+                <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 32, lineHeight: 40, marginBottom: 16, alignSelf: 'stretch', justifyContent: 'center' }}>
                     Reset Password
                 </Text>
 
-                {/* Subtitle — w: 222.896px centered */}
-                <Text className="w-[223px] text-[14px] font-normal text-black text-center leading-[16.8px] mb-[23px] self-center">
+                {/* Subtitle */}
+                <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, marginBottom: 32, width: 223, alignSelf: 'center' }}>
                     Enter your email and we will send you a link to reset your password
                 </Text>
 
-                {/* Email label */}
-                <Text className="text-[15px] font-medium text-black leading-[15px] mb-1.5">Email</Text>
-
-                {/* Email input */}
-                <View className="w-[296px] h-12 flex-row items-center border border-[#ddd] rounded-lg px-4">
-                    <TextInput
-                        className="flex-1 text-[14px] text-black"
-                        placeholder="rodrigo878@wawa.ca"
-                        placeholderTextColor="#B3B3B3"
-                        value={email}
-                        onChangeText={setEmail}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                    />
+                {/* Email label + input */}
+                <View style={{ width: 292, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, alignSelf: 'center' }}>
+                    <Text style={{ alignSelf: 'stretch', color: '#1A0F07', fontFamily: 'Geologica-Light', fontSize: 14 }}>Email</Text>
+                    <View style={{ alignSelf: 'stretch', height: 48, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#C4B8AE', borderRadius: 8, paddingHorizontal: 16, backgroundColor: '#FFF3CD' }}>
+                        <TextInput
+                            style={{ flex: 1, fontSize: 14, color: '#1A0F07' }}
+                            placeholder="rodrigo878@wawa.ca"
+                            placeholderTextColor="#A29789"
+                            value={email}
+                            onChangeText={setEmail}
+                            autoCapitalize="none"
+                            keyboardType="email-address"
+                        />
+                    </View>
                 </View>
 
             </View>
@@ -75,14 +69,15 @@ export default function ForgotPasswordScreen({ navigation }) {
             <View className="flex-1" />
 
             {/* Button + footer pinned to bottom */}
-            <View className="w-[296px] pb-[73px]">
+            <View style={{ width: 292, justifyContent: 'center', alignItems: 'center', paddingBottom: 104, alignSelf: 'center' }}>
                 {loading
-                    ? <ActivityIndicator color="#000" className="mb-4" />
-                    : <Button title="Send Reset Link" onPress={handleSendResetLink} fullWidth />
+                    ? <ActivityIndicator color="#FF6D00" className="mb-4" />
+                    : <Button title="Send Reset Link" onPress={handleSendResetLink} fullWidth shape="square" />
                 }
-                <Text className="text-center text-[14px] font-normal text-black mt-4 leading-[27px]">
-                    <Text className="text-[#1C4BB6] font-medium" onPress={() => navigation.navigate('SignIn')}>
-                        Back to Sign In
+                <Text style={{ textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, color: '#1A0F07', marginTop: 8 }}>
+                    Back to{' '}
+                    <Text style={{ color: '#2664F2', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('SignIn')}>
+                        Sign In
                     </Text>
                 </Text>
             </View>

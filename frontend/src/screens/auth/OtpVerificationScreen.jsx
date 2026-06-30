@@ -43,40 +43,34 @@ export default function OtpVerificationScreen({ navigation, route }) {
     };
 
     return (
-        <View className="flex-1 bg-white">
-
-            {/* Status bar */}
-            <View className="h-6" />
-
-            {/* Header zone */}
-            <View className="h-16" />
+        <View style={{ flex: 1, backgroundColor: '#FFFBF0', alignItems: 'center' }}>
 
             {/* Top spacer */}
-            <View className="flex-1" />
+            <View style={{ height: 232 }} />
 
-            {/* Content frame: w-296px, gap-23px, items-center */}
-            <View className="w-[296px] self-center items-center">
+            {/* Content frame */}
+            <View style={{ width: 292, alignSelf: 'center' }}>
 
                 {/* Title */}
-                <Text className="text-[24px] font-bold text-black text-center leading-[28.8px] tracking-[-0.48px] mb-[15px]">
+                <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 32, lineHeight: 40, marginBottom: 16, alignSelf: 'stretch' }}>
                     Check Your Email
                 </Text>
 
-                {/* Subtitle — w: 222.896px */}
-                <Text className="w-[222.896px] text-[14px] font-normal text-black text-center leading-[16.8px] mb-[23px]">
+                {/* Subtitle */}
+                <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24, marginBottom: 32, alignSelf: 'stretch' }}>
                     We sent 6-digit code to your email {email}
                 </Text>
 
                 {/* Received Code label + input */}
-                <View className="self-stretch">
-                    <Text className="text-[15px] font-medium text-black leading-[15px] mb-1.5">
+                <View style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ alignSelf: 'stretch', color: '#1A0F07', fontFamily: 'Geologica-Light', fontSize: 14 }}>
                         Received Code
                     </Text>
-                    <View className="h-12 flex-row items-center self-stretch border border-[#ddd] rounded-lg px-4">
+                    <View style={{ alignSelf: 'stretch', height: 48, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#C4B8AE', borderRadius: 8, paddingHorizontal: 16, backgroundColor: '#FFF3CD' }}>
                         <TextInput
-                            className="flex-1 text-[14px] text-black tracking-[8px]"
+                            style={{ flex: 1, fontSize: 14, color: '#1A0F07', letterSpacing: 8 }}
                             placeholder="000000"
-                            placeholderTextColor="#B3B3B3"
+                            placeholderTextColor="#A29789"
                             value={otp}
                             onChangeText={(text) => setOtp(text.replace(/[^0-9]/g, '').slice(0, 6))}
                             keyboardType="number-pad"
@@ -87,24 +81,25 @@ export default function OtpVerificationScreen({ navigation, route }) {
 
             </View>
 
-            {/* Bottom spacer */}
-            <View className="flex-1" />
+            {/* gap: 32px between input and buttons */}
+            <View style={{ height: 32 }} />
 
             {/* Buttons + footer pinned to bottom */}
-            <View className="px-8 pb-[101px]">
+            <View style={{ width: 292, alignSelf: 'center', paddingBottom: 104 }}>
                 {loading
-                    ? <ActivityIndicator color="#000" className="mb-3" />
-                    : <Button title="Verify Code" onPress={handleVerify} fullWidth />
+                    ? <ActivityIndicator color="#FF6D00" style={{ marginBottom: 8 }} />
+                    : <Button title="Verify Code" onPress={handleVerify} fullWidth shape="square" />
                 }
-                <View className="mt-3">
+                <View style={{ marginTop: 8 }}>
                     {resending
-                        ? <ActivityIndicator color="#000" />
-                        : <Button title="Resend Code" onPress={handleResend} variant="secondary" fullWidth />
+                        ? <ActivityIndicator color="#FF6D00" />
+                        : <Button title="Resend Code" onPress={handleResend} variant="secondary" fullWidth shape="square" />
                     }
                 </View>
-                <Text className="text-center text-[14px] font-normal text-black mt-4 leading-[27px]">
-                    <Text className="text-[#1C4BB6] font-medium" onPress={() => navigation.navigate('SignIn')}>
-                        Back to Sign In
+                <Text style={{ textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, color: '#1A0F07', marginTop: 8 }}>
+                    Back to{' '}
+                    <Text style={{ color: '#2664F2', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('SignIn')}>
+                        Sign In
                     </Text>
                 </Text>
             </View>
