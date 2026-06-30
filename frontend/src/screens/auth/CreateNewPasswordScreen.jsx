@@ -38,64 +38,61 @@ export default function CreateNewPasswordScreen({ navigation, route }) {
     };
 
     return (
-        <View className="flex-1 bg-white items-center">
-
-            {/* Status bar */}
-            <View className="h-6 self-stretch" />
-
-            {/* Header zone */}
-            <View className="h-16 self-stretch" />
+        <View className="flex-1 bg-Base-Background items-center">
 
             {/* Top spacer */}
-            <View className="flex-1" />
+            <View style={{ height: 232 }} />
 
-            {/* Content frame: w-296px */}
-            <View className="w-[296px]">
+            {/* Content frame */}
+            <View style={{ width: '100%', paddingHorizontal: 34 }}>
 
                 {/* Title */}
-                <Text className="text-[24px] font-bold text-black text-center leading-[28.8px] tracking-[-0.48px] mb-[15px]">
-                    Create New Password
+                <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 32, lineHeight: 40, marginBottom: 16, alignSelf: 'stretch' }}>
+                    Set New Password
                 </Text>
 
                 {/* Subtitle */}
-                <Text className="text-[14px] font-normal text-black text-center leading-[16.8px] mb-[23px]">
+                <Text style={{ width: 222.896, color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, marginBottom: 32, alignSelf: 'center' }}>
                     Enter a new password for your account
                 </Text>
 
-                {/* New Password label */}
-                <Text className="text-[15px] font-medium text-black leading-[15px] mb-1.5">New Password</Text>
-
-                {/* New Password input */}
-                <View className="w-[296px] h-12 flex-row items-center border border-[#ddd] rounded-lg px-4 mb-6">
-                    <TextInput
-                        className="flex-1 text-[14px] text-black"
-                        placeholder="Create a new password"
-                        placeholderTextColor="#B3B3B3"
-                        value={newPassword}
-                        onChangeText={setNewPassword}
-                        secureTextEntry={!showNew}
-                    />
-                    <TouchableOpacity onPress={() => setShowNew(!showNew)}>
-                        <EyeIcon color={showNew ? '#1a1a1a' : '#B3B3B3'} />
-                    </TouchableOpacity>
+                {/* New Password label + input */}
+                <View style={{ width: 292, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, alignSelf: 'center' }}>
+                    <Text style={{ alignSelf: 'stretch', color: '#1A0F07', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20 }}>Create New Password</Text>
+                    <View style={{ alignSelf: 'stretch', height: 48, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#C4B8AE', borderRadius: 8, paddingHorizontal: 16, backgroundColor: '#FFF3CD' }}>
+                        <TextInput
+                            style={{ flex: 1, fontSize: 14, color: '#1A0F07' }}
+                            placeholder="Create password"
+                            placeholderTextColor="#A29789"
+                            value={newPassword}
+                            onChangeText={setNewPassword}
+                            secureTextEntry={!showNew}
+                        />
+                        <TouchableOpacity onPress={() => setShowNew(!showNew)}>
+                            <EyeIcon color={showNew ? '#1A0F07' : '#A29789'} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
-                {/* Confirm Password label */}
-                <Text className="text-[15px] font-medium text-black leading-[15px] mb-1.5">Confirm Password</Text>
+                {/* gap: 24px */}
+                <View style={{ height: 24 }} />
 
-                {/* Confirm Password input */}
-                <View className="w-[296px] h-12 flex-row items-center border border-[#ddd] rounded-lg px-4">
-                    <TextInput
-                        className="flex-1 text-[14px] text-black"
-                        placeholder="Confirm new password"
-                        placeholderTextColor="#B3B3B3"
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        secureTextEntry={!showConfirm}
-                    />
-                    <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
-                        <EyeIcon color={showConfirm ? '#1a1a1a' : '#B3B3B3'} />
-                    </TouchableOpacity>
+                {/* Confirm Password label + input */}
+                <View style={{ width: 292, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, alignSelf: 'center' }}>
+                    <Text style={{ alignSelf: 'stretch', color: '#1A0F07', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20 }}>Confirm New Password</Text>
+                    <View style={{ alignSelf: 'stretch', height: 48, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#C4B8AE', borderRadius: 8, paddingHorizontal: 16, backgroundColor: '#FFF3CD' }}>
+                        <TextInput
+                            style={{ flex: 1, fontSize: 14, color: '#1A0F07' }}
+                            placeholder="Create password"
+                            placeholderTextColor="#A29789"
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            secureTextEntry={!showConfirm}
+                        />
+                        <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
+                            <EyeIcon color={showConfirm ? '#1A0F07' : '#A29789'} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
             </View>
@@ -104,14 +101,15 @@ export default function CreateNewPasswordScreen({ navigation, route }) {
             <View className="flex-1" />
 
             {/* Button + footer pinned to bottom */}
-            <View className="w-[296px] pb-[73px]">
+            <View style={{ width: 292, justifyContent: 'center', alignItems: 'center', paddingBottom: 104, alignSelf: 'center' }}>
                 {loading
-                    ? <ActivityIndicator color="#000" className="mb-4" />
-                    : <Button title="Reset Password" onPress={handleResetPassword} fullWidth />
+                    ? <ActivityIndicator color="#FF6D00" style={{ marginBottom: 8 }} />
+                    : <Button title="Reset Password" onPress={handleResetPassword} fullWidth shape="square" />
                 }
-                <Text className="text-center text-[14px] font-normal text-black mt-4 leading-[27px]">
-                    <Text className="text-[#1C4BB6] font-medium" onPress={() => navigation.navigate('SignIn')}>
-                        Back to Sign In
+                <Text style={{ textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, color: '#1A0F07', marginTop: 8 }}>
+                    Back to{' '}
+                    <Text style={{ color: '#2664F2', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('SignIn')}>
+                        Sign In
                     </Text>
                 </Text>
             </View>
