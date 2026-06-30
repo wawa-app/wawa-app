@@ -1,23 +1,5 @@
-import { View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Logo from '../components/common/Logo';
-import { useScroll } from '../context/ScrollContext';
+import AppBar from '../components/common/AppBar';
 
 export default function StackHeader() {
-    const insets = useSafeAreaInsets()
-    const { scrolled } = useScroll()
-
-    return (
-        <View
-            style={{
-                paddingTop: insets.top + 13,
-                paddingBottom: 12,
-                boxShadow: '0px 1px 3px 0px rgba(26, 15, 7, 0.08)',
-            }}
-            className={`flex-col items-center justify-center ${scrolled ? 'bg-Base-Surface' : 'bg-Base-Background'
-                }`}
-        >
-            <Logo width={82} height={32} />
-        </View>
-    )
+    return <AppBar />;
 }

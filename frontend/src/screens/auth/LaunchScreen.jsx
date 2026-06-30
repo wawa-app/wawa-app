@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
 import Button from '../../components/common/Button';
-
-const uniCharacter = require('../../assets/images/Uni.png');
-const waLogo = require('../../assets/images/WA.png');
+import UniAlarm from '../../assets/uni/uni-alarm';
+import Logo from '../../components/common/Logo';
 
 export default function LaunchScreen({ navigation }) {
     return (
@@ -16,19 +15,12 @@ export default function LaunchScreen({ navigation }) {
             <View className="items-center px-8">
 
                 {/* Uni character */}
-                <Image
-                    source={uniCharacter}
-                    style={{ width: 180, height: 180 }}
-                    resizeMode="contain"
-                />
+                <UniAlarm width={180} height={180} />
 
                 {/* WA logo */}
-                <Image
-                    source={waLogo}
-                    style={{ width: 120, height: 47 }}
-                    resizeMode="contain"
-                    className="mt-6"
-                />
+                <View className="mt-6">
+                    <Logo width={120} height={47} />
+                </View>
 
                 {/* Title */}
                 <Text className="text-[22px] font-bold text-Base-OnBackground text-center mt-3">
