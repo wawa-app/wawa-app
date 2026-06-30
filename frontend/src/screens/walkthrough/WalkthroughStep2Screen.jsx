@@ -4,6 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 import Stepper, { WALKTHROUGH_STEPS } from '../../components/common/Stepper';
 import Button from '../../components/common/Button';
 import AddObjectSheet from '../../components/objects/AddObjectSheet';
+import apiClient from '../../api/client';
 
 const MAX_PHOTOS = 10;
 
