@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/User')
 
 async function sendOtpEmail(toEmail, otp) {
+    console.log('[Brevo] API key present:', !!process.env.BREVO_API_KEY, '| length:', process.env.BREVO_API_KEY?.length)
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
