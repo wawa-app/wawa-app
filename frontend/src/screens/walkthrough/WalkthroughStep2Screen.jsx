@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert, Image } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useFocusEffect } from '@react-navigation/native';
 import Stepper, { WALKTHROUGH_STEPS } from '../../components/common/Stepper';
@@ -72,23 +72,30 @@ export default function WalkthroughStep2Screen({ navigation, route }) {
             }}
         >
             {item.uri && (
-                <TouchableOpacity
-                    onPress={() => handleRemovePhoto(item.id)}
-                    style={{
-                        position: 'absolute',
-                        top: 6,
-                        right: 6,
-                        width: 22,
-                        height: 22,
-                        borderRadius: 11,
-                        backgroundColor: '#000',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 10,
-                    }}
-                >
-                    <XIcon />
-                </TouchableOpacity>
+                <>
+                    <Image
+                        source={{ uri: item.uri }}
+                        style={{ width: '100%', height: '100%' }}
+                        resizeMode="cover"
+                    />
+                    <TouchableOpacity
+                        onPress={() => handleRemovePhoto(item.id)}
+                        style={{
+                            position: 'absolute',
+                            top: 6,
+                            right: 6,
+                            width: 22,
+                            height: 22,
+                            borderRadius: 11,
+                            backgroundColor: '#000',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 10,
+                        }}
+                    >
+                        <XIcon />
+                    </TouchableOpacity>
+                </>
             )}
         </View>
     );

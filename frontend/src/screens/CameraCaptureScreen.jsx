@@ -16,6 +16,7 @@ import {
     usePhotoOutput,
 } from "react-native-vision-camera";
 import RNFS from "react-native-fs";
+import { callOnPhotoTaken } from './walkthrough/WalkthroughStep2Screen';
 
 export default function CameraCaptureScreen({ navigation, route }) {
     const [takingPhoto, setTakingPhoto] = useState(false);
@@ -79,9 +80,8 @@ export default function CameraCaptureScreen({ navigation, route }) {
                 console.log("[CameraCaptureScreen] saved snapshot uri:", savedPhotoUri);
 
                 if (route?.params?.fromWalkthrough) {
-                    navigation.navigate("WalkthroughStep2", {
-                        capturedPhotoUri: savedPhotoUri,
-                    });
+                    callOnPhotoTaken(savedPhotoUri);
+                    navigation.goBack();
                 } else {
                     navigation.navigate("Main", {
                         screen: "Objects",
@@ -126,9 +126,8 @@ export default function CameraCaptureScreen({ navigation, route }) {
 
             // Return to walkthrough if called from walkthrough flow
             if (route?.params?.fromWalkthrough) {
-                navigation.navigate("WalkthroughStep2", {
-                    capturedPhotoUri: savedPhotoUri,
-                });
+                callOnPhotoTaken(savedPhotoUri);
+                navigation.goBack();
             } else {
                 navigation.navigate("Main", {
                     screen: "Objects",

@@ -35,7 +35,7 @@ export default function Stepper({ currentStep = 1, steps = DEFAULT_STEPS }) {
                 return (
                     <React.Fragment key={stepNumber}>
                         {/* Step item */}
-                        <View style={{ flex: 1, alignItems: 'center', gap: 8 }}>
+                        <View style={{ flex: 2, alignItems: 'center', gap: 8 }}>
 
                             {/* Circle */}
                             <View
@@ -43,7 +43,7 @@ export default function Stepper({ currentStep = 1, steps = DEFAULT_STEPS }) {
                                     minWidth: 32,
                                     minHeight: 32,
                                     borderRadius: 9999,
-                                    backgroundColor: isCompleted ? '#1A0F07' : isActive ? '#FF8400' : '#FFE0B2',
+                                    backgroundColor: isCompleted ? '#FF8400' : isActive ? '#FF8400' : '#FFE0B2',
                                     borderWidth: isActive || isCompleted ? 0 : 1,
                                     borderColor: '#FFF3CD',
                                     justifyContent: 'center',
@@ -64,7 +64,7 @@ export default function Stepper({ currentStep = 1, steps = DEFAULT_STEPS }) {
                             {/* Label */}
                             <Text
                                 style={{
-                                    color: isActive ? '#FF8400' : '#1A0F07',
+                                    color: isActive || isCompleted ? '#FF8400' : '#1A0F07',
                                     textAlign: 'center',
                                     fontSize: 11,
                                     fontWeight: '400',
@@ -78,7 +78,7 @@ export default function Stepper({ currentStep = 1, steps = DEFAULT_STEPS }) {
 
                         {/* Connector line */}
                         {!isLast && (
-                            <View style={{ width: 21, height: 2, backgroundColor: '#D4CBBF', marginTop: 15 }} />
+                            <View style={{ flex: 1, height: 2, backgroundColor: isCompleted ? '#FF8400' : '#D4CBBF', marginTop: 15 }} />
                         )}
                     </React.Fragment>
                 );
