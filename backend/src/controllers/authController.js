@@ -4,10 +4,11 @@ const nodemailer = require('nodemailer')
 const User = require('../models/User')
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp-relay.brevo.com',
+    port: 587,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.BREVO_SMTP_LOGIN,
+        pass: process.env.BREVO_SMTP_KEY,
     },
 })
 
@@ -100,7 +101,7 @@ const forgotPassword = async (req, res) => {
         await user.save()
 
         await transporter.sendMail({
-            from:    `"WaWa" <${process.env.EMAIL_USER}>`,
+            from:    '"WaWa" <wawa.app.noreply@gmail.com>',
             to:      user.email,
             subject: 'Your WaWa password reset code',
             text:    `Your verification code is: ${otp}\n\nThis code expires in 10 minutes.`,
