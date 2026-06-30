@@ -27,19 +27,19 @@ export default function TextFieldShowcase() {
         <AppTextField
           value={tagged}
           onChangeText={setTagged}
-          leftIcon="pricetag"
+          leftIcon="Label"
           showClearButton
         />
 
         <AppTextField
           value="Name"
           onChangeText={() => {}}
-          leftIcon="pricetag"
+          leftIcon="Label"
           showErrorIcon
         />
 
         <AppTextField value="Name" onChangeText={() => {}} />
-        <AppTextField value="Name" onChangeText={() => {}} leftIcon="pricetag" />
+        <AppTextField value="Name" onChangeText={() => {}} leftIcon="Label" />
 
         <AppTextField
           label="Name"
@@ -47,7 +47,7 @@ export default function TextFieldShowcase() {
           value="Name"
           onChangeText={() => {}}
           helperText="Supporting Text"
-          leftIcon="pricetag"
+          leftIcon="Label"
           showClearButton
           disabled
         />

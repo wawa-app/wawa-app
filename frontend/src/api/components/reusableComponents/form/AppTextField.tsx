@@ -3,13 +3,102 @@ import {
   Text,
   TextInput,
   TextInputProps,
-  TouchableOpacity,
+  Pressable,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  AlarmIcon,
+  Back,
+  Calendar,
+  Check,
+  Close,
+  Delete,
+  Edit,
+  InvisibleEye,
+  Label,
+  Logout,
+  Menu,
+  ObjectLists,
+  Photo,
+  Plus,
+  Profile,
+  Scan,
+  Share,
+  Streak,
+  Timer,
+  Tracking,
+  Trophy,
+  Unstreak,
+  Update,
+  VisableEye,
+  Warning,
+} from '../../../../components/icons';
 import { cn, formTw as tw } from './formNativewind';
 
-type IconName = React.ComponentProps<typeof Ionicons>['name'];
+const fieldIcons = {
+  AlarmIcon,
+  Back,
+  Calendar,
+  Check,
+  Close,
+  Delete,
+  Edit,
+  InvisibleEye,
+  Label,
+  Logout,
+  Menu,
+  ObjectLists,
+  Photo,
+  Plus,
+  Profile,
+  Scan,
+  Share,
+  Streak,
+  Timer,
+  Tracking,
+  Trophy,
+  Unstreak,
+  Update,
+  VisableEye,
+  Warning,
+} as const;
+
+const iconAliases = {
+  alarm: 'AlarmIcon',
+  back: 'Back',
+  calendar: 'Calendar',
+  check: 'Check',
+  close: 'Close',
+  'close-circle': 'Close',
+  delete: 'Delete',
+  edit: 'Edit',
+  eye: 'VisableEye',
+  hiddenEye: 'InvisibleEye',
+  invisibleEye: 'InvisibleEye',
+  label: 'Label',
+  pricetag: 'Label',
+  logout: 'Logout',
+  menu: 'Menu',
+  objectLists: 'ObjectLists',
+  photo: 'Photo',
+  plus: 'Plus',
+  profile: 'Profile',
+  scan: 'Scan',
+  share: 'Share',
+  streak: 'Streak',
+  timer: 'Timer',
+  tracking: 'Tracking',
+  trophy: 'Trophy',
+  unstreak: 'Unstreak',
+  update: 'Update',
+  visibleEye: 'VisableEye',
+  warning: 'Warning',
+  'alert-circle': 'Warning',
+} as const;
+
+type FieldIconName = keyof typeof fieldIcons;
+type FieldIconAlias = keyof typeof iconAliases;
+export type AppTextFieldIconName = FieldIconName | FieldIconAlias;
 type TextFieldState = 'default' | 'focused' | 'error' | 'disabled';
 
 export interface AppTextFieldProps
@@ -22,8 +111,8 @@ export interface AppTextFieldProps
   errorText?: string;
   state?: Exclude<TextFieldState, 'focused'>;
   disabled?: boolean;
-  leftIcon?: IconName;
-  rightIcon?: IconName;
+  leftIcon?: AppTextFieldIconName;
+  rightIcon?: AppTextFieldIconName;
   onRightIconPress?: () => void;
   showClearButton?: boolean;
   showErrorIcon?: boolean;
@@ -100,7 +189,7 @@ export default function AppTextField({
       <View className={rowClass}>
         {leftIcon ? (
           <View className={tw.leftIconWrap}>
-            <Ionicons name={leftIcon} size={22} color={iconColor} />
+            <FieldIcon name={leftIcon} size={22} color={iconColor} />
           </View>
         ) : null}
 
@@ -123,18 +212,17 @@ export default function AppTextField({
         />
 
         {trailingIcon ? (
-          onRightIconPress || trailingIcon === 'close-circle' ? (
-            <TouchableOpacity
+          onRightIconPress || trailingIcon === 'Close' ? (
+            <Pressable
               className={tw.rightIconButton}
               onPress={handleTrailingPress}
               disabled={disabled}
-              activeOpacity={0.75}
             >
-              <Ionicons name={trailingIcon} size={24} color={iconColor} />
-            </TouchableOpacity>
+              <FieldIcon name={trailingIcon} size={24} color={iconColor} />
+            </Pressable>
           ) : (
             <View className={tw.rightIconStatic}>
-              <Ionicons name={trailingIcon} size={24} color={tw.iconError} />
+              <FieldIcon name={trailingIcon} size={24} color={tw.iconError} />
             </View>
           )
         ) : null}
@@ -154,14 +242,29 @@ function getTrailingIcon({
   value,
   visualState,
 }: {
-  rightIcon?: IconName;
+  rightIcon?: AppTextFieldIconName;
   showClearButton: boolean;
   showErrorIcon: boolean;
   value: string;
   visualState: TextFieldState;
 }) {
   if (rightIcon) return rightIcon;
-  if (showErrorIcon || visualState === 'error') return 'alert-circle';
-  if (showClearButton && value.length > 0) return 'close-circle';
+  if (showErrorIcon || visualState === 'error') return 'Warning';
+  if (showClearButton && value.length > 0) return 'Close';
   return undefined;
+}
+
+function FieldIcon({
+  name,
+  size,
+  color,
+}: {
+  name: AppTextFieldIconName;
+  size: number;
+  color: string;
+}) {
+  const iconName = name in iconAliases ? iconAliases[name as FieldIconAlias] : name;
+  const Icon = fieldIcons[iconName as FieldIconName];
+
+  return <Icon size={size} color={color} style={undefined} />;
 }
