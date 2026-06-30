@@ -1,9 +1,118 @@
-const Alarm       = require('../models/Alarm')
-const Object      = require('../models/Object')
-const TrackingLog = require('../models/TrackingLog')
-const User        = require('../models/User')
+const Alarm = require('../models/Alarm')
+const Object = require('../models/Object')
+const MissionAttempt = require('../models/MissionAttempt')
+const MissionLog = require('../models/MissionLog')
+const Streak = require('../models/Streak')
+const Uni = require('../models/Uni')
+const User = require('../models/User')
 
 const EXP_PER_SUCCESS = 10 // MVP: flat EXP per mission success
+
+const startOfUtcDay = (date) => {
+    const day = new Date(date)
+    day.setUTCHours(0, 0, 0, 0)
+    return day
+}
+
+const daysBetweenUtc = (from, to) => {
+    const msPerDay = 24 * 60 * 60 * 1000
+    return Math.round((startOfUtcDay(to) - startOfUtcDay(from)) / msPerDay)
+}
+
+const utcDayKey = (date) => startOfUtcDay(date).toISOString().slice(0, 10)
+
+const getMissionRewardStats = async (userId) => {
+    const [streak, uni] = await Promise.all([
+        Streak.findOne({ userId }),
+        Uni.findOne({ userId }),
+    ])
+
+    return {
+        awarded: false,
+        streak: {
+            currentCount: streak?.currentCount ?? 0,
+            longestCount: streak?.longestCount ?? 0,
+            lastSuccessDate: streak?.lastSuccessDate ?? null,
+        },
+        uni: {
+            avatarKey: uni?.avatarKey ?? 'default',
+            level: uni?.level ?? 1,
+            stage: uni?.stage ?? 'Baby Uni',
+            exp: uni?.exp ?? 0,
+        },
+    }
+}
+
+// Determine Uni stage based on level (every 5 levels = new stage)
+const getStage = (level) => {
+    if (level <= 5) return 'Baby Uni'
+    if (level <= 10) return 'Child Uni'
+    if (level <= 15) return 'Teen Uni'
+    if (level <= 20) return 'Adult Uni'
+    if (level <= 25) return 'Worker Uni'
+    if (level <= 30) return 'Senior Uni'
+    return 'Chubby Uni'
+}
+
+const applyMissionSuccessRewards = async (userId, completedAt = new Date()) => {
+    let streak = await Streak.findOne({ userId })
+    if (!streak) {
+        streak = await Streak.create({ userId })
+    }
+
+    const daysSinceLastSuccess = streak.lastSuccessDate
+        ? daysBetweenUtc(streak.lastSuccessDate, completedAt)
+        : null
+
+    // XP and streak progress are granted at most once per UTC calendar day.
+    const awarded = daysSinceLastSuccess !== 0
+    let newCount = streak.currentCount
+    if (daysSinceLastSuccess === 1) {
+        newCount = streak.currentCount + 1
+    } else if (awarded) {
+        newCount = 1
+    }
+
+    if (awarded) {
+        streak.currentCount = newCount
+        streak.longestCount = Math.max(streak.longestCount, newCount)
+        streak.lastSuccessDate = completedAt
+        await streak.save()
+    }
+
+    let uni = await Uni.findOne({ userId })
+    if (!uni) {
+        uni = await Uni.create({ userId, avatarKey: 'default' })
+    }
+
+    if (awarded) {
+        const newExp = uni.exp + EXP_PER_SUCCESS
+        const newLevel = Math.floor(newExp / 100) + 1
+        const newStage = getStage(newLevel)
+
+        uni.exp = newExp
+        uni.level = newLevel
+        uni.stage = newStage
+        await uni.save()
+
+        await User.findByIdAndUpdate(userId, { $inc: { totalUnlocks: 1 } })
+    }
+
+    return {
+        awarded,
+        streak: {
+            currentCount: streak.currentCount,
+            longestCount: streak.longestCount,
+            lastSuccessDate: streak.lastSuccessDate,
+        },
+        uni: {
+            avatarKey: uni.avatarKey,
+            level: uni.level,
+            stage: uni.stage,
+            exp: uni.exp,
+        },
+    }
+}
 
 // GET /api/mission/:alarmId
 // Fetches active mission config when alarm fires (called by Android BroadcastReceiver)
@@ -27,47 +136,50 @@ const getMission = async (req, res) => {
 }
 
 // POST /api/mission/verify
-// Receives scanned image, calls OpenAI Vision API, updates streak & EXP
+// Receives scanned image, calls OpenAI Vision API, updates Streak, Uni, and logs result
 const verifyMission = async (req, res) => {
     try {
         const { alarmId, objectId, imageBase64, timeToComplete } = req.body
 
+        const alarm = await Alarm.findOne({ _id: alarmId, userId: req.user.userId })
+        if (!alarm) {
+            return res.status(404).json({ success: false, error: 'ALARM_NOT_FOUND' })
+        }
+
+        const object = await Object.findOne({ _id: objectId, userId: req.user.userId })
+        if (!object) {
+            return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
+        }
+
         // ── TODO: call OpenAI Vision API ──────────────────────────
         // const isSuccess = await callVisionAPI(imageBase64, objectId)
-        const isSuccess = true // placeholder — replace with Vision API result
+        // const isSuccess = true // placeholder — replace with Vision API result
+        const isSuccess = req.body.isSuccess ?? true // front-end Vision result; falls back to true until backend Vision lands
 
-        const status = isSuccess ? 'success' : 'failed'
-
-        // Log the attempt
-        await TrackingLog.create({
-            userId:         req.user.userId,
+        // Create MissionAttempt record
+        const attempt = await MissionAttempt.create({
+            userId: req.user.userId,
             alarmId,
             objectId,
-            status,
-            expGained:      isSuccess ? EXP_PER_SUCCESS : 0,
+            status: isSuccess ? 'success' : 'failed',
+        })
+
+        // Create MissionLog record
+        await MissionLog.create({
+            userId: req.user.userId,
+            objectId,
+            missionId: attempt._id,
             timeToComplete: timeToComplete ?? null,
+            isSuccess,
+            attemptAt: new Date(),
+            completedAt: isSuccess ? new Date() : null,
         })
 
         if (isSuccess) {
-            // Update streak, longestStreak, EXP, totalUnlocks
-            const user = await User.findById(req.user.userId)
-            const newStreak = user.streak + 1
-            const newExp    = user.exp + EXP_PER_SUCCESS
-            // MVP: level up every 100 EXP
-            const newLevel  = Math.floor(newExp / 100) + 1
-
-            await User.findByIdAndUpdate(req.user.userId, {
-                $set: {
-                    streak:       newStreak,
-                    longestStreak: Math.max(user.longestStreak, newStreak),
-                    exp:          newExp,
-                    level:        newLevel,
-                },
-                $inc: { totalUnlocks: 1 },
-            })
+            await applyMissionSuccessRewards(req.user.userId)
         }
 
-        return res.json({ success: true, result: status })
+        return res.json({ success: true, result: isSuccess ? 'success' : 'failed' })
     } catch (err) {
         console.error('[scanController.verifyMission]', err)
         return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
@@ -98,27 +210,140 @@ const changeObject = async (req, res) => {
 }
 
 // PATCH /api/mission/emergency
-// Forces alarm off, logs as emergency, resets streak to 0
+// Logs an emergency exit and breaks the current streak.
 const emergencyOverride = async (req, res) => {
     try {
         const { alarmId, objectId } = req.body
+        if (!objectId) {
+            return res.status(400).json({ success: false, error: 'MISSING_OBJECT_ID' })
+        }
 
-        await TrackingLog.create({
-            userId:   req.user.userId,
-            alarmId,
+        if (alarmId) {
+            const alarm = await Alarm.findOne({ _id: alarmId, userId: req.user.userId })
+            if (!alarm) {
+                return res.status(404).json({ success: false, error: 'ALARM_NOT_FOUND' })
+            }
+        }
+
+        const object = await Object.findOne({ _id: objectId, userId: req.user.userId })
+        if (!object) {
+            return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
+        }
+
+        const attemptAt = new Date()
+
+        // Create MissionAttempt as failed
+        const attempt = await MissionAttempt.create({
+            userId: req.user.userId,
+            alarmId: alarmId || null,
             objectId,
-            status:   'emergency',
-            expGained: 0,
+            status: 'failed',
         })
 
-        // Reset current streak
-        await User.findByIdAndUpdate(req.user.userId, { $set: { streak: 0 } })
+        // Create MissionLog as not successful
+        await MissionLog.create({
+            userId: req.user.userId,
+            objectId,
+            missionId: attempt._id,
+            isSuccess: false,
+            attemptAt,
+            completedAt: null,
+        })
 
-        return res.json({ success: true, message: 'Emergency override logged, streak reset' })
+        // Reset current streak to 0 and clear the last success date so the next
+        // successful mission can start a fresh streak at 1.
+        await Streak.findOneAndUpdate(
+            { userId: req.user.userId },
+            { $set: { currentCount: 0, lastSuccessDate: null } },
+            { upsert: true, setDefaultsOnInsert: true }
+        )
+
+        const stats = await getMissionRewardStats(req.user.userId)
+
+        return res.json({
+            success: true,
+            message: 'Emergency override logged, streak reset',
+            stats,
+        })
     } catch (err) {
         console.error('[scanController.emergencyOverride]', err)
         return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
     }
 }
 
-module.exports = { getMission, verifyMission, changeObject, emergencyOverride }
+// POST /api/mission/challenge-success
+// Records a successful standalone challenge compare and updates streak/Uni stats
+const recordChallengeSuccess = async (req, res) => {
+    try {
+        const { objectId } = req.body
+        if (!objectId) {
+            return res.status(400).json({ success: false, error: 'MISSING_OBJECT_ID' })
+        }
+
+        const object = await Object.findOne({ _id: objectId, userId: req.user.userId })
+        if (!object) {
+            return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
+        }
+
+        const completedAt = new Date()
+        const completionDay = utcDayKey(completedAt)
+        const existing = await MissionLog.findOne({
+            userId: req.user.userId,
+            isSuccess: true,
+            completionDay,
+        })
+        if (existing) {
+            const stats = await getMissionRewardStats(req.user.userId)
+            return res.json({
+                success: true,
+                result: 'success',
+                awarded: false,
+                alreadyCompletedToday: true,
+                stats,
+            })
+        }
+
+        const attempt = await MissionAttempt.create({
+            userId: req.user.userId,
+            objectId,
+            status: 'success',
+        })
+
+        try {
+            await MissionLog.create({
+                userId: req.user.userId,
+                objectId,
+                missionId: attempt._id,
+                isSuccess: true,
+                attemptAt: completedAt,
+                completedAt,
+                completionDay,
+            })
+        } catch (err) {
+            if (err?.code !== 11000) throw err
+            await MissionAttempt.findByIdAndDelete(attempt._id)
+            const stats = await getMissionRewardStats(req.user.userId)
+            return res.json({
+                success: true,
+                result: 'success',
+                awarded: false,
+                alreadyCompletedToday: true,
+                stats,
+            })
+        }
+
+        const stats = await applyMissionSuccessRewards(req.user.userId, completedAt)
+
+        return res.json({
+            success: true,
+            result: 'success',
+            awarded: stats.awarded,
+            stats,
+        })
+    } catch (err) {
+        console.error('[scanController.recordChallengeSuccess]', err)
+        return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
+    }
+}
+
+module.exports = { getMission, verifyMission, changeObject, emergencyOverride, recordChallengeSuccess }

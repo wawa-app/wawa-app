@@ -1,10 +1,10 @@
 const Alarm = require('../models/Alarm')
+const Object = require('../models/Object')
 
 // GET /api/alarms — Retrieve all alarms for the authenticated user
 const getAlarms = async (req, res) => {
     try {
         const alarms = await Alarm.find({ userId: req.user.userId })
-            .populate('objectId', 'name localRef') // JOIN with Object
         return res.status(200).json({ success: true, data: alarms })
     } catch (err) {
         console.error('[alarmController.getAlarms]', err)
@@ -15,54 +15,39 @@ const getAlarms = async (req, res) => {
 // POST /api/alarms — Create a new alarm
 const createAlarm = async (req, res) => {
     try {
-        const { objectId, alarmTime, dayOfWeek, alarmType } = req.body
+        const { alarmTime, daysOfWeek, alarmType, label } = req.body
 
-        if (!objectId || !alarmTime || dayOfWeek === undefined) {
+        if (!alarmTime || !Array.isArray(daysOfWeek) || daysOfWeek.length === 0) {
             return res.status(400).json({ success: false, error: 'MISSING_FIELDS' })
         }
 
         const userId = req.user.userId
 
-        // Enforce max 3 alarms total (2 regular + 1 special)
+        // Require at least 10 objects before creating an alarm
+        const objectCount = await Object.countDocuments({ userId })
+        if (objectCount < 10) {
+            return res.status(400).json({
+                success: false,
+                error: 'INSUFFICIENT_OBJECTS',
+                message: 'You need at least 10 objects to set an alarm'
+            })
+        }
+
+        // Enforce max 3 alarms total
         const existingAlarms = await Alarm.find({ userId })
         if (existingAlarms.length >= 3) {
             return res.status(400).json({
                 success: false,
                 error: 'MAX_ALARMS_REACHED',
-                message: 'Maximum 3 alarms allowed (2 regular + 1 special)'
+                message: 'Maximum 3 alarms allowed'
             })
-        }
-
-        // Enforce max 2 regular alarms
-        if (alarmType === 'regular' || !alarmType) {
-            const regularAlarms = existingAlarms.filter(a => a.alarmType === 'regular')
-            if (regularAlarms.length >= 2) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'MAX_REGULAR_ALARMS_REACHED',
-                    message: 'Maximum 2 regular alarms allowed'
-                })
-            }
-        }
-
-        // Enforce max 1 special alarm
-        if (alarmType === 'special') {
-            const specialAlarms = existingAlarms.filter(a => a.alarmType === 'special')
-            if (specialAlarms.length >= 1) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'MAX_SPECIAL_ALARMS_REACHED',
-                    message: 'Maximum 1 special alarm allowed'
-                })
-            }
         }
 
         const alarm = await Alarm.create({
             userId,
-            objectId,
             alarmTime,
-            dayOfWeek,
-            alarmType: alarmType || 'regular',
+            daysOfWeek,
+            label: label || '',
         })
 
         return res.status(201).json({ success: true, data: alarm })
@@ -78,7 +63,7 @@ const getAlarmById = async (req, res) => {
         const alarm = await Alarm.findOne({
             _id: req.params.id,
             userId: req.user.userId,
-        }).populate('objectId', 'name localRef')
+        })
 
         if (!alarm) {
             return res.status(404).json({ success: false, error: 'ALARM_NOT_FOUND' })
@@ -94,11 +79,16 @@ const getAlarmById = async (req, res) => {
 // PUT /api/alarms/:id — Update an existing alarm
 const updateAlarm = async (req, res) => {
     try {
-        const { objectId, alarmTime, dayOfWeek, isActive } = req.body
+        const { alarmTime, daysOfWeek, isActive, label } = req.body
+        const update = {}
+        if (alarmTime !== undefined) update.alarmTime = alarmTime
+        if (daysOfWeek !== undefined) update.daysOfWeek = daysOfWeek
+        if (isActive !== undefined) update.isActive = isActive
+        if (label !== undefined) update.label = label
 
         const alarm = await Alarm.findOneAndUpdate(
             { _id: req.params.id, userId: req.user.userId },
-            { objectId, alarmTime, dayOfWeek, isActive },
+            { $set: update },
             { new: true, runValidators: true }
         )
 

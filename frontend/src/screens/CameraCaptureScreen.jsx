@@ -1,0 +1,176 @@
+import React, { useRef, useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
+import {
+    Camera,
+    CommonResolutions,
+    useCameraDevice,
+    useCameraPermission,
+    usePhotoOutput,
+} from "react-native-vision-camera";
+import RNFS from "react-native-fs";
+import { dispatchPhotoCaptured } from './walkthrough/WalkthroughStep2Screen';
+
+export default function CameraCaptureScreen({ navigation, route }) {
+    const [takingPhoto, setTakingPhoto] = useState(false);
+    const cameraRef = useRef(null);
+
+    const device = useCameraDevice("back");
+    const photoOutput = usePhotoOutput({
+        targetResolution: CommonResolutions.FHD_4_3,
+        quality: 0.78,
+        qualityPrioritization: device?.supportsSpeedQualityPrioritization
+            ? "speed"
+            : "balanced",
+    });
+
+    const { hasPermission, requestPermission } = useCameraPermission();
+    const editingObjectId = route?.params?.editingObjectId;
+
+    const savePhotoLocally = async (photoPath) => {
+        const folderPath = `${RNFS.DocumentDirectoryPath}/wawa_objects`;
+        const fileName = `object_${Date.now()}.jpg`;
+        const destinationPath = `${folderPath}/${fileName}`;
+
+        const folderExists = await RNFS.exists(folderPath);
+        if (!folderExists) {
+            await RNFS.mkdir(folderPath);
+        }
+
+        const cleanSourcePath = photoPath.startsWith("file://")
+            ? photoPath.replace("file://", "")
+            : photoPath;
+
+        await RNFS.copyFile(cleanSourcePath, destinationPath);
+        return `file://${destinationPath}`;
+    };
+
+    const handleTakePhoto = async () => {
+        try {
+            if (takingPhoto) return;
+
+            if (!photoOutput) {
+                Alert.alert("Camera Error", "Photo output is not ready yet.");
+                return;
+            }
+
+            setTakingPhoto(true);
+
+            const photo = await photoOutput.capturePhotoToFile(
+                { enableShutterSound: false },
+                {
+                    onWillBeginCapture: () => console.log("[CameraCaptureScreen] will begin capture"),
+                    onWillCapturePhoto: () => console.log("[CameraCaptureScreen] will capture photo"),
+                    onDidCapturePhoto: () => console.log("[CameraCaptureScreen] did capture photo"),
+                }
+            );
+
+            console.log("[CameraCaptureScreen] photo result:", photo);
+
+            if (!photo?.filePath) {
+                Alert.alert("Camera Error", "Photo file path was not created.");
+                return;
+            }
+
+            const savedPhotoUri = await savePhotoLocally(photo.filePath);
+            console.log("[CameraCaptureScreen] saved photo uri:", savedPhotoUri);
+
+            if (route?.params?.fromWalkthrough) {
+                // Deliver photo to the existing WalkthroughStep2 instance via callback,
+                // then go back to it (preserves photos state)
+                dispatchPhotoCaptured(savedPhotoUri);
+                navigation.goBack();
+            } else {
+                navigation.navigate("Main", {
+                    screen: "Objects",
+                    params: {
+                        capturedPhotoUri: savedPhotoUri,
+                        capturedAt: Date.now(),
+                        editingObjectId,
+                    },
+                });
+            }
+        } catch (error) {
+            console.error("[CameraCaptureScreen] take photo error:", error);
+            Alert.alert("Camera Error", error?.message || "Could not take the photo.");
+        } finally {
+            setTakingPhoto(false);
+        }
+    };
+
+    const handleRequestPermission = async () => {
+        const permissionGranted = await requestPermission();
+        if (!permissionGranted) {
+            Alert.alert(
+                "Camera Permission Required",
+                "Please allow camera access to add an object."
+            );
+        }
+    };
+
+    if (!hasPermission) {
+        return (
+            <View className="flex-1 bg-black items-center justify-center px-6">
+                <Text className="text-white text-[20px] font-geologica-bold text-center mb-4">
+                    Camera permission is required
+                </Text>
+                <Pressable
+                    className="bg-white px-6 py-3 rounded-full"
+                    onPress={handleRequestPermission}
+                >
+                    <Text className="text-black text-[16px] font-geologica-medium">
+                        Allow Camera
+                    </Text>
+                </Pressable>
+            </View>
+        );
+    }
+
+    if (!device) {
+        return (
+            <View className="flex-1 bg-black items-center justify-center">
+                <ActivityIndicator color="#FFFFFF" />
+                <Text className="text-white mt-4 text-[14px]">
+                    Loading camera...
+                </Text>
+            </View>
+        );
+    }
+
+    return (
+        <View className="flex-1 bg-black">
+            <Camera
+                ref={cameraRef}
+                style={StyleSheet.absoluteFill}
+                device={device}
+                isActive={true}
+                outputs={[photoOutput]}
+                onInitialized={() => console.log("[CameraCaptureScreen] Camera initialized")}
+                onStarted={() => console.log("[CameraCaptureScreen] Camera started")}
+                onError={(error) => {
+                    console.error("[CameraCaptureScreen] Camera error:", error);
+                    Alert.alert("Camera Error", error?.message || "Camera failed to start.");
+                }}
+            />
+
+            {/* Bottom camera button area */}
+            <View className="absolute left-0 right-0 bottom-0 h-[118px] bg-[#191919] items-center justify-center z-10">
+                <Pressable
+                    className="w-[52px] h-[52px] rounded-full bg-white items-center justify-center"
+                    onPress={handleTakePhoto}
+                    disabled={takingPhoto}
+                >
+                    <Text className="text-[28px] leading-[32px] text-black">
+                        📷
+                    </Text>
+                </Pressable>
+            </View>
+        </View>
+    );
+}
