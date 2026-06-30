@@ -16,11 +16,6 @@ async function fileToDataUri(uri) {
 
 const FALLBACK_OBJECT_NAME = 'Object';
 
-/**
- * Returns a short, human-readable name for the main object in a photo.
- * A failed or ambiguous Vision response deliberately resolves to "Object" so
- * the add-object form is always usable, including when the device is offline.
- */
 export async function identifyObject(imageUri) {
   if (!imageUri || !OPENAI_API_KEY) return FALLBACK_OBJECT_NAME;
 
@@ -45,13 +40,11 @@ export async function identifyObject(imageUri) {
             role: 'user',
             content: [
               { type: 'text', text: 'What is the main object in this image?' },
-              // Naming only needs a quick general read of the object. The
-              // harder two-photo match below keeps high detail.
               { type: 'image_url', image_url: { url: imageData, detail: 'low' } },
             ],
           },
         ],
-        // GPT-5 models use max_completion_tokens; max_tokens is rejected.
+
         max_completion_tokens: 60,
       }),
     });

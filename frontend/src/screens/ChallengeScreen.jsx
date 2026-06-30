@@ -8,6 +8,8 @@ import { getStoredObjectsWithImages, pickRandomObject } from '../storage/objectS
 import { compareImages } from '../utils/vision';
 import apiClient from '../api/client';
 
+const MAX_ATTEMPTS = 3;
+
 export default function ChallengeScreen() {
   const [targetObject, setTargetObject] = React.useState(null);
   const [candidate, setCandidate] = React.useState(null);
@@ -15,6 +17,7 @@ export default function ChallengeScreen() {
   const [matched, setMatched] = React.useState(false);
   const [loadingTarget, setLoadingTarget] = React.useState(true);
   const [completionStats, setCompletionStats] = React.useState(null);
+  const [failedCount, setFailedCount] = React.useState(0);
 
   const target = targetObject?.imageUri || null;
   const targetName = targetObject?.objectName || 'Saved object';
@@ -36,57 +39,108 @@ export default function ChallengeScreen() {
     loadTarget();
   }, [loadTarget]));
 
+  const fetchUserStats = React.useCallback(async () => {
+    try {
+      const response = await apiClient.get('/api/users/stats');
+      return response.data?.stats ?? null;
+    } catch (error) {
+      console.warn(
+        'Failed to fetch user stats:',
+        error?.response?.status,
+        error?.response?.data || error?.message
+      );
+      return null;
+    }
+  }, []);
+
   const handleCaptured = React.useCallback(async (photoUri) => {
     console.log('Challenge photo captured:', photoUri);
     setCandidate(photoUri);
     setStage('comparing');
 
+    let isMatch = false;
     try {
       if (!target) throw new Error('No saved object photo selected');
       const result = await compareImages(target, photoUri);
       console.log('Challenge comparison result:', result);
-      setMatched(result.match);
-
-      if (result.match) {
-        try {
-          const response = await apiClient.post('/api/mission/challenge-success', {
-            objectId: targetObject?.id,
-          });
-          setCompletionStats(response.data?.stats ?? null);
-        } catch (rewardError) {
-          console.warn(
-            'Challenge matched, but streak update failed:',
-            rewardError?.response?.status,
-            rewardError?.response?.data || rewardError?.message
-          );
-        }
-      }
+      isMatch = Boolean(result.match);
     } catch (e) {
       console.warn('Challenge comparison failed:', e);
-      setMatched(false);
-    } finally {
-      setStage('result');
+      isMatch = false;
     }
-  }, [target, targetObject?.id]);
+
+    setMatched(isMatch);
+
+    if (isMatch) {
+      try {
+        const response = await apiClient.post('/api/mission/challenge-success', {
+          objectId: targetObject?.id,
+        });
+        const stats = response.data?.stats ?? await fetchUserStats();
+        setCompletionStats(
+          stats
+            ? { ...stats, awarded: response.data?.awarded }
+            : null
+        );
+        setFailedCount(0);
+      } catch (rewardError) {
+        console.warn(
+          'Challenge matched, but streak update failed:',
+          rewardError?.response?.status,
+          rewardError?.response?.data || rewardError?.message
+        );
+      }
+    } else {
+      const nextFailedCount = failedCount + 1;
+      setFailedCount(nextFailedCount);
+      try {
+        const response = await apiClient.post('/api/mission/challenge-failure', {
+          objectId: targetObject?.id,
+          failedAttemptCount: nextFailedCount,
+        });
+        const stats = response.data?.stats ?? await fetchUserStats();
+        setCompletionStats(stats);
+      } catch (failureError) {
+        console.warn(
+          'Challenge failed, but streak update failed:',
+          failureError?.response?.status,
+          failureError?.response?.data || failureError?.message
+        );
+      }
+    }
+
+    setStage('result');
+  }, [failedCount, fetchUserStats, target, targetObject?.id]);
 
   const handleTryAgain = React.useCallback(() => {
+    if (failedCount >= MAX_ATTEMPTS) {
+      setCandidate(null);
+      setCompletionStats(null);
+      setFailedCount(0);
+      setStage('capture');
+      loadTarget();
+      return;
+    }
+
     setCandidate(null);
     setCompletionStats(null);
     setStage('capture');
-  }, []);
+  }, [failedCount, loadTarget]);
 
   const handleClose = React.useCallback(() => {
     setCandidate(null);
     setCompletionStats(null);
+    setFailedCount(0);
     setStage('capture');
     loadTarget();
   }, [loadTarget]);
 
   const handleEmergencyExit = React.useCallback(async () => {
     try {
-      await apiClient.patch('/api/mission/emergency', {
+      const response = await apiClient.patch('/api/mission/emergency', {
         objectId: targetObject?.id,
       });
+      setCompletionStats(response.data?.stats ?? null);
     } catch (err) {
       console.warn(
         'Challenge emergency exit failed:',
@@ -141,6 +195,8 @@ export default function ChallengeScreen() {
         onTryAgain={handleTryAgain}
         onEmergencyExit={handleEmergencyExit}
         completionStats={completionStats}
+        failedAttemptCount={failedCount}
+        maxAttempts={MAX_ATTEMPTS}
       />
     );
   }

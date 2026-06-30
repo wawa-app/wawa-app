@@ -51,6 +51,8 @@ export default function ChallengeResultScreen({
   onTryAgain,
   onEmergencyExit,
   completionStats,
+  failedAttemptCount = 0,
+  maxAttempts = 3,
 }) {
   const [uni, setUni] = React.useState(DEFAULT_UNI);
   // Matched flow has two steps: 'streak' (streak card + Continue) then 'reward'
@@ -176,6 +178,16 @@ export default function ChallengeResultScreen({
 
   const currentXp = Math.min(uni.exp % 100, 100);
   const xpProgress = `${currentXp}%`;
+  const remainingAttempts = Math.max(maxAttempts - failedAttemptCount, 0);
+  const isFinalFailure = failedAttemptCount >= maxAttempts;
+  const failureRetryCopy = remainingAttempts > 0
+    ? `You can try again within ${remainingAttempts} times to\nkeep the streak!`
+    : 'Your streak has been reset to zero.';
+  const serverStreakCount = completionStats?.streak?.currentCount;
+  const successStreakCount = typeof serverStreakCount === 'number'
+    ? serverStreakCount
+    : undefined;
+  const failureStreakCount = completionStats?.streak?.currentCount;
 
   if (matched) {
     return (
@@ -204,7 +216,7 @@ export default function ChallengeResultScreen({
             >
               <StreakCard
                 variant="success"
-                streakCount={completionStats?.streak?.currentCount}
+                streakCount={successStreakCount}
               />
 
               <View className={tw.successActions}>
@@ -283,10 +295,13 @@ export default function ChallengeResultScreen({
           </Animated.View>
 
           <Text className={tw.wrongCopy}>
-            Don&apos;t give up! You can do it.{'\n'}
-            Take a deep breath and aim again.{'\n'}
-            You can try again within 3 times to{'\n'}
-            keep the streak!
+            {!isFinalFailure ? (
+              <>
+                Don&apos;t give up! You can do it.{'\n'}
+                Take a deep breath and aim again.{'\n'}
+              </>
+            ) : null}
+            {failureRetryCopy}
           </Text>
         </Animated.View>
 
@@ -297,18 +312,23 @@ export default function ChallengeResultScreen({
             { opacity: failReveal, transform: [{ translateY: failBottomTranslateY }] },
           ]}
         >
-          <StreakCard variant="lose" />
+          <StreakCard
+            variant="lose"
+            streakCount={failureStreakCount}
+          />
 
           <View className={tw.successActions}>
+            {!isFinalFailure ? (
+              <TouchableOpacity
+                className={tw.primaryActionButton}
+                onPress={onTryAgain}
+                activeOpacity={0.85}
+              >
+                <Text className={tw.primaryActionText}>Try again</Text>
+              </TouchableOpacity>
+            ) : null}
             <TouchableOpacity
-              className={tw.primaryActionButton}
-              onPress={onTryAgain}
-              activeOpacity={0.85}
-            >
-              <Text className={tw.primaryActionText}>Try again</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={tw.secondaryActionButton}
+              className={isFinalFailure ? tw.primaryActionButton : tw.secondaryActionButton}
               onPress={onEmergencyExit}
               activeOpacity={0.85}
             >
