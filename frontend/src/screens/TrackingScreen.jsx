@@ -19,6 +19,7 @@ import {
     Timer,
 } from "../components/icons";
 import { useScroll } from "../context/ScrollContext";
+import MissionHistoryCard from "../components/tracking/MissionHistoryCard";
 
 const uniHappy = require("../assets/animations/UNIIII - Child happy.json");
 const uniNormal = require("../assets/animations/UNIIII - Child normal.json");
@@ -67,18 +68,7 @@ function formatAverageTime(logs) {
     return `${minutes}m${String(seconds).padStart(2, "0")}s`;
 }
 
-function formatHistoryDate(value) {
-    if (!value) return "Unknown date";
 
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Unknown date";
-
-    return date.toLocaleDateString("en-CA", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-    });
-}
 
 function getHistoryTitle(log) {
     const objectName = log?.objectId?.name;
@@ -89,19 +79,86 @@ function getHistoryTitle(log) {
     return "Mission completed";
 }
 
-function getHistorySubtitle(log) {
-    const date = formatHistoryDate(log?.attemptAt || log?.createdAt);
-    const duration = getDurationSeconds(log);
+function formatCompletedDate(value) {
+    if (!value) return "Complete Unknown date";
 
-    if (typeof duration === "number" && duration > 0) {
-        const minutes = Math.floor(duration / 60);
-        const seconds = duration % 60;
-        return `${date} • ${minutes}m${String(seconds).padStart(2, "0")}s`;
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return "Complete Unknown date";
     }
 
-    return date;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `Complete ${year}/${month}/${day}`;
 }
 
+function formatDuration(value) {
+    if (typeof value !== "number" || value <= 0) {
+        return "0m00s";
+    }
+
+    const minutes = Math.floor(value / 60);
+    const seconds = value % 60;
+
+    return `${minutes}m${String(seconds).padStart(2, "0")}s`;
+}
+
+function normalizeImagePath(value) {
+    if (!value) {
+        return null;
+    }
+
+    if (Array.isArray(value)) {
+        return normalizeImagePath(value[0]);
+    }
+
+    if (typeof value === "object") {
+        return normalizeImagePath(
+            value.uri ??
+            value.path ??
+            value.localRef ??
+            value.localPhotoPath ??
+            value.local_photo_path ??
+            null
+        );
+    }
+
+    if (typeof value !== "string") {
+        return null;
+    }
+
+    if (value.startsWith("file://")) {
+        return value;
+    }
+
+    return `file://${value}`;
+}
+
+function getHistoryImageUri(log) {
+    return normalizeImagePath(
+        log?.objectId?.localRef ??
+        log?.objectId?.localPhotoPath ??
+        log?.objectId?.local_photo_path ??
+        log?.objectId?.imageUri ??
+        log?.objectId?.photoUri ??
+        log?.objectId?.photo ??
+        log?.objectId?.image ??
+        log?.object?.localRef ??
+        log?.object?.localPhotoPath ??
+        log?.object?.local_photo_path ??
+        log?.object?.imageUri ??
+        log?.object?.photoUri ??
+        log?.localRef ??
+        log?.localPhotoPath ??
+        log?.local_photo_path ??
+        log?.imageUri ??
+        log?.photoUri ??
+        null
+    );
+}
 function UniAnimation({ mood = "normal" }) {
     const source =
         mood === "happy" ? uniHappy : mood === "cry" ? uniCry : uniNormal;
@@ -245,39 +302,38 @@ function StreakInfoSection({ current, best, averageTime }) {
 }
 
 function MissionHistorySection({ logs }) {
-    return (
-        <View className="w-full gap-3">
-            <Text className="text-[#1A0F0A] text-[24px] leading-[32px] font-geologica-bold font-bold">
-                Recent mission history
-            </Text>
+    if (logs.length === 0) {
+        return (
+            <View className="w-full">
+                <Text className="text-[#1A0F0A] text-[24px] leading-[32px] font-geologica-bold font-bold">
+                    Recent mission history
+                </Text>
 
-            <View className="w-full rounded-lg bg-[#FFF3C7] overflow-hidden">
-                {logs.length === 0 ? (
-                    <View className="p-4">
-                        <Text className="text-[#1A0F0A] text-[14px] leading-[20px] font-geologica-regular">
-                            No mission history yet.
-                        </Text>
-                    </View>
-                ) : (
-                    logs.map((log, index) => (
-                        <View
-                            key={log?._id ?? index}
-                            className={`p-4 ${index !== logs.length - 1
-                                ? "border-b border-[#FFCC80]"
-                                : ""
-                                }`}
-                        >
-                            <Text className="text-[#1A0F0A] text-[16px] leading-[24px] font-geologica-bold font-bold">
-                                {getHistoryTitle(log)}
-                            </Text>
-
-                            <Text className="mt-1 text-[#4D3A2A] text-[12px] leading-[16px] font-geologica-regular">
-                                {getHistorySubtitle(log)}
-                            </Text>
-                        </View>
-                    ))
-                )}
+                <Text className="mt-6 text-[#1A0F0A] text-[18px] leading-[24px] font-geologica-bold font-bold">
+                    You don’t have history yet. Let’s do mission
+                </Text>
             </View>
+        );
+    }
+
+    return (
+        <View className="w-full gap-4">
+            {logs.map((log, index) => {
+                const durationSeconds = getDurationSeconds(log);
+                const imageUri = getHistoryImageUri(log);
+
+                return (
+                    <MissionHistoryCard
+                        key={log?._id ?? index}
+                        objectName={getHistoryTitle(log)}
+                        completedDate={formatCompletedDate(
+                            log?.attemptAt ?? log?.createdAt
+                        )}
+                        duration={formatDuration(durationSeconds)}
+                        imageUri={imageUri}
+                    />
+                );
+            })}
         </View>
     );
 }
