@@ -18,7 +18,7 @@ import EditIcon from "../components/icons/Edit";
 import DeleteIcon from "../components/icons/Delete";
 import CheckIcon from "../components/icons/Check";
 
-const CHECK_MINUTES = 1; // TESTING: after 1 minute, object needs check
+const CHECK_MINUTES = 43200; // 30 days
 
 function ObjectMenu({
     position,

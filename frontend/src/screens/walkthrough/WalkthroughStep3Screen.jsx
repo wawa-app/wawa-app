@@ -73,8 +73,19 @@ export default function WalkthroughStep3Screen({ navigation, route }) {
         }
         try {
             setLoading(true);
-            // Objects already saved in Step 2
             const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+            // Save all walkthrough photos to backend (batch)
+            await Promise.all(
+                photos.map(p =>
+                    apiClient.post('/api/onboarding/photo-challenge', {
+                        name: p.label,
+                        localRef: [p.uri],
+                    })
+                )
+            );
+
+            // Save alarm
             await apiClient.post('/api/alarms', {
                 alarmTime: to24h(),
                 daysOfWeek: selectedDays.map(name => DAY_NAMES.indexOf(name)),
@@ -99,10 +110,11 @@ export default function WalkthroughStep3Screen({ navigation, route }) {
             {/* Status bar */}
             <View style={{ height: 24 }} />
 
+            {/* Header zone */}
+            <View style={{ height: 64 }} />
+
             {/* Stepper */}
-            <View style={{ paddingTop: 24 }}>
-                <Stepper currentStep={3} steps={WALKTHROUGH_STEPS} />
-            </View>
+            <Stepper currentStep={3} steps={WALKTHROUGH_STEPS} />
 
             {/* gap: 104px */}
             <View style={{ height: 104 }} />
@@ -202,7 +214,7 @@ export default function WalkthroughStep3Screen({ navigation, route }) {
             <View style={{ flex: 1 }} />
 
             {/* Button */}
-            <View style={{ paddingHorizontal: 34, paddingBottom: 104 }}>
+            <View style={{ width: 292, alignSelf: 'center', paddingBottom: 104 }}>
                 {loading
                     ? <ActivityIndicator color="#FF6D00" size="large" />
                     : <Button title="Set Alarm" onPress={handleSetAlarm} fullWidth shape="square" />

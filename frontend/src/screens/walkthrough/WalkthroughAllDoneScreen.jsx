@@ -4,6 +4,7 @@ import Svg, { Mask, Rect, G, Path } from 'react-native-svg';
 import Stepper, { WALKTHROUGH_STEPS } from '../../components/common/Stepper';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
+import { CommonActions } from '@react-navigation/native';
 
 const CheckIcon = () => (
     <Svg width={72} height={72} viewBox="0 0 72 72" fill="none">
@@ -30,10 +31,11 @@ export default function WalkthroughAllDoneScreen({ navigation }) {
             {/* Status bar */}
             <View style={{ height: 24 }} />
 
+            {/* Header zone */}
+            <View style={{ height: 64 }} />
+
             {/* Stepper — all steps completed */}
-            <View style={{ paddingTop: 24 }}>
-                <Stepper currentStep={4} steps={WALKTHROUGH_STEPS} />
-            </View>
+            <Stepper currentStep={4} steps={WALKTHROUGH_STEPS} />
 
             {/* gap: 160px */}
             <View style={{ height: 160 }} />
@@ -69,12 +71,17 @@ export default function WalkthroughAllDoneScreen({ navigation }) {
             <View style={{ flex: 1 }} />
 
             {/* Button */}
-            <View style={{ paddingHorizontal: 34, paddingBottom: 104 }}>
+            <View style={{ width: 292, alignSelf: 'center', paddingBottom: 104 }}>
                 <Button
                     title="Go to Home"
                     onPress={() => {
                         setIsFirstLogin(false);
-                        navigation.navigate('Main');
+                        navigation.dispatch(
+                            CommonActions.reset({
+                                index: 0,
+                                routes: [{ name: 'Main' }],
+                            })
+                        );
                     }}
                     fullWidth
                     shape="square"
