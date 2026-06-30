@@ -53,11 +53,19 @@ export default function WalkthroughStep2Screen({ navigation }) {
         setPendingPhotoUri(null);
     };
 
-    const handleSavePhoto = ({ objectName, imageUri }) => {
+    const handleSavePhoto = async ({ objectName, imageUri }) => {
         if (photos.length >= MAX_PHOTOS) {
             setShowAddSheet(false);
             setPendingPhotoUri(null);
             return;
+        }
+        try {
+            await apiClient.post('/api/onboarding/photo-challenge', {
+                name: objectName,
+                localRef: [imageUri],
+            });
+        } catch (err) {
+            console.error('[WalkthroughStep2] save object error:', err?.response?.data || err.message);
         }
         setPhotos(prev => [
             ...prev,
