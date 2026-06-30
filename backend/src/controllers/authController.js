@@ -1,16 +1,27 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const nodemailer = require('nodemailer')
 const User = require('../models/User')
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    auth: {
-        user: process.env.BREVO_SMTP_LOGIN,
-        pass: process.env.BREVO_SMTP_KEY,
-    },
-})
+async function sendOtpEmail(toEmail, otp) {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json',
+            'api-key': process.env.BREVO_API_KEY,
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+            sender: { name: 'WaWa', email: 'wawa.app.noreply@gmail.com' },
+            to: [{ email: toEmail }],
+            subject: 'Your WaWa password reset code',
+            textContent: `Your verification code is: ${otp}\n\nThis code expires in 10 minutes.`,
+        }),
+    })
+    if (!res.ok) {
+        const err = await res.text()
+        throw new Error(`Brevo API error: ${err}`)
+    }
+}
 
 const signToken = (userId, email) =>
     jwt.sign({ userId, email }, process.env.JWT_SECRET, {
@@ -100,12 +111,7 @@ const forgotPassword = async (req, res) => {
         user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
         await user.save()
 
-        await transporter.sendMail({
-            from:    '"WaWa" <wawa.app.noreply@gmail.com>',
-            to:      user.email,
-            subject: 'Your WaWa password reset code',
-            text:    `Your verification code is: ${otp}\n\nThis code expires in 10 minutes.`,
-        })
+        await sendOtpEmail(user.email, otp)
 
         return res.json({ success: true })
     } catch (err) {
