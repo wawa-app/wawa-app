@@ -39,9 +39,6 @@ export default function ProfileScreen({ navigation }) {
             contentContainerStyle={{ paddingBottom: 40 }}
             showsVerticalScrollIndicator={false}
         >
-            {/* Divider */}
-            <View className="h-[1px] bg-Neutral-Gray-300 mx-6" />
-
             {/* gap: 24px */}
             <View style={{ height: 24 }} />
 

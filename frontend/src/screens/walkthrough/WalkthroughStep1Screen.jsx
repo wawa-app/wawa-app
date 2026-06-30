@@ -59,21 +59,24 @@ export default function WalkthroughStep1Screen({ navigation }) {
             {/* Status bar */}
             <View style={{ height: 24 }} />
 
-            {/* Stepper */}
-            <View style={{ paddingTop: 24 }}>
-                <Stepper currentStep={1} steps={WALKTHROUGH_STEPS} />
-            </View>
+            {/* Header zone */}
+            <View style={{ height: 64 }} />
 
-            {/* gap: 24px */}
-            <View style={{ height: 24 }} />
+            {/* Stepper */}
+            <Stepper currentStep={1} steps={WALKTHROUGH_STEPS} />
+
+            {/* gap: 64px */}
+            <View style={{ height: 64 }} />
 
             {/* Content frame */}
             <View style={{ paddingHorizontal: 16 }}>
 
                 {/* Title */}
-                <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 24, lineHeight: 32 }}>
-                    Let's prepare for mission
-                </Text>
+                <View style={{ width: 329, height: 32, alignSelf: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 24, lineHeight: 32 }}>
+                        Let's prepare for mission
+                    </Text>
+                </View>
 
                 {/* gap: 9px */}
                 <View style={{ height: 9 }} />
@@ -83,12 +86,11 @@ export default function WalkthroughStep1Screen({ navigation }) {
                     Take 10 photos of your objects
                 </Text>
 
-
                 {/* gap: 40px */}
                 <View style={{ height: 40 }} />
 
                 {/* Tips card */}
-                <View style={{ borderRadius: 12, paddingHorizontal: 16, paddingVertical: 24, gap: 32, backgroundColor: '#FFE0B2' }}>
+                <View style={{ width: 328, alignSelf: 'center', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 24, gap: 32, backgroundColor: '#FFE0B2' }}>
 
                     {/* Tips title */}
                     <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 20, lineHeight: 28 }}>
@@ -112,7 +114,7 @@ export default function WalkthroughStep1Screen({ navigation }) {
             <View style={{ flex: 1 }} />
 
             {/* Button pinned to bottom */}
-            <View style={{ paddingHorizontal: 34, paddingBottom: 104 }}>
+            <View style={{ width: 292, alignSelf: 'center', paddingBottom: 104 }}>
                 <Button
                     title="Go to Setting"
                     onPress={() => navigation.navigate('WalkthroughStep2')}
