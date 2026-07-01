@@ -116,22 +116,21 @@ function ChallengeCaptureOnly() {
 // Redirects first-time users to Walkthrough, returning users to Main.
 // Registered as the first screen in the user stack so it's always the
 // initial destination after login / signup.
-function HomeRedirector({ navigation }) {
-    const { isFirstLogin } = useAuth();
-    React.useEffect(() => {
-        if (isFirstLogin) {
-            navigation.replace('WalkthroughIntro');
-        } else {
-            navigation.replace('Main');
-        }
-    }, []);
-    return <View style={{ flex: 1, backgroundColor: '#fff' }} />;
-}
+// function HomeRedirector({ navigation }) {
+//     const { isFirstLogin } = useAuth();
+//     React.useEffect(() => {
+//         if (isFirstLogin) {
+//             navigation.replace('WalkthroughIntro');
+//         } else {
+//             navigation.replace('Main');
+//         }
+//     }, []);
+//     return <View style={{ flex: 1, backgroundColor: '#fff' }} />;
+// }
 
 function RootNavigator() {
-    const { user, loading } = useAuth();
+    const { user, loading, isFirstLogin } = useAuth();
 
-    // Show spinner while checking for existing token on launch
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -141,35 +140,40 @@ function RootNavigator() {
     }
 
     return (
-        <Stack.Navigator
-            screenOptions={{ headerShown: false }}
-        >
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
             {user ? (
-                <>
-                    <Stack.Screen name="HomeRedirector" component={HomeRedirector} />
-                    <Stack.Screen
-                        name="Main"
-                        component={NavTabs}
-                        options={{ headerShown: true, header: () => <StackHeader /> }}
-                    />
-                    {/* Detail / full-screen pages go here.
-                    Build the screen (content only), then add a line below with name + title.
-                    Example:
-                    {/* <Stack.Screen name="ChangeUserName" component={ChangeUserName} options={{ headerShown: true, title: 'Change User Name' }} /> */}
-                    <Stack.Screen name="CameraCapture" component={CameraCaptureScreen} />
-                    {/* Profile sub-screens */}
-                    <Stack.Screen name="ChangeUserName" component={ChangeUserNameScreen} />
-                    <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-                    <Stack.Screen name="PasswordUpdated" component={PasswordUpdatedScreen} />
-                    <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
-                    {/* Walkthrough flow — shown to first-time users after login */}
-                    <Stack.Screen name="WalkthroughIntro" component={WalkthroughIntroScreen} />
-                    <Stack.Screen name="WalkthroughStep1" component={WalkthroughStep1Screen} />
-                    <Stack.Screen name="WalkthroughStep1Camera" component={WalkthroughStep1CameraScreen} />
-                    <Stack.Screen name="WalkthroughStep2" component={WalkthroughStep2Screen} />
-                    <Stack.Screen name="WalkthroughStep3" component={WalkthroughStep3Screen} />
-                    <Stack.Screen name="WalkthroughAllDone" component={WalkthroughAllDoneScreen} />
-                </>
+                isFirstLogin ? (
+                    // New user
+                    <>
+                        <Stack.Screen name="WalkthroughIntro" component={WalkthroughIntroScreen} />
+                        <Stack.Screen name="WalkthroughStep1" component={WalkthroughStep1Screen} />
+                        <Stack.Screen name="WalkthroughStep1Camera" component={WalkthroughStep1CameraScreen} />
+                        <Stack.Screen name="WalkthroughStep2" component={WalkthroughStep2Screen} />
+                        <Stack.Screen name="WalkthroughStep3" component={WalkthroughStep3Screen} />
+                        <Stack.Screen name="WalkthroughAllDone" component={WalkthroughAllDoneScreen} />
+                        <Stack.Screen
+                            name="Main"
+                            component={NavTabs}
+                            options={{ headerShown: true, header: () => <StackHeader /> }}
+                        />
+                        <Stack.Screen name="CameraCapture" component={CameraCaptureScreen} />
+                    </>
+                ) : (
+                    // Exist user
+                    <>
+                        <Stack.Screen
+                            name="Main"
+                            component={NavTabs}
+                            options={{ headerShown: true, header: () => <StackHeader /> }}
+                        />
+                        <Stack.Screen name="CameraCapture" component={CameraCaptureScreen} />
+                        <Stack.Screen name="ChangeUserName" component={ChangeUserNameScreen} />
+                        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+                        <Stack.Screen name="PasswordUpdated" component={PasswordUpdatedScreen} />
+                        <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+                        <Stack.Screen name="WalkthroughIntro" component={WalkthroughIntroScreen} />
+                    </>
+                )
             ) : (
                 <>
                     <Stack.Screen name="Launch" component={LaunchScreen} />
