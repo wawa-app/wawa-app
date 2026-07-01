@@ -46,8 +46,18 @@ export default function AlarmFlow({ alarmId }) {
         setPhase(PHASE.CAPTURING)
     }, []);
 
+    const fetchUserStats = useCallback(async () => {
+        try {
+            const response = await apiClient.get('/api/users/stats')
+            return response.data?.stats ?? null
+        } catch (error) {
+            console.warn('stats fetch failed:', error?.response?.status, error?.response?.data || error?.message)
+            return null
+        }
+    }, [])
+
     // Records the attempt (success or failed) to /verify with the alarm _id.
-    const recordAttempt = useCallback(async (isSuccess) => {
+    const recordAttempt = useCallback(async (isSuccess, failedAttemptCount) => {
         const timeToComplete = missionStartRef.current
             ? Math.round((Date.now() - missionStartRef.current) / 1000)
             : null;
@@ -57,6 +67,7 @@ export default function AlarmFlow({ alarmId }) {
                 objectId: targetObject?.id,
                 isSuccess,
                 timeToComplete,
+                failedAttemptCount,
             });
             return response.data
         } catch (err) {
@@ -85,18 +96,26 @@ export default function AlarmFlow({ alarmId }) {
         if (isMatch) {
             AlarmModule.stopRingtone()
             const data = await recordAttempt(true)
-            setCompletionStats(data?.stats ?? null)
+            const stats = data?.stats ?? await fetchUserStats()
+            setCompletionStats(
+                stats
+                    ? { ...stats, awarded: data?.awarded }
+                    : null
+            )
             setMatched(true)
             setPhase(PHASE.RESULT)
             return
         }
 
         // Failure: record failed attempt, increment the counter.
-        await recordAttempt(false)
-        setFailedCount((prev) => prev + 1)
+        const nextFailedCount = failedCount + 1
+        const data = await recordAttempt(false, nextFailedCount)
+        const stats = data?.stats ?? await fetchUserStats()
+        setCompletionStats(stats)
+        setFailedCount(nextFailedCount)
         setMatched(false)
         setPhase(PHASE.RESULT)
-    }, [target, recordAttempt])
+    }, [failedCount, target, recordAttempt, fetchUserStats])
 
     const handleChangeTarget = useCallback(async () => { await loadTarget(); }, [loadTarget])
 
@@ -135,7 +154,7 @@ export default function AlarmFlow({ alarmId }) {
         case PHASE.COMPARING:
             return <ChallengeComparingScreen target={target} targetName={targetName} candidate={candidate} />;
         case PHASE.RESULT:
-            return <ChallengeResultScreen matched={matched} targetName={targetName} onClose={handleClose} onTryAgain={handleTryAgain} onEmergencyExit={handleEmergencyExit} completionStats={completionStats} />;
+            return <ChallengeResultScreen matched={matched} targetName={targetName} onClose={handleClose} onTryAgain={handleTryAgain} onEmergencyExit={handleEmergencyExit} completionStats={completionStats} failedAttemptCount={failedCount} maxAttempts={MAX_ATTEMPTS} />;
         case PHASE.RINGING:
         default:
             return <AlarmRingingScreen onStartMission={handleStartMission} />;

@@ -14,11 +14,6 @@ const startOfUtcDay = (date) => {
     return day
 }
 
-const daysBetweenUtc = (from, to) => {
-    const msPerDay = 24 * 60 * 60 * 1000
-    return Math.round((startOfUtcDay(to) - startOfUtcDay(from)) / msPerDay)
-}
-
 const utcDayKey = (date) => startOfUtcDay(date).toISOString().slice(0, 10)
 
 const getMissionRewardStats = async (userId) => {
@@ -43,6 +38,23 @@ const getMissionRewardStats = async (userId) => {
     }
 }
 
+const hasSuccessfulMissionToday = async (userId, completedAt) => {
+    const [existing, streak] = await Promise.all([
+        MissionLog.findOne({
+            userId,
+            isSuccess: true,
+            completionDay: utcDayKey(completedAt),
+        }),
+        Streak.findOne({ userId }),
+    ])
+
+    const alreadyAwardedByStreak = streak?.lastSuccessDate
+        ? utcDayKey(streak.lastSuccessDate) === utcDayKey(completedAt)
+        : false
+
+    return Boolean(existing) || alreadyAwardedByStreak
+}
+
 // Determine Uni stage based on level (every 5 levels = new stage)
 const getStage = (level) => {
     if (level <= 5) return 'Baby Uni'
@@ -60,46 +72,30 @@ const applyMissionSuccessRewards = async (userId, completedAt = new Date()) => {
         streak = await Streak.create({ userId })
     }
 
-    const daysSinceLastSuccess = streak.lastSuccessDate
-        ? daysBetweenUtc(streak.lastSuccessDate, completedAt)
-        : null
-
-    // XP and streak progress are granted at most once per UTC calendar day.
-    const awarded = daysSinceLastSuccess !== 0
-    let newCount = streak.currentCount
-    if (daysSinceLastSuccess === 1) {
-        newCount = streak.currentCount + 1
-    } else if (awarded) {
-        newCount = 1
-    }
-
-    if (awarded) {
-        streak.currentCount = newCount
-        streak.longestCount = Math.max(streak.longestCount, newCount)
-        streak.lastSuccessDate = completedAt
-        await streak.save()
-    }
+    const newCount = (streak.currentCount ?? 0) + 1
+    streak.currentCount = newCount
+    streak.longestCount = Math.max(streak.longestCount ?? 0, newCount)
+    streak.lastSuccessDate = completedAt
+    await streak.save()
 
     let uni = await Uni.findOne({ userId })
     if (!uni) {
         uni = await Uni.create({ userId, avatarKey: 'default' })
     }
 
-    if (awarded) {
-        const newExp = uni.exp + EXP_PER_SUCCESS
-        const newLevel = Math.floor(newExp / 100) + 1
-        const newStage = getStage(newLevel)
+    const newExp = uni.exp + EXP_PER_SUCCESS
+    const newLevel = Math.floor(newExp / 100) + 1
+    const newStage = getStage(newLevel)
 
-        uni.exp = newExp
-        uni.level = newLevel
-        uni.stage = newStage
-        await uni.save()
+    uni.exp = newExp
+    uni.level = newLevel
+    uni.stage = newStage
+    await uni.save()
 
-        await User.findByIdAndUpdate(userId, { $inc: { totalUnlocks: 1 } })
-    }
+    await User.findByIdAndUpdate(userId, { $inc: { totalUnlocks: 1 } })
 
     return {
-        awarded,
+        awarded: true,
         streak: {
             currentCount: streak.currentCount,
             longestCount: streak.longestCount,
@@ -112,6 +108,19 @@ const applyMissionSuccessRewards = async (userId, completedAt = new Date()) => {
             exp: uni.exp,
         },
     }
+}
+
+const applyMissionFailurePenalty = async (userId, { reset = false } = {}) => {
+    if (reset) {
+        await Streak.findOneAndUpdate(
+            { userId },
+            { $set: { currentCount: 0, lastSuccessDate: null } },
+            { upsert: true, setDefaultsOnInsert: true }
+        )
+    }
+
+
+    return getMissionRewardStats(userId)
 }
 
 // GET /api/mission/:alarmId
@@ -139,7 +148,13 @@ const getMission = async (req, res) => {
 // Receives scanned image, calls OpenAI Vision API, updates Streak, Uni, and logs result
 const verifyMission = async (req, res) => {
     try {
-        const { alarmId, objectId, imageBase64, timeToComplete } = req.body
+        const { alarmId, objectId, timeToComplete, failedAttemptCount } = req.body
+        const isSuccess = req.body.isSuccess ?? true // front-end Vision result; falls back to true until backend Vision lands
+        const shouldResetStreak = !isSuccess && Number(failedAttemptCount) >= 3
+
+        if (shouldResetStreak) {
+            await applyMissionFailurePenalty(req.user.userId, { reset: true })
+        }
 
         const alarm = await Alarm.findOne({ _id: alarmId, userId: req.user.userId })
         if (!alarm) {
@@ -154,7 +169,12 @@ const verifyMission = async (req, res) => {
         // ── TODO: call OpenAI Vision API ──────────────────────────
         // const isSuccess = await callVisionAPI(imageBase64, objectId)
         // const isSuccess = true // placeholder — replace with Vision API result
-        const isSuccess = req.body.isSuccess ?? true // front-end Vision result; falls back to true until backend Vision lands
+        const attemptAt = new Date()
+        const completionDay = isSuccess ? utcDayKey(attemptAt) : null
+        const alreadyCompletedToday = isSuccess
+            ? await hasSuccessfulMissionToday(req.user.userId, attemptAt)
+            : false
+        const logCompletionDay = alreadyCompletedToday ? null : completionDay
 
         // Create MissionAttempt record
         const attempt = await MissionAttempt.create({
@@ -171,15 +191,26 @@ const verifyMission = async (req, res) => {
             missionId: attempt._id,
             timeToComplete: timeToComplete ?? null,
             isSuccess,
-            attemptAt: new Date(),
-            completedAt: isSuccess ? new Date() : null,
+            attemptAt,
+            completedAt: isSuccess ? attemptAt : null,
+            completionDay: logCompletionDay,
         })
 
-        if (isSuccess) {
-            await applyMissionSuccessRewards(req.user.userId)
-        }
+        const stats = isSuccess && alreadyCompletedToday
+            ? await getMissionRewardStats(req.user.userId)
+            : isSuccess
+                ? await applyMissionSuccessRewards(req.user.userId, attemptAt)
+            : await applyMissionFailurePenalty(req.user.userId, {
+                reset: shouldResetStreak,
+            })
 
-        return res.json({ success: true, result: isSuccess ? 'success' : 'failed' })
+        return res.json({
+            success: true,
+            result: isSuccess ? 'success' : 'failed',
+            awarded: isSuccess ? !alreadyCompletedToday : false,
+            alreadyCompletedToday,
+            stats,
+        })
     } catch (err) {
         console.error('[scanController.verifyMission]', err)
         return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
@@ -287,57 +318,33 @@ const recordChallengeSuccess = async (req, res) => {
 
         const completedAt = new Date()
         const completionDay = utcDayKey(completedAt)
-        const existing = await MissionLog.findOne({
-            userId: req.user.userId,
-            isSuccess: true,
-            completionDay,
-        })
-        if (existing) {
-            const stats = await getMissionRewardStats(req.user.userId)
-            return res.json({
-                success: true,
-                result: 'success',
-                awarded: false,
-                alreadyCompletedToday: true,
-                stats,
-            })
-        }
-
+        const alreadyCompletedToday = await hasSuccessfulMissionToday(req.user.userId, completedAt)
+        const logCompletionDay = alreadyCompletedToday ? null : completionDay
         const attempt = await MissionAttempt.create({
             userId: req.user.userId,
             objectId,
             status: 'success',
         })
 
-        try {
-            await MissionLog.create({
-                userId: req.user.userId,
-                objectId,
-                missionId: attempt._id,
-                isSuccess: true,
-                attemptAt: completedAt,
-                completedAt,
-                completionDay,
-            })
-        } catch (err) {
-            if (err?.code !== 11000) throw err
-            await MissionAttempt.findByIdAndDelete(attempt._id)
-            const stats = await getMissionRewardStats(req.user.userId)
-            return res.json({
-                success: true,
-                result: 'success',
-                awarded: false,
-                alreadyCompletedToday: true,
-                stats,
-            })
-        }
+        await MissionLog.create({
+            userId: req.user.userId,
+            objectId,
+            missionId: attempt._id,
+            isSuccess: true,
+            attemptAt: completedAt,
+            completedAt,
+            completionDay: logCompletionDay,
+        })
 
-        const stats = await applyMissionSuccessRewards(req.user.userId, completedAt)
+        const stats = alreadyCompletedToday
+            ? await getMissionRewardStats(req.user.userId)
+            : await applyMissionSuccessRewards(req.user.userId, completedAt)
 
         return res.json({
             success: true,
             result: 'success',
-            awarded: stats.awarded,
+            awarded: !alreadyCompletedToday,
+            alreadyCompletedToday,
             stats,
         })
     } catch (err) {
@@ -346,4 +353,62 @@ const recordChallengeSuccess = async (req, res) => {
     }
 }
 
-module.exports = { getMission, verifyMission, changeObject, emergencyOverride, recordChallengeSuccess }
+// POST /api/mission/challenge-failure
+// Records a failed standalone challenge compare and decreases/resets the streak.
+const recordChallengeFailure = async (req, res) => {
+    try {
+        const { objectId, failedAttemptCount } = req.body
+        const shouldResetStreak = Number(failedAttemptCount) >= 3
+
+        if (shouldResetStreak) {
+            await applyMissionFailurePenalty(req.user.userId, { reset: true })
+        }
+
+        if (!objectId) {
+            return res.status(400).json({ success: false, error: 'MISSING_OBJECT_ID' })
+        }
+
+        const object = await Object.findOne({ _id: objectId, userId: req.user.userId })
+        if (!object) {
+            return res.status(404).json({ success: false, error: 'OBJECT_NOT_FOUND' })
+        }
+
+        const attemptAt = new Date()
+        const attempt = await MissionAttempt.create({
+            userId: req.user.userId,
+            objectId,
+            status: 'failed',
+        })
+
+        await MissionLog.create({
+            userId: req.user.userId,
+            objectId,
+            missionId: attempt._id,
+            isSuccess: false,
+            attemptAt,
+            completedAt: null,
+        })
+
+        const stats = await applyMissionFailurePenalty(req.user.userId, {
+            reset: shouldResetStreak,
+        })
+
+        return res.json({
+            success: true,
+            result: 'failed',
+            stats,
+        })
+    } catch (err) {
+        console.error('[scanController.recordChallengeFailure]', err)
+        return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
+    }
+}
+
+module.exports = {
+    getMission,
+    verifyMission,
+    changeObject,
+    emergencyOverride,
+    recordChallengeSuccess,
+    recordChallengeFailure,
+}
