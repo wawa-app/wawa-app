@@ -90,7 +90,7 @@ export default function AlarmListScreen({ navigation }) {
     useEffect(() => {
         const sub = AppState.addEventListener('change', async (state) => {
             if (state === 'active') {
-                setNotifGranted(await hasNotificationPermission());  // check だけ
+                setNotifGranted(await hasNotificationPermission());
             }
         });
         return () => sub.remove();
@@ -156,7 +156,7 @@ export default function AlarmListScreen({ navigation }) {
             let active = true;
             (async () => {
                 const granted = await requestNotificationPermissionIfNeeded();
-                if (active) setNotifGranted(granted);   // ← 結果をゲート判定に使う
+                if (active) setNotifGranted(granted);
 
                 try {
                     const objects = await getStoredObjectsWithImages();
