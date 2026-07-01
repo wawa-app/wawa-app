@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, Pressable, NativeModules, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, NativeModules, ActivityIndicator, Alert, Linking, AppState } from 'react-native';
 import apiClient from '../../api/client';
 import AlarmCard from '../../components/alarm/AlarmCard';
 import AlarmBottomSheet from '../../components/alarm/AlarmBottomSheet'
@@ -9,11 +9,11 @@ import { useSnackbar } from '../../components/common/SnackbarProvider';
 import Button from '../../components/common/Button';
 import Fab from '../../components/common/Fab';
 import { getStoredObjectsWithImages } from "../../storage/objectStorage";
-import { requestNotificationPermissionIfNeeded } from '../../utils/permissions';
+import { requestNotificationPermissionIfNeeded, hasNotificationPermission } from '../../utils/permissions';
 
 const { AlarmModule } = NativeModules;
 
-const REQUIRED_OBJECTS = 5
+const REQUIRED_OBJECTS = 10
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const toRequestCode = (id) => parseInt(id.slice(-6), 16)
@@ -85,7 +85,16 @@ export default function AlarmListScreen({ navigation }) {
     const atLimit = alarms.length >= 3
     const { show } = useSnackbar();
     const [objectCount, setObjectCount] = useState(null);
+    const [notifGranted, setNotifGranted] = useState(true);
 
+    useEffect(() => {
+        const sub = AppState.addEventListener('change', async (state) => {
+            if (state === 'active') {
+                setNotifGranted(await hasNotificationPermission());  // check だけ
+            }
+        });
+        return () => sub.remove();
+    }, []);
 
     const closeSheet = () => {
         setShowSheet(false)
@@ -144,9 +153,11 @@ export default function AlarmListScreen({ navigation }) {
 
     useFocusEffect(
         useCallback(() => {
-            requestNotificationPermissionIfNeeded();
             let active = true;
             (async () => {
+                const granted = await requestNotificationPermissionIfNeeded();
+                if (active) setNotifGranted(granted);   // ← 結果をゲート判定に使う
+
                 try {
                     const objects = await getStoredObjectsWithImages();
                     if (active) setObjectCount(objects.length);
@@ -241,6 +252,41 @@ export default function AlarmListScreen({ navigation }) {
             console.error('[AlarmListScreen] deleteAlarm error:', err?.response?.status, err?.response?.data)
             if (isNetworkError(err)) show({ text: 'Connection failed', tone: 'error' })
         }
+    }
+    // Gate: notifications must be enabled for alarms to sound
+    if (!loading && !notifGranted) {
+        return (
+            <View className="flex-1 bg-Base-Background px-Space-spacing-lg pt-Space-spacing-xl">
+                <Text className="text-headline-large font-geologica-bold text-Base-OnBackground">Alarms</Text>
+                <View className="justify-center gap-Space-spacing-xxl">
+                    <View className="items-center">
+                        <Text
+                            className="text-title-large font-geologica-bold text-center mb-Space-spacing-lg mt-Space-spacing-xl"
+                            style={{ color: '#000' }}
+                        >
+                            Notifications required for alarms
+                        </Text>
+                        <Text
+                            className="text-body-large font-geologica-light text-center"
+                            style={{ color: '#000' }}
+                        >
+                            Alarms will not sound if notifications are turned off.
+                        </Text>
+                    </View>
+
+                    <Button
+                        title="Open Setting"
+                        onPress={() => Linking.openSettings()}
+                        variant="primary"
+                        fullWidth
+                    />
+                </View>
+                {/* Disabled FAB */}
+                <View className="absolute bottom-6 right-6">
+                    <Fab disabled />
+                </View>
+            </View>
+        );
     }
     // Gate: must enroll enough objects before using alarms
     if (!loading && objectCount !== null && objectCount < REQUIRED_OBJECTS) {
