@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, Alert, ActivityIndicator, Keyboard, TextInput } from 'react-native';
 import Svg, { Mask, Rect, G, Circle, Path } from 'react-native-svg';
 import Stepper, { WALKTHROUGH_STEPS } from '../../components/common/Stepper';
 import Button from '../../components/common/Button';
 import WeekDays from '../../components/alarm/WeekDays';
 import apiClient from '../../api/client';
+import { requestNotificationPermissionIfNeeded } from '../../utils/permissions';
 
 const AlarmIcon = () => (
     <Svg width={72} height={72} viewBox="0 0 72 72" fill="none">
@@ -27,6 +28,10 @@ export default function WalkthroughStep3Screen({ navigation, route }) {
     const [meridiem, setMeridiem] = useState('AM');
     const [selectedDays, setSelectedDays] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        requestNotificationPermissionIfNeeded();
+    }, []);
 
     const handleHourChange = (text) => {
         const value = text.replace(/[^0-9]/g, '');

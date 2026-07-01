@@ -9,6 +9,7 @@ import { useSnackbar } from '../../components/common/SnackbarProvider';
 import Button from '../../components/common/Button';
 import Fab from '../../components/common/Fab';
 import { getStoredObjectsWithImages } from "../../storage/objectStorage";
+import { requestNotificationPermissionIfNeeded } from '../../utils/permissions';
 
 const { AlarmModule } = NativeModules;
 
@@ -143,6 +144,7 @@ export default function AlarmListScreen({ navigation }) {
 
     useFocusEffect(
         useCallback(() => {
+            requestNotificationPermissionIfNeeded();
             let active = true;
             (async () => {
                 try {
