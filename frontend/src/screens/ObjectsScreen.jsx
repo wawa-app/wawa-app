@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
     View,
     Text,
@@ -13,6 +14,7 @@ import ObjectCard from "../components/ObjectCard.jsx";
 import CautionModal from "../components/objects/CautionModal.jsx";
 import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
 import { saveStoredObjects } from "../storage/objectStorage";
+import { useScroll } from "../context/ScrollContext";
 
 import EditIcon from "../components/icons/Edit";
 import DeleteIcon from "../components/icons/Delete";
@@ -108,6 +110,18 @@ export default function ObjectsScreen({ navigation, route }) {
     const [timeTick, setTimeTick] = useState(Date.now());
 
     const cardRefs = useRef({});
+
+    const { setScrolled } = useScroll();
+
+    const handleScroll = (e) => {
+        setScrolled(e.nativeEvent.contentOffset.y > 0);
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            return () => setScrolled(false);
+        }, [setScrolled])
+    );
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -433,6 +447,8 @@ export default function ObjectsScreen({ navigation, route }) {
 
             <ScrollView
                 className="flex-1"
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
                 contentContainerStyle={{ paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
             >
