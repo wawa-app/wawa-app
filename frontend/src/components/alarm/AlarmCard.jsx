@@ -4,6 +4,8 @@ import MenuIcon from '../icons/Menu';
 import { Edit, Delete } from '../icons';
 import Toggle from '../common/Toggle'
 
+const DAY_ORDER = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
 export default function AlarmCard({ alarm, onToggle, onMenu, onEdit, onDelete }) {
     const { label, hour, minute, meridiem, days, enabled } = alarm
     const [menuVisible, setMenuVisible] = useState(false)
@@ -11,13 +13,17 @@ export default function AlarmCard({ alarm, onToggle, onMenu, onEdit, onDelete })
     const openMenu = () => setMenuVisible(true)
     const closeMenu = () => setMenuVisible(false)
 
+    const sortedDays = [...days].sort(
+        (a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b)
+    )
+
     return (
-        <View className={`w-full p-4 rounded-Radius-radius-sm ${enabled ? 'bg-Base-Surface' : 'bg-Neutral-Gray-300'}`}
-            style={{ height: 136 }}>
+        <View className={`w-full rounded-Radius-radius-sm gap-Space-spacing-xs ${enabled ? 'bg-Base-Surface' : 'bg-Neutral-Gray-300'}`}
+            style={{ height: 136, paddingTop: 20, paddingBottom: 12, paddingHorizontal: 16 }}>
             {/* Label */}
             <View className="flex-row justify-between items-center w-full">
                 <Text className="text-label-large font-geologica-medium text-Base-OnSurface">
-                    {label || 'Label'}
+                    {label}
                 </Text>
 
                 <Menu
@@ -57,7 +63,7 @@ export default function AlarmCard({ alarm, onToggle, onMenu, onEdit, onDelete })
             </View>
 
             {/* Time */}
-            <View className="flex-row items-end mt-1">
+            <View className="flex-row items-end">
                 <Text className="text-display-small font-geologica-bold text-Base-OnSurface">
                     {hour}:{String(minute).padStart(2, '0')}
                 </Text>
@@ -67,9 +73,9 @@ export default function AlarmCard({ alarm, onToggle, onMenu, onEdit, onDelete })
             </View>
 
             {/* Week, toggle */}
-            <View className="flex-row justify-between items-center w-full mt-auto">
+            <View className="flex-row justify-between items-center w-full">
                 <Text className="text-label-large font-geologica-medium text-Base-OnSurface">
-                    {days.length === 7 ? 'Everyday' : days.join(', ')}
+                    {sortedDays.length === 7 ? 'Everyday' : sortedDays.join(', ')}
                 </Text>
                 <Toggle value={enabled} onValueChange={onToggle} />
             </View>
