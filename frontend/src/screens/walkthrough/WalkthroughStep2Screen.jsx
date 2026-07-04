@@ -163,7 +163,7 @@ export default function WalkthroughStep2Screen({ navigation }) {
 
             <View style={{ paddingHorizontal: 32 }}>
                 <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 24, lineHeight: 32 }}>
-                    Mission Preparation
+                    Get Ready
                 </Text>
                 <View style={{ height: 8 }} />
                 <View style={{ width: 277, height: 40, justifyContent: 'center', alignSelf: 'center' }}>

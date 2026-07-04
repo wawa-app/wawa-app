@@ -19,7 +19,7 @@ const DEFAULT_STEPS = [
 // 3-step config for walkthrough
 export const WALKTHROUGH_STEPS = [
     { label: 'Camera' },
-    { label: 'Mission\nPreparation' },
+    { label: 'Get Ready' },
     { label: 'Set Alarm' },
 ];
 
