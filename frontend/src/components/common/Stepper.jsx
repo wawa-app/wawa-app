@@ -43,9 +43,9 @@ export default function Stepper({ currentStep = 1, steps = DEFAULT_STEPS }) {
                                     minWidth: 32,
                                     minHeight: 32,
                                     borderRadius: 9999,
-                                    backgroundColor: isCompleted ? '#FF8400' : isActive ? '#FF8400' : '#FFE0B2',
+                                    backgroundColor: isCompleted ? '#FF8400' : isActive ? '#FF8400' : '#FFCC80',
                                     borderWidth: isActive || isCompleted ? 0 : 1,
-                                    borderColor: '#FFF3CD',
+                                    borderColor: '#FFCC80',
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     paddingHorizontal: 8,
@@ -78,7 +78,7 @@ export default function Stepper({ currentStep = 1, steps = DEFAULT_STEPS }) {
 
                         {/* Connector line */}
                         {!isLast && (
-                            <View style={{ flex: 2, height: 2, backgroundColor: isCompleted || isActive ? '#FF8400' : '#FFF3CD', marginTop: 15 }} />
+                            <View style={{ flex: 2, height: 2, backgroundColor: isCompleted || isActive ? '#FF8400' : '#FFCC80', marginTop: 15 }} />
                         )}
                     </React.Fragment>
                 );
