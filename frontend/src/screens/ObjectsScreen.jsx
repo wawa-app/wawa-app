@@ -113,6 +113,7 @@ export default function ObjectsScreen({ navigation, route }) {
     const [timeTick, setTimeTick] = useState(Date.now());
 
     const cardRefs = useRef({});
+    const isSavingObjectRef = useRef(false);
 
     const { setScrolled } = useScroll();
 
@@ -450,6 +451,11 @@ export default function ObjectsScreen({ navigation, route }) {
     };
 
     const handleSaveObject = async ({ objectName, imageUri }) => {
+        if (isSavingObjectRef.current) {
+            return;
+        }
+
+        isSavingObjectRef.current = true;
         try {
             const objectIdToUpdate =
                 editingObject?.id || editingObjectId || route?.params?.editingObjectId;
@@ -513,6 +519,9 @@ export default function ObjectsScreen({ navigation, route }) {
                 "[ObjectsScreen] saveObject error:",
                 error.response?.data || error.message
             );
+        }
+        finally {
+            isSavingObjectRef.current = false;
         }
     };
 
