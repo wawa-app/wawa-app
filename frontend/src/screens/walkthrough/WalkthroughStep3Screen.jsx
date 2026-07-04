@@ -126,7 +126,7 @@ export default function WalkthroughStep3Screen({ navigation, route }) {
 
             {/* Title */}
             <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Bold', fontSize: 24, lineHeight: 32 }}>
-                Alarm Preparation
+                Set Alarm
             </Text>
 
             {/* gap: 37px */}
