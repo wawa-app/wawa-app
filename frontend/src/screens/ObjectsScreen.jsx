@@ -16,6 +16,8 @@ import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
 import { saveStoredObjects } from "../storage/objectStorage";
 import { useScroll } from "../context/ScrollContext";
 import { compareImages } from "../utils/vision";
+import RNFS from "react-native-fs";
+import { pathFromUri } from "../utils/photos";
 
 import EditIcon from "../components/icons/Edit";
 import DeleteIcon from "../components/icons/Delete";
@@ -213,6 +215,18 @@ export default function ObjectsScreen({ navigation, route }) {
     const enrolledCount = objects.length;
     const objectsToCheckCount = mustCheckObjects.length;
 
+    const localPhotoExists = async (imageUri) => {
+        if (!imageUri) return false;
+
+        try {
+            const filePath = pathFromUri(imageUri);
+            return await RNFS.exists(filePath);
+        } catch (error) {
+            console.warn("[ObjectsScreen] localPhotoExists error:", error?.message);
+            return false;
+        }
+    };
+
     useEffect(() => {
         const fetchObjects = async () => {
             try {
@@ -222,7 +236,26 @@ export default function ObjectsScreen({ navigation, route }) {
                     formatBackendObject(object)
                 );
 
-                await persistObjects(backendObjects);
+                const validObjects = [];
+
+                for (const object of backendObjects) {
+                    const existsOnThisDevice = await localPhotoExists(object.imageUri);
+
+                    if (existsOnThisDevice) {
+                        validObjects.push(object);
+                    } else {
+                        try {
+                            await apiClient.delete(`/api/objects/${object.id}`);
+                        } catch (deleteError) {
+                            console.error(
+                                "[ObjectsScreen] delete missing local object error:",
+                                deleteError.response?.data || deleteError.message
+                            );
+                        }
+                    }
+                }
+
+                await persistObjects(validObjects);
             } catch (error) {
                 console.error("[ObjectsScreen] fetchObjects error:", error);
             }
