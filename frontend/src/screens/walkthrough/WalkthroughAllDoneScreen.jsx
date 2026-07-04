@@ -5,6 +5,7 @@ import Stepper, { WALKTHROUGH_STEPS } from '../../components/common/Stepper';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { CommonActions } from '@react-navigation/native';
+import apiClient from '../../api/client';
 
 const CheckIcon = () => (
     <Svg width={72} height={72} viewBox="0 0 72 72" fill="none">
@@ -74,7 +75,12 @@ export default function WalkthroughAllDoneScreen({ navigation }) {
             <View style={{ width: 292, alignSelf: 'center', paddingBottom: 104 }}>
                 <Button
                     title="Go to Home"
-                    onPress={() => {
+                    onPress={async () => {
+                        try {
+                            await apiClient.patch('/api/users/profile', { isFirstLogin: false });
+                        } catch (err) {
+                            console.warn('[WalkthroughAllDone] isFirstLogin update error:', err?.message);
+                        }
                         setIsFirstLogin(false);
                         navigation.dispatch(
                             CommonActions.reset({

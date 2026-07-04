@@ -9,10 +9,11 @@ const MissionLog    = require('../models/MissionLog')
 // Updates username and/or avatar
 const updateProfile = async (req, res) => {
     try {
-        const { username, avatar } = req.body
+        const { username, avatar, isFirstLogin } = req.body
         const updates = {}
         if (username) updates.username = username.trim()
         if (avatar)   updates.avatar   = avatar
+        if (isFirstLogin === false) updates.isFirstLogin = false
 
         const user = await User.findByIdAndUpdate(
             req.user.userId,
