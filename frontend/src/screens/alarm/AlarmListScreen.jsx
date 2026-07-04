@@ -15,6 +15,7 @@ const { AlarmModule } = NativeModules;
 
 const REQUIRED_OBJECTS = 10
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const normalizeDays = (days) => (!days || days.length === 0) ? DAY_NAMES : days
 
 const toRequestCode = (id) => parseInt(id.slice(-6), 16)
 const isNetworkError = (err) => !err?.response
@@ -42,7 +43,9 @@ const mapAlarmToApi = ({ label, hour, minute, meridiem, days }) => {
     return {
         label: label || '',
         alarmTime: `${String(h24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
-        daysOfWeek: (days || []).map((name) => DAY_NAMES.indexOf(name)),
+        daysOfWeek: (days || [])
+            .map((name) => DAY_NAMES.indexOf(name))
+            .sort((a, b) => a - b),
     }
 }
 
@@ -110,10 +113,7 @@ export default function AlarmListScreen({ navigation }) {
 
     // put
     const handleUpdateAlarm = async (id, { label, hour, minute, meridiem, days }) => {
-        if (!days || days.length === 0) {
-            Alert.alert('Select days', 'Pick at least one day of the week.')
-            return
-        }
+        const normalizedDays = normalizeDays(days)
         try {
             const res = await apiClient.put(`/api/alarms/${id}`, mapAlarmToApi({ label, hour, minute, meridiem, days }))
             const updated = mapAlarmFromApi(res.data.data)
@@ -198,12 +198,9 @@ export default function AlarmListScreen({ navigation }) {
 
     // post
     const handleSaveAlarm = async ({ label, hour, minute, meridiem, days }) => {
-        if (!days || days.length === 0) {
-            Alert.alert('Select days', 'Pick at least one day of the week.')
-            return
-        }
+        const normalizedDays = normalizeDays(days)
         try {
-            const res = await apiClient.post('/api/alarms', mapAlarmToApi({ label, hour, minute, meridiem, days }))
+            const res = await apiClient.post('/api/alarms', mapAlarmToApi({ label, hour, minute, meridiem, days: normalizedDays }))
             const created = mapAlarmFromApi(res.data.data)
             setAlarms((prev) => [...prev, created])
             syncNative(created)

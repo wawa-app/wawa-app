@@ -23,12 +23,10 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
             return
         }
 
-        const number = parseInt(value)
+        const number = parseInt(value, 10)
 
         if (number > 12) {
             setHour('12')
-        } else if (number < 1) {
-            setHour('1')
         } else {
             setHour(value)
         }
@@ -52,11 +50,12 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
     }
 
     const padHourOnBlur = () => {
-        if (hour === '') {
+        const number = parseInt(hour, 10)
+        if (hour === '' || Number.isNaN(number) || number === 0) {
             setHour('12')
             return
         }
-        setHour(String(parseInt(hour)).padStart(2, '0'))
+        setHour(String(number).padStart(2, '0'))
     }
 
     const padMinuteOnBlur = () => {
@@ -92,8 +91,15 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
     }
 
     const handleSave = () => {
-        const safeHour = Math.min(Math.max(parseInt(hour) || 8, 1), 12)
-        const safeMinute = Math.min(Math.max(parseInt(minute) || 0, 0), 59)
+        const parsedHour = parseInt(hour, 10)
+        const safeHour = Number.isNaN(parsedHour) || parsedHour === 0
+            ? 12
+            : Math.min(Math.max(parsedHour, 1), 12)
+
+        const parsedMinute = parseInt(minute, 10)
+        const safeMinute = Number.isNaN(parsedMinute)
+            ? 0
+            : Math.min(Math.max(parsedMinute, 0), 59)
 
         onSave({
             label,
@@ -112,7 +118,7 @@ export default function AlarmBottomSheet({ visible, onClose, onSave, initialValu
                 {/* sheet body */}
                 <View
                     className="bg-Base-Paper items-start"
-                    style={{ height: 572, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}
+                    style={{ height: 540, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}
                 >
                     {/* scroll content */}
                     <View className="w-full items-center gap-Space-spacing-xl px-Space-spacing-lg pt-Space-spacing-xl">
