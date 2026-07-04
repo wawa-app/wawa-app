@@ -3,6 +3,18 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } fro
 import { useAuth } from '../../context/AuthContext';
 import EyeIcon from '../../components/EyeIcon';
 import Button from '../../components/common/Button';
+import { Check } from '../../components/icons';
+
+function Requirement({ met, label }) {
+    return (
+        <View className="flex-row items-center gap-2 mt-1">
+            <Check size={12} color={met ? '#4CAF50' : '#1A0F07'} />
+            <Text style={{ color: '#1A0F07', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20 }}>
+                {label}
+            </Text>
+        </View>
+    );
+}
 
 export default function SignUpScreen({ navigation }) {
     const { signup } = useAuth();
@@ -11,9 +23,16 @@ export default function SignUpScreen({ navigation }) {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const hasLength = password.length >= 5;
+    const hasNumberSymbol = /[0-9]/.test(password) && /[^a-zA-Z0-9]/.test(password);
+
     const handleSignUp = async () => {
         if (!email || !password) {
             Alert.alert('Error', 'Please fill in all fields');
+            return;
+        }
+        if (!hasLength || !hasNumberSymbol) {
+            Alert.alert('Error', 'Password does not meet requirements.');
             return;
         }
         try {
@@ -83,6 +102,13 @@ export default function SignUpScreen({ navigation }) {
                         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                             <EyeIcon color={showPassword ? '#1A0F07' : '#A29789'} />
                         </TouchableOpacity>
+                    </View>
+                    <View style={{ width: 216, alignSelf: 'center', marginTop: 24 }}>
+                        <Text style={{ color: '#1A0F07', fontFamily: 'Geologica-Medium', fontSize: 14, lineHeight: 20 }}>
+                            Password requirements:
+                        </Text>
+                        <Requirement met={hasLength} label="At least 5 characters" />
+                        <Requirement met={hasNumberSymbol} label="Include a number & symbol" />
                     </View>
                 </View>
 
