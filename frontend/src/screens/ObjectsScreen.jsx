@@ -15,6 +15,7 @@ import CautionModal from "../components/objects/CautionModal.jsx";
 import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
 import { saveStoredObjects } from "../storage/objectStorage";
 import { useScroll } from "../context/ScrollContext";
+import { compareImages } from "../utils/vision";
 
 import EditIcon from "../components/icons/Edit";
 import DeleteIcon from "../components/icons/Delete";
@@ -384,11 +385,55 @@ export default function ObjectsScreen({ navigation, route }) {
         clearEditState();
     };
 
+    const findDuplicateObjectPhoto = async (newImageUri, currentEditingId = null) => {
+        if (!newImageUri) return null;
+
+        for (const object of objects) {
+            const isSameObjectBeingEdited = object.id === currentEditingId;
+
+            if (isSameObjectBeingEdited) {
+                continue;
+            }
+
+            if (!object.imageUri) {
+                continue;
+            }
+
+            try {
+                const result = await compareImages(newImageUri, object.imageUri);
+
+                if (result.match) {
+                    return object;
+                }
+            } catch (error) {
+                console.warn(
+                    "[ObjectsScreen] compareImages error:",
+                    error?.message
+                );
+            }
+        }
+
+        return null;
+    };
+
     const handleSaveObject = async ({ objectName, imageUri }) => {
         try {
             const objectIdToUpdate =
                 editingObject?.id || editingObjectId || route?.params?.editingObjectId;
+            const duplicateObject = await findDuplicateObjectPhoto(
+                imageUri,
+                objectIdToUpdate
+            );
 
+            if (duplicateObject) {
+                setShowAddObjectSheet(false);
+                setPendingPhotoUri(null);
+                clearEditState();
+                setSnackbarMessage(
+                    `This object already exists as ${duplicateObject.objectName}`
+                );
+                return;
+            }
             if (objectIdToUpdate) {
                 const response = await apiClient.patch(
                     `/api/objects/${objectIdToUpdate}`,
@@ -396,6 +441,7 @@ export default function ObjectsScreen({ navigation, route }) {
                         name: objectName,
                         localRef: [imageUri],
                     }
+
                 );
 
                 const savedObject = response.data.data;
