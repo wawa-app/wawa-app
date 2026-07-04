@@ -76,7 +76,7 @@ export default function ProfileScreen({ navigation }) {
                     <Text className="text-[16px] font-geologica-regular text-Base-OnBackground mr-2">
                         Hello {user?.username ?? 'User'}
                     </Text>
-                    <Edit size={18} />
+                    <Edit size={32} />
                 </TouchableOpacity>
             </View>
 
