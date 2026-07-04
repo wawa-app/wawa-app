@@ -94,7 +94,7 @@ export default function WalkthroughStep3Screen({ navigation, route }) {
             await apiClient.post('/api/alarms', {
                 alarmTime: to24h(),
                 daysOfWeek: selectedDays.map(name => DAY_NAMES.indexOf(name)),
-                label: 'WaWa Alarm',
+                label: null,
             });
             navigation.navigate('WalkthroughAllDone');
         } catch (err) {
