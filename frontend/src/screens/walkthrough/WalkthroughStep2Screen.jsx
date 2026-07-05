@@ -60,17 +60,19 @@ export default function WalkthroughStep2Screen({ navigation }) {
             setPendingPhotoUri(null);
             return;
         }
+        let savedId = null;
         try {
-            await apiClient.post('/api/onboarding/photo-challenge', {
+            const res = await apiClient.post('/api/onboarding/photo-challenge', {
                 name: objectName,
                 localRef: [imageUri],
             });
+            savedId = res.data?.data?._id ?? null;
         } catch (err) {
             console.error('[WalkthroughStep2] save object error:', err?.response?.data || err.message);
         }
         setPhotos(prev => [
             ...prev,
-            { id: Date.now().toString(), uri: imageUri, label: objectName },
+            { id: savedId || Date.now().toString(), uri: imageUri, label: objectName },
         ]);
         setShowAddSheet(false);
         setPendingPhotoUri(null);
@@ -81,7 +83,7 @@ export default function WalkthroughStep2Screen({ navigation }) {
             Alert.alert('Not enough photos', `Please take ${MAX_PHOTOS - photos.length} more photo(s).`);
             return;
         }
-        navigation.navigate('WalkthroughStep3', { photos: photos.map(p => ({ uri: p.uri, label: p.label })) });
+        navigation.navigate('WalkthroughStep3', { photos: photos.map(p => ({ id: p.id, uri: p.uri, label: p.label })) });
     };
 
     const isDone = photos.length >= MAX_PHOTOS;

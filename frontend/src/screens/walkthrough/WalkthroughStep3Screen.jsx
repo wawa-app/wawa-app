@@ -6,6 +6,7 @@ import Button from '../../components/common/Button';
 import WeekDays from '../../components/alarm/WeekDays';
 import apiClient from '../../api/client';
 import { requestNotificationPermissionIfNeeded } from '../../utils/permissions';
+import { loadStoredObjects, saveStoredObjects } from '../../storage/objectStorage';
 
 const AlarmIcon = () => (
     <Svg width={72} height={72} viewBox="0 0 72 72" fill="none">
@@ -36,8 +37,8 @@ export default function WalkthroughStep3Screen({ navigation, route }) {
     const handleHourChange = (text) => {
         const value = text.replace(/[^0-9]/g, '');
         if (value === '') { setHour(''); return; }
-        const n = parseInt(value);
-        setHour(n > 12 ? '12' : n < 1 ? '1' : value);
+        const n = parseInt(value, 10);
+        setHour(n > 12 ? '12' : value);
     };
 
     const handleMinuteChange = (text) => {
@@ -48,8 +49,12 @@ export default function WalkthroughStep3Screen({ navigation, route }) {
     };
 
     const padHour = () => {
-        if (hour === '') { setHour('12'); return; }
-        setHour(String(parseInt(hour)).padStart(2, '0'));
+        const number = parseInt(hour, 10);
+        if (hour === '' || Number.isNaN(number) || number === 0) {
+            setHour('12');
+            return;
+        }
+        setHour(String(number).padStart(2, '0'));
     };
 
     const padMinute = () => {
@@ -65,35 +70,48 @@ export default function WalkthroughStep3Screen({ navigation, route }) {
     };
 
     const to24h = () => {
-        let h = parseInt(hour) || 8;
+        const parsedHour = parseInt(hour, 10);
+        let h = Number.isNaN(parsedHour) || parsedHour === 0 ? 12 : Math.min(Math.max(parsedHour, 1), 12);
         if (meridiem === 'AM' && h === 12) h = 0;
         if (meridiem === 'PM' && h !== 12) h += 12;
         return `${String(h).padStart(2, '0')}:${minute.padStart(2, '0')}`;
     };
 
     const handleSetAlarm = async () => {
-        if (selectedDays.length === 0) {
-            Alert.alert('Select days', 'Please select at least one day of the week.');
-            return;
-        }
+        // if (selectedDays.length === 0) {
+        //     Alert.alert('Select days', 'Please select at least one day of the week.');
+        //     return;
+        // }
         try {
             setLoading(true);
             const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const normalizedDays = selectedDays.length === 0 ? DAY_NAMES : selectedDays;
 
             // Save all walkthrough photos to backend (batch)
-            await Promise.all(
-                photos.map(p =>
-                    apiClient.post('/api/onboarding/photo-challenge', {
-                        name: p.label,
-                        localRef: [p.uri],
-                    })
-                )
-            );
+            // await Promise.all(
+            //     photos.map(p =>
+            //         apiClient.post('/api/onboarding/photo-challenge', {
+            //             name: p.label,
+            //             localRef: [p.uri],
+            //         })
+            //     )
+            // );
+
+            // Also persist to local storage so AlarmListScreen's gate check
+            // (reads AsyncStorage, not the DB) sees these objects immediately,
+            // without requiring a visit to the Objects tab first.
+            const existing = await loadStoredObjects();
+            const newObjects = photos.map((p, i) => ({
+                id: p.id,
+                objectName: p.label,
+                imageUri: p.uri,
+            }));
+            await saveStoredObjects([...existing, ...newObjects]);
 
             // Save alarm
             await apiClient.post('/api/alarms', {
                 alarmTime: to24h(),
-                daysOfWeek: selectedDays.map(name => DAY_NAMES.indexOf(name)),
+                daysOfWeek: normalizedDays.map(name => DAY_NAMES.indexOf(name)),
                 label: null,
             });
             navigation.navigate('WalkthroughAllDone');
