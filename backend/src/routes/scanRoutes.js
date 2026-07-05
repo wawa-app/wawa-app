@@ -4,6 +4,7 @@ const {
     verifyMission,
     changeObject,
     emergencyOverride,
+    resetCurrentStreak,
     recordChallengeSuccess,
     recordChallengeFailure,
 } = require('../controllers/scanController')
@@ -15,6 +16,7 @@ router.post('/challenge-failure', recordChallengeFailure) // POST /api/mission/c
 router.post('/verify', verifyMission) // POST /api/mission/verify
 router.patch('/change-object', changeObject) // PATCH /api/mission/change-object
 router.patch('/emergency', emergencyOverride) // PATCH /api/mission/emergency
+router.patch('/streak-reset', resetCurrentStreak) // PATCH /api/mission/streak-reset
 router.get('/:alarmId', getMission) // GET /api/mission/:alarmId
 
 module.exports = router

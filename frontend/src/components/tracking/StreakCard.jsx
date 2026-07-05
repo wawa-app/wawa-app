@@ -3,10 +3,12 @@ import {
     View,
     Text,
     ActivityIndicator,
+    StyleSheet,
     TouchableOpacity,
 } from "react-native";
 
 import apiClient from "../../api/client";
+import { Streak, Unstreak } from "../icons";
 
 export default function StreakCard({ variant = "lose", streakCount }) {
     const hasProvidedStreak = typeof streakCount === "number";
@@ -61,6 +63,8 @@ export default function StreakCard({ variant = "lose", streakCount }) {
     const isLose = variant === "lose";
     const title = isLose ? "Day Streak LOSE!" : "Day Streak COUNT!";
     const cardBg = isLose ? "bg-[#315A84]" : "bg-[#E65B00]";
+    const titleWeight = isLose ? "font-geologica-black font-black" : "font-geologica-bold font-bold";
+    const StreakStatusIcon = isLose ? Unstreak : Streak;
 
     const totalDays = 7;
     const filledDays = Math.min(streak, totalDays);
@@ -83,17 +87,15 @@ export default function StreakCard({ variant = "lose", streakCount }) {
                 <>
                     {/* Icon + streak number */}
                     <View className="flex-row items-center justify-center mb-2">
-                        <Text className="text-white text-[28px] mr-3">
-                            🔥
-                        </Text>
+                        <StreakStatusIcon size={40} color="#FFFFFF" style={styles.headerIcon} />
 
-                        <Text className="text-white text-[36px] leading-[44px] font-geologica-bold font-bold text-center">
+                        <Text className="text-white text-[36px] leading-[44px] font-geologica-black font-black text-center">
                             {streak}
                         </Text>
                     </View>
 
                     {/* Title */}
-                    <Text className="text-white text-[20px] leading-[28px] font-geologica-bold font-bold text-center mb-4">
+                    <Text className={`text-white text-[18px] leading-[28px] ${titleWeight} text-center mb-4`}>
                         {title}
                     </Text>
 
@@ -125,3 +127,9 @@ export default function StreakCard({ variant = "lose", streakCount }) {
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    headerIcon: {
+        marginRight: 12,
+    },
+});
