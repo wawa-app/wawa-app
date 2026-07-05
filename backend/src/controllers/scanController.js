@@ -302,6 +302,29 @@ const emergencyOverride = async (req, res) => {
     }
 }
 
+// PATCH /api/mission/streak-reset
+// Resets the current streak without logging an emergency override.
+const resetCurrentStreak = async (req, res) => {
+    try {
+        await Streak.findOneAndUpdate(
+            { userId: req.user.userId },
+            { $set: { currentCount: 0, lastSuccessDate: null } },
+            { upsert: true, setDefaultsOnInsert: true }
+        )
+
+        const stats = await getMissionRewardStats(req.user.userId)
+
+        return res.json({
+            success: true,
+            message: 'Streak reset',
+            stats,
+        })
+    } catch (err) {
+        console.error('[scanController.resetCurrentStreak]', err)
+        return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
+    }
+}
+
 // POST /api/mission/challenge-success
 // Records a successful standalone challenge compare and updates streak/Uni stats
 const recordChallengeSuccess = async (req, res) => {
@@ -409,6 +432,7 @@ module.exports = {
     verifyMission,
     changeObject,
     emergencyOverride,
+    resetCurrentStreak,
     recordChallengeSuccess,
     recordChallengeFailure,
 }

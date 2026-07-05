@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, Text, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { challengeTw as tw, cameraFrameStyle } from './challengeNativewind';
@@ -9,7 +9,7 @@ export default function ChallengeComparingScreen({
   candidate,
 }) {
   const scanAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(0)).current;
+  const [dotCount, setDotCount] = useState(1);
 
   useEffect(() => {
     const scanLoop = Animated.loop(
@@ -20,43 +20,21 @@ export default function ChallengeComparingScreen({
         useNativeDriver: true,
       })
     );
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 700,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 0,
-          duration: 700,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ])
-    );
+    const dotsInterval = setInterval(() => {
+      setDotCount((count) => (count === 3 ? 1 : count + 1));
+    }, 450);
 
     scanLoop.start();
-    pulseLoop.start();
 
     return () => {
       scanLoop.stop();
-      pulseLoop.stop();
+      clearInterval(dotsInterval);
     };
-  }, [pulseAnim, scanAnim]);
+  }, [scanAnim]);
 
   const scanTranslateY = scanAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-24, 452],
-  });
-  const pulseScale = pulseAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.92, 1.08],
-  });
-  const pulseOpacity = pulseAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.18, 0.38],
+    outputRange: [-16, 504],
   });
 
   return (
@@ -96,18 +74,13 @@ export default function ChallengeComparingScreen({
             className={tw.scanBand}
             style={{ transform: [{ translateY: scanTranslateY }] }}
           />
-          <Animated.View
-            pointerEvents="none"
-            className={tw.scanPulse}
-            style={{
-              opacity: pulseOpacity,
-              transform: [{ translateY: -48 }, { scale: pulseScale }],
-            }}
-          />
           <View className={tw.scanBorder} pointerEvents="none" />
         </View>
 
-        <Text className={tw.comparingText}>Comparing objects...</Text>
+        <View className={tw.comparingTextRow}>
+          <Text className={tw.comparingText}>Comparing Objects</Text>
+          <Text className={tw.comparingDots}>{'.'.repeat(dotCount)}</Text>
+        </View>
       </View>
     </View>
   );
