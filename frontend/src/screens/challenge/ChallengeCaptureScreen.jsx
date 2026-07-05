@@ -112,7 +112,7 @@ export default function ChallengeCaptureScreen({
             disabled={isChangingTarget || hasReachedChangeLimit}
             activeOpacity={0.8}
           >
-            <Text className={tw.changeObjectText}>
+            <Text className={tw.changeObjectText} numberOfLines={1} adjustsFontSizeToFit>
               {changeTargetLabel}
             </Text>
           </TouchableOpacity>

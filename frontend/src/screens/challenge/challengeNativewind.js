@@ -1,4 +1,4 @@
-export const cameraFrameStyle = { height: 440, maxWidth: 340 };
+export const cameraFrameStyle = { height: 520, maxWidth: 340 };
 export const captureControlsStyle = { maxWidth: 340 };
 
 export const challengeTw = {
@@ -16,8 +16,8 @@ export const challengeTw = {
   targetLabel: 'mb-3 text-xs font-geologica-bold uppercase tracking-widest text-Neutral-Gray-500',
   targetName: 'text-base font-geologica-bold text-Base-OnBackground',
   targetNameWithButton: 'mb-3 text-base font-geologica-bold text-Base-OnBackground',
-  changeObjectButton: 'self-start rounded-full bg-Brand-Secondary px-5 py-2.5',
-  changeObjectText: 'text-sm font-geologica-bold text-white',
+  changeObjectButton: 'w-[240px] items-center justify-center self-start rounded-full bg-Brand-Secondary px-6 py-2.5',
+  changeObjectText: 'text-sm font-geologica text-Base-OnSecondary',
 
   challengeStartContent: 'min-h-full items-center bg-white px-8 pb-12 pt-8',
   challengeStartTitle: 'self-start text-xs font-extrabold uppercase tracking-widest text-slate-400',
@@ -44,21 +44,26 @@ export const challengeTw = {
   comparingBody: 'flex-1 items-center px-9 pt-4',
   comparingCandidateImage: 'h-full w-full',
   comparingFallback: 'h-full w-full items-center justify-center',
-  scanBand: 'absolute left-0 right-0 h-16 bg-white/35',
-  scanPulse: 'absolute left-8 right-8 top-1/2 h-24 rounded-full bg-white/40',
+  scanBand: 'absolute left-0 right-0 h-8 bg-white/35',
   scanBorder: 'absolute inset-0 border-2 border-[#FF6D0066]',
-  comparingText: 'mt-5 text-2xl font-geologica-bold text-Base-OnBackground',
+  comparingTextRow: 'mt-5 flex-row items-center justify-center',
+  comparingText: 'text-2xl font-geologica-bold text-Base-OnBackground',
+  comparingDots: 'w-8 text-left text-2xl font-geologica-bold text-Base-OnBackground',
 
   resultContent: 'min-h-full px-8 pb-12',
 
   // Mission accomplished (success) — two-step flow
   successStepBody: 'flex-1 items-center pt-14',
+  successCenteredBody: 'flex-1 items-center justify-center py-12',
+  successHeaderBlock: 'items-center',
+  successCenteredBottom: 'w-full items-center',
   successActions: 'mt-8 w-full',
+  failedActions: 'mt-10 w-full',
   uniRewardCenter: 'w-full flex-1 items-center justify-center',
   uniRewardBottom: 'w-full',
   successTitle: 'text-center text-[34px] font-geologica-bold leading-[40px] text-Base-OnBackground',
   resultCopy: 'mt-4 text-center text-[16px] leading-6 text-Neutral-brandWarm-800',
-  levelText: 'mt-6 text-center text-[16px] font-geologica-medium text-Base-OnBackground',
+  levelText: 'mt-26 text-center text-[16px] font-geologica-medium text-Base-OnBackground',
 
   xpCard: 'w-full rounded-2xl bg-Uni-100 px-5 py-4',
   xpHeader: 'mb-2 flex-row justify-between',

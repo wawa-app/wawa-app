@@ -53,6 +53,36 @@ export default function ChallengeScreen() {
     }
   }, []);
 
+  const resetStreakAfterFinalFailure = React.useCallback(async () => {
+    try {
+      const response = await apiClient.patch('/api/mission/streak-reset');
+      return response.data?.stats ?? null;
+    } catch (resetError) {
+      if (resetError?.response?.status !== 404) {
+        console.warn(
+          'Final failure streak reset failed:',
+          resetError?.response?.status,
+          resetError?.response?.data || resetError?.message
+        );
+        return null;
+      }
+
+      try {
+        const response = await apiClient.patch('/api/mission/emergency', {
+          objectId: targetObject?.id,
+        });
+        return response.data?.stats ?? null;
+      } catch (fallbackError) {
+        console.warn(
+          'Final failure emergency reset fallback failed:',
+          fallbackError?.response?.status,
+          fallbackError?.response?.data || fallbackError?.message
+        );
+        return null;
+      }
+    }
+  }, [targetObject?.id]);
+
   const handleCaptured = React.useCallback(async (photoUri) => {
     console.log('Challenge photo captured:', photoUri);
     setCandidate(photoUri);
@@ -98,7 +128,10 @@ export default function ChallengeScreen() {
           objectId: targetObject?.id,
           failedAttemptCount: nextFailedCount,
         });
-        const stats = response.data?.stats ?? await fetchUserStats();
+        const resetStats = nextFailedCount >= MAX_ATTEMPTS
+          ? await resetStreakAfterFinalFailure()
+          : null;
+        const stats = resetStats ?? response.data?.stats ?? await fetchUserStats();
         setCompletionStats(stats);
       } catch (failureError) {
         console.warn(
@@ -110,7 +143,7 @@ export default function ChallengeScreen() {
     }
 
     setStage('result');
-  }, [failedCount, fetchUserStats, target, targetObject?.id]);
+  }, [failedCount, fetchUserStats, resetStreakAfterFinalFailure, target, targetObject?.id]);
 
   const handleTryAgain = React.useCallback(() => {
     if (failedCount >= MAX_ATTEMPTS) {

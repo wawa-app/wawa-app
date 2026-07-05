@@ -76,6 +76,29 @@ export default function AlarmFlow({ alarmId }) {
         }
     }, [resolvedAlarmId, targetObject?.id])
 
+    const resetStreakAfterFinalFailure = useCallback(async () => {
+        try {
+            const response = await apiClient.patch('/api/mission/streak-reset')
+            return response.data?.stats ?? null
+        } catch (resetError) {
+            if (resetError?.response?.status !== 404) {
+                console.warn('final failure streak reset failed:', resetError?.response?.status, resetError?.response?.data || resetError?.message)
+                return null
+            }
+
+            try {
+                const response = await apiClient.patch('/api/mission/emergency', {
+                    alarmId: resolvedAlarmId,
+                    objectId: targetObject?.id,
+                })
+                return response.data?.stats ?? null
+            } catch (fallbackError) {
+                console.warn('final failure emergency reset fallback failed:', fallbackError?.response?.status, fallbackError?.response?.data || fallbackError?.message)
+                return null
+            }
+        }
+    }, [resolvedAlarmId, targetObject?.id])
+
     const handleCaptured = useCallback(async (photoUri) => {
         setCandidate(photoUri)
         setPhase(PHASE.COMPARING)
@@ -110,12 +133,15 @@ export default function AlarmFlow({ alarmId }) {
         // Failure: record failed attempt, increment the counter.
         const nextFailedCount = failedCount + 1
         const data = await recordAttempt(false, nextFailedCount)
-        const stats = data?.stats ?? await fetchUserStats()
+        const resetStats = nextFailedCount >= MAX_ATTEMPTS
+            ? await resetStreakAfterFinalFailure()
+            : null
+        const stats = resetStats ?? data?.stats ?? await fetchUserStats()
         setCompletionStats(stats)
         setFailedCount(nextFailedCount)
         setMatched(false)
         setPhase(PHASE.RESULT)
-    }, [failedCount, target, recordAttempt, fetchUserStats])
+    }, [failedCount, target, recordAttempt, resetStreakAfterFinalFailure, fetchUserStats])
 
     const handleChangeTarget = useCallback(async () => { await loadTarget(); }, [loadTarget])
 
