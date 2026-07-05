@@ -77,10 +77,6 @@ const login = async (req, res) => {
 
         const token = signToken(user._id, user.email)
 
-        // Capture isFirstLogin before updating
-        const isFirstLogin = user.isFirstLogin
-
-        // Mark as no longer first login
         if (user.isFirstLogin) {
             await User.findByIdAndUpdate(user._id, { isFirstLogin: false })
         }
@@ -88,7 +84,7 @@ const login = async (req, res) => {
         return res.status(200).json({
         success: true,
         token,
-        user: { id: user._id, email: user.email, username: user.username, isFirstLogin },
+        user: { id: user._id, email: user.email, username: user.username, isFirstLogin: false },
         })
     } catch (err) {
         console.error('[authController.login]', err)
@@ -173,7 +169,7 @@ const me = async (req, res) => {
     try {
         const user = await User.findById(req.user.userId)
         if (!user) return res.status(404).json({ success: false, error: 'USER_NOT_FOUND' })
-        return res.json({ success: true, user })
+        return res.json({ success: true, user: { ...user.toObject(), isFirstLogin: false } })
     } catch (err) {
         console.error('[authController.me]', err)
         return res.status(500).json({ success: false, error: 'INTERNAL_ERROR' })
