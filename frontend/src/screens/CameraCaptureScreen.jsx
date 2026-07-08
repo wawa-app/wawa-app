@@ -162,13 +162,11 @@ export default function CameraCaptureScreen({ navigation, route }) {
             {/* Bottom camera button area */}
             <View className="absolute left-0 right-0 bottom-0 h-[118px] bg-[#191919] items-center justify-center z-10">
                 <Pressable
-                    className="w-[52px] h-[52px] rounded-full bg-white items-center justify-center"
+                    className="w-[72px] h-[72px] rounded-full bg-white items-center justify-center"
                     onPress={handleTakePhoto}
                     disabled={takingPhoto}
                 >
-                    <Text className="text-[28px] leading-[32px] text-black">
-                        📷
-                    </Text>
+                    <View className="w-[58px] h-[58px] rounded-full border-2 border-[#191919]" />
                 </Pressable>
             </View>
         </View>

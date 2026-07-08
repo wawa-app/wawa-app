@@ -15,8 +15,11 @@ import { identifyObject } from "../../utils/vision";
 export default function AddObjectSheet({
     visible,
     imageUri,
+    initialName = "",
+    isEditing = false,
     onCancel,
     onSave,
+    onImagePress,
 }) {
     const [objectName, setObjectName] = useState("");
     const [isIdentifying, setIsIdentifying] = useState(false);
@@ -28,14 +31,14 @@ export default function AddObjectSheet({
 
         let isCurrent = true;
         hasUserEditedName.current = false;
-        setObjectName("Object");
+        setObjectName(initialName || "Object");
         setIsIdentifying(false);
 
         const focusTimeout = setTimeout(() => {
             inputRef.current?.focus();
         }, 300);
 
-        if (!imageUri) {
+        if (!imageUri || isEditing) {
             return () => {
                 isCurrent = false;
                 clearTimeout(focusTimeout);
@@ -57,7 +60,7 @@ export default function AddObjectSheet({
             isCurrent = false;
             clearTimeout(focusTimeout);
         };
-    }, [visible, imageUri]);
+    }, [visible, imageUri, initialName, isEditing]);
 
     const handleCancel = () => {
         Keyboard.dismiss();
@@ -97,7 +100,7 @@ export default function AddObjectSheet({
                             </Pressable>
 
                             <Text className="text-[20px] leading-[28px] font-geologica-bold text-black">
-                                Add Object
+                                {isEditing ? "Edit Object" : "Add Object"}
                             </Text>
 
                             <Pressable onPress={handleSave}>
@@ -108,7 +111,11 @@ export default function AddObjectSheet({
                         </View>
 
                         <View className="px-4">
-                            <View className="w-[328px] h-[231px] self-center bg-[#F2F2F2] overflow-hidden">
+                            <Pressable
+                                className="w-[328px] h-[231px] self-center bg-[#F2F2F2] overflow-hidden"
+                                onPress={onImagePress}
+                                disabled={!isEditing || !onImagePress}
+                            >
                                 {imageUri ? (
                                     <Image
                                         source={{ uri: imageUri }}
@@ -118,7 +125,7 @@ export default function AddObjectSheet({
                                 ) : (
                                     <View className="w-full h-full bg-[#F7F7F7]" />
                                 )}
-                            </View>
+                            </Pressable>
 
                             <Text className="mt-3 mb-2 text-[16px] leading-[20px] font-geologica-bold text-black">
                                 Name*
