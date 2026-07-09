@@ -21,6 +21,7 @@ import { pathFromUri } from "../utils/photos";
 import Fab from "../components/common/Fab";
 import { useSnackbar } from "../components/common/SnackbarProvider";
 
+
 import EditIcon from "../components/icons/Edit";
 import DeleteIcon from "../components/icons/Delete";
 import CheckIcon from "../components/icons/Check";
@@ -109,6 +110,7 @@ export default function ObjectsScreen({ navigation, route }) {
     const [showCautionModal, setShowCautionModal] = useState(false);
     const [showAddObjectSheet, setShowAddObjectSheet] = useState(false);
     const [pendingPhotoUri, setPendingPhotoUri] = useState(null);
+    const [shouldIdentifyImage, setShouldIdentifyImage] = useState(true);
 
     const [editingObject, setEditingObject] = useState(null);
     const [editingObjectId, setEditingObjectId] = useState(null);
@@ -290,6 +292,7 @@ export default function ObjectsScreen({ navigation, route }) {
         }
 
         setPendingPhotoUri(capturedPhotoUri);
+        setShouldIdentifyImage(true);
         setShowAddObjectSheet(true);
 
         navigation.setParams({
@@ -335,6 +338,7 @@ export default function ObjectsScreen({ navigation, route }) {
         setEditingObject(objectToEdit);
         setEditingObjectId(id);
         setPendingPhotoUri(objectToEdit.imageUri);
+        setShouldIdentifyImage(false);
         closeMenu();
 
         navigation.setParams({
@@ -412,6 +416,7 @@ export default function ObjectsScreen({ navigation, route }) {
         setEditingObject(null);
         setEditingObjectId(null);
         setPendingPhotoUri(null);
+        setShouldIdentifyImage(true);
 
         navigation.setParams({
             editingObjectId: undefined,
@@ -670,6 +675,7 @@ export default function ObjectsScreen({ navigation, route }) {
                 imageUri={pendingPhotoUri}
                 initialName={editingObject?.objectName || ""}
                 isEditing={Boolean(editingObjectId)}
+                shouldIdentifyImage={shouldIdentifyImage}
                 onCancel={handleCancelAddObject}
                 onSave={handleSaveObject}
                 onImagePress={handleEditImagePress}

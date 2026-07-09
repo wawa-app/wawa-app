@@ -17,6 +17,7 @@ export default function AddObjectSheet({
     imageUri,
     initialName = "",
     isEditing = false,
+    shouldIdentifyImage = true,
     onCancel,
     onSave,
     onImagePress,
@@ -38,7 +39,7 @@ export default function AddObjectSheet({
             inputRef.current?.focus();
         }, 300);
 
-        if (!imageUri || isEditing) {
+        if (!imageUri || !shouldIdentifyImage) {
             return () => {
                 isCurrent = false;
                 clearTimeout(focusTimeout);
@@ -60,7 +61,7 @@ export default function AddObjectSheet({
             isCurrent = false;
             clearTimeout(focusTimeout);
         };
-    }, [visible, imageUri, initialName, isEditing]);
+    }, [visible, imageUri, initialName, isEditing, shouldIdentifyImage]);
 
     const handleCancel = () => {
         Keyboard.dismiss();
