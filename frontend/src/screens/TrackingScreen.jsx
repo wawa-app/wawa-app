@@ -51,6 +51,21 @@ function getDurationSeconds(log) {
     );
 }
 
+function isCompletedLog(log) {
+    const status = String(
+        log?.status ??
+        log?.missionId?.status ??
+        log?.result ??
+        ""
+    ).toLowerCase();
+
+    return (
+        status === "completed" ||
+        status === "complete" ||
+        status === "success"
+    );
+}
+
 function formatAverageTime(logs) {
     const validDurations = logs
         .map(getDurationSeconds)
@@ -80,19 +95,19 @@ function getHistoryTitle(log) {
 }
 
 function formatCompletedDate(value) {
-    if (!value) return "Complete Unknown date";
+    if (!value) return "Completed Unknown date";
 
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
-        return "Complete Unknown date";
+        return "Completed Unknown date";
     }
 
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
 
-    return `Complete ${year}/${month}/${day}`;
+    return `Completed ${year}/${month}/${day}`;
 }
 
 function formatDuration(value) {
@@ -280,19 +295,19 @@ function StreakInfoSection({ current, best, averageTime }) {
 
             <View className="mt-6 w-full h-24 flex-row items-center justify-between">
                 <StreakStatItem
-                    icon={<StreakIcon size={40} color="#E85A00" />}
+                    icon={<StreakIcon size={48} color="#E85A00" />}
                     value={current}
                     label="Current"
                 />
 
                 <StreakStatItem
-                    icon={<Trophy size={40} color="#E85A00" />}
+                    icon={<Trophy size={48} color="#E85A00" />}
                     value={best}
                     label="Best"
                 />
 
                 <StreakStatItem
-                    icon={<Timer size={40} color="#E85A00" />}
+                    icon={<Timer size={48} color="#E85A00" />}
                     value={averageTime}
                     label="Average time"
                 />
@@ -317,23 +332,29 @@ function MissionHistorySection({ logs }) {
     }
 
     return (
-        <View className="w-full gap-4">
-            {logs.map((log, index) => {
-                const durationSeconds = getDurationSeconds(log);
-                const imageUri = getHistoryImageUri(log);
+        <View className="w-full">
+            <Text className="text-[#1A0F07] text-[20px] leading-[28px] font-geologica-bold font-bold">
+                Recent mission history
+            </Text>
 
-                return (
-                    <MissionHistoryCard
-                        key={log?._id ?? index}
-                        objectName={getHistoryTitle(log)}
-                        completedDate={formatCompletedDate(
-                            log?.attemptAt ?? log?.createdAt
-                        )}
-                        duration={formatDuration(durationSeconds)}
-                        imageUri={imageUri}
-                    />
-                );
-            })}
+            <View className="mt-4 gap-4">
+                {logs.map((log, index) => {
+                    const durationSeconds = getDurationSeconds(log);
+                    const imageUri = getHistoryImageUri(log);
+
+                    return (
+                        <MissionHistoryCard
+                            key={log?._id ?? index}
+                            objectName={getHistoryTitle(log)}
+                            completedDate={formatCompletedDate(
+                                log?.attemptAt ?? log?.createdAt
+                            )}
+                            duration={formatDuration(durationSeconds)}
+                            imageUri={imageUri}
+                        />
+                    );
+                })}
+            </View>
         </View>
     );
 }
@@ -367,7 +388,8 @@ export default function TrackingScreen() {
             }
 
             if (historyResponse.data?.success) {
-                setHistory(historyResponse.data.logs ?? []);
+                const completedLogs = (historyResponse.data.logs ?? []).filter(isCompletedLog);
+                setHistory(completedLogs);
             } else {
                 setHistory([]);
             }
