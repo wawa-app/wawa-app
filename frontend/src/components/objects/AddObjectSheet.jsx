@@ -92,7 +92,7 @@ export default function AddObjectSheet({
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
                 <View className="flex-1 justify-end bg-black/35">
-                    <View className="h-[687px] bg-[#FFF7FF] rounded-t-[28px] overflow-hidden">
+                    <View className="h-[687px] bg-[#FFF3CD] rounded-t-[28px] overflow-hidden">
                         <View className="h-[67px] px-6 flex-row items-center justify-between">
                             <Pressable onPress={handleCancel}>
                                 <Text className="text-[16px] leading-[24px] font-geologica-regular text-[#49454F]">
@@ -104,7 +104,11 @@ export default function AddObjectSheet({
                                 {isEditing ? "Edit Object" : "Add Object"}
                             </Text>
 
-                            <Pressable onPress={handleSave}>
+                            <Pressable
+                                onPress={handleSave}
+                                hitSlop={12}
+                                className="min-w-[48px] h-12 items-end justify-center"
+                            >
                                 <Text className="text-[16px] leading-[24px] font-geologica-regular text-black">
                                     Save
                                 </Text>

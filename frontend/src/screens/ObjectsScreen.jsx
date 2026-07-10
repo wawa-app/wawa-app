@@ -413,6 +413,8 @@ export default function ObjectsScreen({ navigation, route }) {
             return;
         }
 
+
+
         setEditingObject(null);
         setEditingObjectId(null);
         setPendingPhotoUri(null);
@@ -477,13 +479,41 @@ export default function ObjectsScreen({ navigation, route }) {
         }
 
         isSavingObjectRef.current = true;
-        try {
-            const objectIdToUpdate =
-                editingObject?.id || editingObjectId || route?.params?.editingObjectId;
 
+        const objectIdToUpdate =
+            editingObject?.id ||
+            editingObjectId ||
+            route?.params?.editingObjectId;
+
+        const temporaryId = `temporary-${Date.now()}`;
+
+        setShowAddObjectSheet(false);
+        setPendingPhotoUri(null);
+
+        if (!objectIdToUpdate) {
+            const temporaryObject = {
+                id: temporaryId,
+                objectName,
+                status: "Saving...",
+                date: formatDate(new Date()),
+                imageUri,
+                lastUpdatedAt: new Date().toISOString(),
+            };
+
+            setObjects((currentObjects) => [
+                ...currentObjects,
+                temporaryObject,
+            ]);
+        }
+
+        try {
             if (!objectIdToUpdate && objects.length >= MAX_OBJECTS) {
-                setShowAddObjectSheet(false);
-                setPendingPhotoUri(null);
+                setObjects((currentObjects) =>
+                    currentObjects.filter(
+                        (object) => object.id !== temporaryId
+                    )
+                );
+
                 clearEditState();
                 showSnackbar({ text: "You can store up to 20 objects" });
                 return;
@@ -494,12 +524,20 @@ export default function ObjectsScreen({ navigation, route }) {
             );
 
             if (duplicateObject) {
-                setShowAddObjectSheet(false);
-                setPendingPhotoUri(null);
+                if (!objectIdToUpdate) {
+                    setObjects((currentObjects) =>
+                        currentObjects.filter(
+                            (object) => object.id !== temporaryId
+                        )
+                    );
+                }
+
                 clearEditState();
+
                 showSnackbar({
                     text: `This object already exists as ${duplicateObject.objectName}`,
                 });
+
                 return;
             }
             if (objectIdToUpdate) {
@@ -537,17 +575,40 @@ export default function ObjectsScreen({ navigation, route }) {
             const savedObject = response.data.data;
             const formattedObject = formatBackendObject(savedObject);
 
-            await persistObjects([...objects, formattedObject]);
+            setObjects((currentObjects) => {
+                const nextObjects = currentObjects.map((object) =>
+                    object.id === temporaryId ? formattedObject : object
+                );
 
-            setShowAddObjectSheet(false);
-            setPendingPhotoUri(null);
+                saveStoredObjects(nextObjects).catch((storageError) => {
+                    console.warn(
+                        "[ObjectsScreen] saveStoredObjects error:",
+                        storageError?.message
+                    );
+                });
+
+                return nextObjects;
+            });
+
             clearEditState();
             showSnackbar({ text: `${objectName} is Added` });
         } catch (error) {
+            if (!objectIdToUpdate) {
+                setObjects((currentObjects) =>
+                    currentObjects.filter(
+                        (object) => object.id !== temporaryId
+                    )
+                );
+            }
+
             console.error(
                 "[ObjectsScreen] saveObject error:",
                 error.response?.data || error.message
             );
+
+            showSnackbar({
+                text: "Unable to save object. Please try again.",
+            });
         }
         finally {
             isSavingObjectRef.current = false;
@@ -571,7 +632,7 @@ export default function ObjectsScreen({ navigation, route }) {
             >
                 <View className="px-4 py-6 items-center">
                     <View style={{ width: 328 }}>
-                        <Text className="text-4xl font-geologica-bold font-bold text-Base-OnBackground">
+                        <Text className="text-[32px] leading-[40px] font-geologica-bold text-Base-OnBackground">
                             Objects
                         </Text>
 

@@ -492,7 +492,7 @@ export default function TrackingScreen() {
                 }}
                 showsVerticalScrollIndicator={false}
             >
-                <Text className="text-[#1A0F0A] text-[32px] leading-[40px] font-geologica-bold font-bold mb-8">
+                <Text className="text-[#1A0F0A] text-[32px] leading-[40px] font-geologica-bold mb-8">
                     Tracking
                 </Text>
 
