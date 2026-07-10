@@ -109,10 +109,10 @@ export default function StreakCard({ variant = "lose", streakCount }) {
                                 <View
                                     key={index}
                                     className={`w-6 h-6 rounded-full items-center justify-center ${isFilled
-                                            ? "bg-[#FFC107]"
-                                            : isMissed
-                                                ? "bg-[#6F7378]"
-                                                : "bg-[#D8D0C4]"
+                                        ? "bg-[#FFC107]"
+                                        : isMissed
+                                            ? "bg-[#6F7378]"
+                                            : "bg-[#D8D0C4]"
                                         }`}
                                 >
                                     <Text className="text-black text-[14px] font-bold leading-[16px]">
