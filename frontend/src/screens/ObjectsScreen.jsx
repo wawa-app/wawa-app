@@ -18,12 +18,17 @@ import { useScroll } from "../context/ScrollContext";
 import { compareImages } from "../utils/vision";
 import RNFS from "react-native-fs";
 import { pathFromUri } from "../utils/photos";
+import Fab from "../components/common/Fab";
+import { useSnackbar } from "../components/common/SnackbarProvider";
+
 
 import EditIcon from "../components/icons/Edit";
 import DeleteIcon from "../components/icons/Delete";
 import CheckIcon from "../components/icons/Check";
 
 const CHECK_MINUTES = 43200; // 30 days
+const MAX_OBJECTS = 20;
+const MIN_OBJECTS = 10;
 
 function ObjectMenu({
     position,
@@ -105,17 +110,18 @@ export default function ObjectsScreen({ navigation, route }) {
     const [showCautionModal, setShowCautionModal] = useState(false);
     const [showAddObjectSheet, setShowAddObjectSheet] = useState(false);
     const [pendingPhotoUri, setPendingPhotoUri] = useState(null);
+    const [shouldIdentifyImage, setShouldIdentifyImage] = useState(true);
 
     const [editingObject, setEditingObject] = useState(null);
     const [editingObjectId, setEditingObjectId] = useState(null);
 
-    const [snackbarMessage, setSnackbarMessage] = useState("");
     const [timeTick, setTimeTick] = useState(Date.now());
 
     const cardRefs = useRef({});
     const isSavingObjectRef = useRef(false);
 
     const { setScrolled } = useScroll();
+    const { show: showSnackbar } = useSnackbar();
 
     const handleScroll = (e) => {
         setScrolled(e.nativeEvent.contentOffset.y > 0);
@@ -215,6 +221,8 @@ export default function ObjectsScreen({ navigation, route }) {
 
     const enrolledCount = objects.length;
     const objectsToCheckCount = mustCheckObjects.length;
+    const isMaxObjectsReached = enrolledCount >= MAX_OBJECTS;
+    const canDeleteObject = enrolledCount > MIN_OBJECTS;
 
     const localPhotoExists = async (imageUri) => {
         if (!imageUri) return false;
@@ -284,6 +292,7 @@ export default function ObjectsScreen({ navigation, route }) {
         }
 
         setPendingPhotoUri(capturedPhotoUri);
+        setShouldIdentifyImage(true);
         setShowAddObjectSheet(true);
 
         navigation.setParams({
@@ -298,15 +307,6 @@ export default function ObjectsScreen({ navigation, route }) {
         route?.params?.editingObjectId,
     ]);
 
-    useEffect(() => {
-        if (!snackbarMessage) return;
-
-        const timer = setTimeout(() => {
-            setSnackbarMessage("");
-        }, 2500);
-
-        return () => clearTimeout(timer);
-    }, [snackbarMessage]);
 
     const openMenu = (id) => {
         const cardRef = cardRefs.current[id];
@@ -337,19 +337,34 @@ export default function ObjectsScreen({ navigation, route }) {
 
         setEditingObject(objectToEdit);
         setEditingObjectId(id);
-        setPendingPhotoUri(null);
+        setPendingPhotoUri(objectToEdit.imageUri);
+        setShouldIdentifyImage(false);
         closeMenu();
 
         navigation.setParams({
             editingObjectId: id,
         });
 
+        setShowAddObjectSheet(true);
+    };
+
+    const handleEditImagePress = () => {
+        if (!editingObjectId) return;
+
+        setShowAddObjectSheet(false);
+
         navigation.navigate("CameraCapture", {
-            editingObjectId: id,
+            editingObjectId,
         });
     };
 
     const handleDelete = async (id) => {
+        if (!canDeleteObject) {
+            closeMenu();
+            showSnackbar({ text: "You need at least 10 objects" });
+            return;
+        }
+
         try {
             await apiClient.delete(`/api/objects/${id}`);
 
@@ -358,7 +373,7 @@ export default function ObjectsScreen({ navigation, route }) {
             await persistObjects(nextObjects);
 
             closeMenu();
-            setSnackbarMessage("Object deleted");
+            showSnackbar({ text: "Object deleted" });
         } catch (error) {
             console.error(
                 "[ObjectsScreen] deleteObject error:",
@@ -382,7 +397,7 @@ export default function ObjectsScreen({ navigation, route }) {
 
             await persistObjects(nextObjects);
 
-            setSnackbarMessage("Object marked as checked");
+            showSnackbar({ text: "Object marked as checked" });
             closeMenu();
         } catch (error) {
             console.error(
@@ -393,9 +408,15 @@ export default function ObjectsScreen({ navigation, route }) {
     };
 
     const handleAddPress = () => {
+        if (isMaxObjectsReached) {
+            showSnackbar({ text: "You can store up to 20 objects" });
+            return;
+        }
+
         setEditingObject(null);
         setEditingObjectId(null);
         setPendingPhotoUri(null);
+        setShouldIdentifyImage(true);
 
         navigation.setParams({
             editingObjectId: undefined,
@@ -459,6 +480,14 @@ export default function ObjectsScreen({ navigation, route }) {
         try {
             const objectIdToUpdate =
                 editingObject?.id || editingObjectId || route?.params?.editingObjectId;
+
+            if (!objectIdToUpdate && objects.length >= MAX_OBJECTS) {
+                setShowAddObjectSheet(false);
+                setPendingPhotoUri(null);
+                clearEditState();
+                showSnackbar({ text: "You can store up to 20 objects" });
+                return;
+            }
             const duplicateObject = await findDuplicateObjectPhoto(
                 imageUri,
                 objectIdToUpdate
@@ -468,9 +497,9 @@ export default function ObjectsScreen({ navigation, route }) {
                 setShowAddObjectSheet(false);
                 setPendingPhotoUri(null);
                 clearEditState();
-                setSnackbarMessage(
-                    `This object already exists as ${duplicateObject.objectName}`
-                );
+                showSnackbar({
+                    text: `This object already exists as ${duplicateObject.objectName}`,
+                });
                 return;
             }
             if (objectIdToUpdate) {
@@ -479,8 +508,8 @@ export default function ObjectsScreen({ navigation, route }) {
                     {
                         name: objectName,
                         localRef: [imageUri],
+                        status: "Updated",
                     }
-
                 );
 
                 const savedObject = response.data.data;
@@ -495,7 +524,7 @@ export default function ObjectsScreen({ navigation, route }) {
                 setShowAddObjectSheet(false);
                 setPendingPhotoUri(null);
                 clearEditState();
-                setSnackbarMessage(`${objectName} is Updated`);
+                showSnackbar({ text: `${objectName} is Updated` });
 
                 return;
             }
@@ -513,7 +542,7 @@ export default function ObjectsScreen({ navigation, route }) {
             setShowAddObjectSheet(false);
             setPendingPhotoUri(null);
             clearEditState();
-            setSnackbarMessage(`${objectName} is Added`);
+            showSnackbar({ text: `${objectName} is Added` });
         } catch (error) {
             console.error(
                 "[ObjectsScreen] saveObject error:",
@@ -540,24 +569,26 @@ export default function ObjectsScreen({ navigation, route }) {
                 contentContainerStyle={{ paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View className="px-4 py-6">
-                    <Text className="text-4xl font-geologica-bold font-bold text-Base-OnBackground">
-                        Objects
-                    </Text>
+                <View className="px-4 py-6 items-center">
+                    <View style={{ width: 328 }}>
+                        <Text className="text-4xl font-geologica-bold font-bold text-Base-OnBackground">
+                            Objects
+                        </Text>
 
-                    <Text className="text-xs text-Base-OnBackground mt-1">
-                        <Text className="font-geologica-bold font-bold text-State-Info">
-                            {enrolledCount} / 20
-                        </Text>{" "}
-                        Enrolled{" "}
-                        <Text className="font-geologica-bold font-bold text-State-Error">
-                            ({objectsToCheckCount}
+                        <Text className="text-xs text-Base-OnBackground mt-1">
+                            <Text className="font-geologica-bold font-bold text-State-Info">
+                                {enrolledCount} / {MAX_OBJECTS}
+                            </Text>{" "}
+                            Enrolled{" "}
+                            <Text className="font-geologica-bold font-bold text-State-Error">
+                                ({objectsToCheckCount}
+                            </Text>
+                            <Text className="text-Base-OnBackground">
+                                {" "}
+                                objects you need to check)
+                            </Text>
                         </Text>
-                        <Text className="text-Base-OnBackground">
-                            {" "}
-                            objects you need to check)
-                        </Text>
-                    </Text>
+                    </View>
                 </View>
 
                 {mustCheckObjects.length > 0 && (
@@ -613,14 +644,14 @@ export default function ObjectsScreen({ navigation, route }) {
                 </View>
             </ScrollView>
 
-            <Pressable
-                className="absolute right-6 bottom-[98px] w-[58px] h-[58px] rounded-full bg-Brand-Primary items-center justify-center z-10"
-                onPress={handleAddPress}
-            >
-                <Text className="text-Base-OnPrimary text-4xl font-light">
-                    +
-                </Text>
-            </Pressable>
+            <View className="absolute right-6 z-10" style={{ bottom: 24 }}>
+                <Fab
+                    onPress={handleAddPress}
+                    disabled={isMaxObjectsReached}
+                    variant="primary"
+                    size="regular"
+                />
+            </View>
 
             {activeMenuId && (
                 <ObjectMenu
@@ -642,17 +673,14 @@ export default function ObjectsScreen({ navigation, route }) {
             <AddObjectSheet
                 visible={showAddObjectSheet}
                 imageUri={pendingPhotoUri}
+                initialName={editingObject?.objectName || ""}
+                isEditing={Boolean(editingObjectId)}
+                shouldIdentifyImage={shouldIdentifyImage}
                 onCancel={handleCancelAddObject}
                 onSave={handleSaveObject}
+                onImagePress={handleEditImagePress}
             />
 
-            {snackbarMessage ? (
-                <View className="absolute right-6 bottom-[150px] bg-Base-OnBackground px-6 py-4 rounded-sm shadow-lg">
-                    <Text className="text-Base-Background text-sm font-geologica-regular">
-                        {snackbarMessage}
-                    </Text>
-                </View>
-            ) : null}
         </View>
     );
 }

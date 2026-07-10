@@ -55,6 +55,13 @@ const ObjectCardContent = ({
             <TouchableOpacity
                 className="absolute top-3 right-3"
                 onPress={onMenuPress}
+                activeOpacity={0.7}
+                hitSlop={{
+                    top: 12,
+                    bottom: 12,
+                    left: 12,
+                    right: 12,
+                }}
             >
                 <Text className="text-2xl text-Base-OnSurface leading-6">
                     ⋮
