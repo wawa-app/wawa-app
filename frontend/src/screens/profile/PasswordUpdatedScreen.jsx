@@ -47,13 +47,15 @@ export default function PasswordUpdatedScreen({ navigation }) {
             <View style={{ height: 16 }} />
 
             {/* Text container */}
-            <View style={{ width: 322, height: 89, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, alignSelf: 'center' }}>
-                <Text style={{ height: 33, alignSelf: 'stretch', color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24 }}>
+            <View style={{ width: 322, alignSelf: 'center' }}>
+                <Text style={{ alignSelf: 'stretch', color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24, marginBottom: 8 }}>
                     Your Password Was Successfully Updated
                 </Text>
-                <Text style={{ alignSelf: 'stretch', color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24 }}>
-                    WaWa now is ready for a new challenge
-                </Text>
+                <View style={{ width: 275, height: 48, justifyContent: 'center', alignSelf: 'center' }}>
+                    <Text style={{ color: '#1A0F07', textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 16, lineHeight: 24 }}>
+                        WaWa now is ready for a new challenge
+                    </Text>
+                </View>
             </View>
 
             <View style={{ flex: 1 }} />
