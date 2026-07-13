@@ -8,7 +8,11 @@ import apiClient from '../../api/client';
 export default function ChangeUserNameScreen({ navigation }) {
     const { user, setUser } = useAuth();
     const [username, setUsername] = useState(user?.username ?? '');
-    const isChanged = username.trim() !== (user?.username ?? '');
+    const MAX_USERNAME_LENGTH = 20;
+    const trimmed = username.trim();
+    const isChanged = trimmed !== (user?.username ?? '');
+    const isEmpty = trimmed.length === 0;
+    const canSave = isChanged && !isEmpty;
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
@@ -49,6 +53,7 @@ export default function ChangeUserNameScreen({ navigation }) {
                         onChangeText={setUsername}
                         placeholder="Enter username"
                         placeholderTextColor="#A29789"
+                        maxLength={MAX_USERNAME_LENGTH}
                     />
                 </View>
             </View>
@@ -59,7 +64,15 @@ export default function ChangeUserNameScreen({ navigation }) {
             <View style={{ width: 292, alignSelf: 'center', paddingBottom: 104 }}>
                 {loading
                     ? <ActivityIndicator color="#FF6D00" />
-                    : <Button title="Save User Name" onPress={handleSave} fullWidth shape="square" variant={isChanged ? 'primary' : 'secondary'} />
+                    : (
+                        <Button
+                            title="Save User Name"
+                            onPress={handleSave}
+                            fullWidth
+                            shape="square"
+                            disabled={!canSave}
+                        />
+                    )
                 }
             </View>
         </View>
