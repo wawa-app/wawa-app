@@ -98,7 +98,7 @@ export default function OtpVerificationScreen({ navigation, route }) {
                 </View>
                 <Text style={{ textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, color: '#1A0F07', marginTop: 8 }}>
                     Back to{' '}
-                    <Text style={{ color: '#2664F2', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('SignIn')}>
+                    <Text style={{ color: '#FF6D00', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('SignIn')}>
                         Sign In
                     </Text>
                 </Text>

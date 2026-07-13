@@ -85,7 +85,7 @@ export default function DeleteAccountScreen({ navigation }) {
                         Want to keep your account?
                     </Text>
                     <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-                        <Text style={{ textAlign: 'center', color: '#2664F2', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }}>
+                        <Text style={{ textAlign: 'center', color: '#FF6D00', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }}>
                             Cancel
                         </Text>
                     </TouchableOpacity>

@@ -125,7 +125,7 @@ export default function SignUpScreen({ navigation }) {
                 }
                 <Text style={{ textAlign: 'center', fontSize: 14, color: '#1A0F07', marginTop: 8 }}>
                     Already have an account?{' '}
-                    <Text style={{ color: '#2664F2', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('SignIn')}>
+                    <Text style={{ color: '#FF6D00', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('SignIn')}>
                         Sign in
                     </Text>
                 </Text>

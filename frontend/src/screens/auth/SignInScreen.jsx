@@ -91,13 +91,13 @@ export default function SignInScreen({ navigation }) {
                     : <Button title="Sign In" onPress={handleSignIn} fullWidth shape="square" />
                 }
                 <Text style={{ textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, color: '#1A0F07', marginTop: 8 }}>
-                    <Text style={{ color: '#2664F2', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('ForgotPassword')}>
+                    <Text style={{ color: '#FF6D00', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('ForgotPassword')}>
                         Forgot Password?
                     </Text>
                 </Text>
                 <Text style={{ textAlign: 'center', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, color: '#1A0F07', marginTop: 8 }}>
                     Don't have an account?{' '}
-                    <Text style={{ color: '#2664F2', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('SignUp')}>
+                    <Text style={{ color: '#FF6D00', fontFamily: 'Geologica-Light', fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('SignUp')}>
                         Sign up
                     </Text>
                 </Text>
