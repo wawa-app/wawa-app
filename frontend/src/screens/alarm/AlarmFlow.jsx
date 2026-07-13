@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { NativeModules } from 'react-native';
+import { NativeModules, StatusBar } from 'react-native';
 import AlarmRingingScreen from './AlarmRingingScreen';
 import ChallengeCaptureScreen from '../challenge/ChallengeCaptureScreen';
 import ChallengeComparingScreen from '../challenge/ChallengeComparingScreen';
@@ -176,13 +176,32 @@ export default function AlarmFlow({ alarmId }) {
 
     switch (phase) {
         case PHASE.CAPTURING:
-            return <ChallengeCaptureScreen target={target} targetName={targetName} onCaptured={handleCaptured} onChangeTarget={handleChangeTarget} />;
+            return (
+                <>
+                    <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+                    <ChallengeCaptureScreen target={target} targetName={targetName} onCaptured={handleCaptured} onChangeTarget={handleChangeTarget} />
+                </>
+            )
         case PHASE.COMPARING:
-            return <ChallengeComparingScreen target={target} targetName={targetName} candidate={candidate} />;
+            return (
+                <>
+                    <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+                    <ChallengeComparingScreen target={target} targetName={targetName} candidate={candidate} />
+                </>
+            )
         case PHASE.RESULT:
-            return <ChallengeResultScreen matched={matched} targetName={targetName} onClose={handleClose} onTryAgain={handleTryAgain} onEmergencyExit={handleEmergencyExit} completionStats={completionStats} failedAttemptCount={failedCount} maxAttempts={MAX_ATTEMPTS} />;
+            return (
+                <>
+                    <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+                    <ChallengeResultScreen matched={matched} targetName={targetName} onClose={handleClose} onTryAgain={handleTryAgain} onEmergencyExit={handleEmergencyExit} completionStats={completionStats} failedAttemptCount={failedCount} maxAttempts={MAX_ATTEMPTS} />
+                </>)
         case PHASE.RINGING:
         default:
-            return <AlarmRingingScreen onStartMission={handleStartMission} />;
+            return (
+                <>
+                    <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+                    <AlarmRingingScreen onStartMission={handleStartMission} />
+                </>
+            )
     }
 }

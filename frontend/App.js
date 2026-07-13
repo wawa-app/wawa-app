@@ -1,5 +1,6 @@
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import React from 'react';
+import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
@@ -196,6 +197,7 @@ export default function App() {
             <PaperProvider>
                 <AuthProvider>
                     <NavigationContainer>
+                        <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
                         <SnackbarProvider>
                             <ScrollProvider>
                                 <RootNavigator />
