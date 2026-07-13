@@ -15,7 +15,6 @@ import CautionModal from "../components/objects/CautionModal.jsx";
 import AddObjectSheet from "../components/objects/AddObjectSheet.jsx";
 import { saveStoredObjects } from "../storage/objectStorage";
 import { useScroll } from "../context/ScrollContext";
-import { compareImages } from "../utils/vision";
 import RNFS from "react-native-fs";
 import { pathFromUri } from "../utils/photos";
 import Fab from "../components/common/Fab";
@@ -361,7 +360,10 @@ export default function ObjectsScreen({ navigation, route }) {
     const handleDelete = async (id) => {
         if (!canDeleteObject) {
             closeMenu();
-            showSnackbar({ text: "You need at least 10 objects" });
+            showSnackbar({
+                text: "You need at least 10 objects",
+                tone: "error",
+            });
             return;
         }
 
@@ -373,7 +375,10 @@ export default function ObjectsScreen({ navigation, route }) {
             await persistObjects(nextObjects);
 
             closeMenu();
-            showSnackbar({ text: "Object deleted" });
+            showSnackbar({
+                text: "Object deleted",
+                tone: "success",
+            });
         } catch (error) {
             console.error(
                 "[ObjectsScreen] deleteObject error:",
@@ -397,7 +402,10 @@ export default function ObjectsScreen({ navigation, route }) {
 
             await persistObjects(nextObjects);
 
-            showSnackbar({ text: "Object marked as checked" });
+            showSnackbar({
+                text: "Object marked as checked",
+                tone: "success",
+            });
             closeMenu();
         } catch (error) {
             console.error(
@@ -409,7 +417,10 @@ export default function ObjectsScreen({ navigation, route }) {
 
     const handleAddPress = () => {
         if (isMaxObjectsReached) {
-            showSnackbar({ text: "You can store up to 20 objects" });
+            showSnackbar({
+                text: "You can store up to 20 objects",
+                tone: "error",
+            });
             return;
         }
 
@@ -442,35 +453,34 @@ export default function ObjectsScreen({ navigation, route }) {
         clearEditState();
     };
 
-    const findDuplicateObjectPhoto = async (newImageUri, currentEditingId = null) => {
-        if (!newImageUri) return null;
+    const findDuplicateObjectName = (
+        newObjectName,
+        currentEditingId = null
+    ) => {
+        const normalizedNewName = newObjectName
+            ?.trim()
+            .toLowerCase();
 
-        for (const object of objects) {
-            const isSameObjectBeingEdited = object.id === currentEditingId;
-
-            if (isSameObjectBeingEdited) {
-                continue;
-            }
-
-            if (!object.imageUri) {
-                continue;
-            }
-
-            try {
-                const result = await compareImages(newImageUri, object.imageUri);
-
-                if (result.match) {
-                    return object;
-                }
-            } catch (error) {
-                console.warn(
-                    "[ObjectsScreen] compareImages error:",
-                    error?.message
-                );
-            }
+        if (
+            !normalizedNewName ||
+            normalizedNewName === "object"
+        ) {
+            return null;
         }
 
-        return null;
+        return (
+            objects.find((object) => {
+                if (object.id === currentEditingId) {
+                    return false;
+                }
+
+                const normalizedExistingName = object.objectName
+                    ?.trim()
+                    .toLowerCase();
+
+                return normalizedExistingName === normalizedNewName;
+            }) || null
+        );
     };
 
     const handleSaveObject = async ({ objectName, imageUri }) => {
@@ -485,6 +495,7 @@ export default function ObjectsScreen({ navigation, route }) {
             editingObjectId ||
             route?.params?.editingObjectId;
 
+        const trimmedObjectName = objectName?.trim();
         const temporaryId = `temporary-${Date.now()}`;
 
         setShowAddObjectSheet(false);
@@ -493,7 +504,7 @@ export default function ObjectsScreen({ navigation, route }) {
         if (!objectIdToUpdate) {
             const temporaryObject = {
                 id: temporaryId,
-                objectName,
+                objectName: trimmedObjectName,
                 status: "Saving...",
                 date: formatDate(new Date()),
                 imageUri,
@@ -515,11 +526,14 @@ export default function ObjectsScreen({ navigation, route }) {
                 );
 
                 clearEditState();
-                showSnackbar({ text: "You can store up to 20 objects" });
+                showSnackbar({
+                    text: "You can store up to 20 objects",
+                    tone: "error",
+                });
                 return;
             }
-            const duplicateObject = await findDuplicateObjectPhoto(
-                imageUri,
+            const duplicateObject = findDuplicateObjectName(
+                trimmedObjectName,
                 objectIdToUpdate
             );
 
@@ -535,16 +549,18 @@ export default function ObjectsScreen({ navigation, route }) {
                 clearEditState();
 
                 showSnackbar({
-                    text: `This object already exists as ${duplicateObject.objectName}`,
+                    text: `${duplicateObject.objectName} already exists`,
+                    tone: "error",
                 });
 
                 return;
+
             }
             if (objectIdToUpdate) {
                 const response = await apiClient.patch(
                     `/api/objects/${objectIdToUpdate}`,
                     {
-                        name: objectName,
+                        name: trimmedObjectName,
                         localRef: [imageUri],
                         status: "Updated",
                     }
@@ -562,13 +578,13 @@ export default function ObjectsScreen({ navigation, route }) {
                 setShowAddObjectSheet(false);
                 setPendingPhotoUri(null);
                 clearEditState();
-                showSnackbar({ text: `${objectName} is Updated` });
+                showSnackbar({ text: `${trimmedObjectName} is Updated`, tone: "success" });
 
                 return;
             }
 
             const response = await apiClient.post("/api/onboarding/photo-challenge", {
-                name: objectName,
+                name: trimmedObjectName,
                 localRef: [imageUri],
             });
 
@@ -591,7 +607,10 @@ export default function ObjectsScreen({ navigation, route }) {
             });
 
             clearEditState();
-            showSnackbar({ text: `${objectName} is Added` });
+            showSnackbar({
+                text: `${trimmedObjectName} is Added`,
+                tone: "success",
+            });
         } catch (error) {
             if (!objectIdToUpdate) {
                 setObjects((currentObjects) =>
@@ -608,6 +627,7 @@ export default function ObjectsScreen({ navigation, route }) {
 
             showSnackbar({
                 text: "Unable to save object. Please try again.",
+                tone: "error",
             });
         }
         finally {
