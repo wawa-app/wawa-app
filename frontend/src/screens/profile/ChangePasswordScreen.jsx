@@ -19,7 +19,7 @@ function PasswordInput({ placeholder, value, onChangeText }) {
                 style={{ flex: 1, fontFamily: 'Geologica-Medium', fontSize: 12, lineHeight: 16, letterSpacing: 0.06, color: '#1A0F07' }}
             />
             <TouchableOpacity onPress={() => setShow(s => !s)}>
-                <EyeIcon color={show ? '#1A0F07' : '#A29789'} />
+                <EyeIcon visible={show} />
             </TouchableOpacity>
         </View>
     );

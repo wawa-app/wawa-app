@@ -100,7 +100,7 @@ export default function SignUpScreen({ navigation }) {
                             secureTextEntry={!showPassword}
                         />
                         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                            <EyeIcon color={showPassword ? '#1A0F07' : '#A29789'} />
+                            <EyeIcon visible={showPassword} />
                         </TouchableOpacity>
                     </View>
                     <View style={{ width: 216, alignSelf: 'center', marginTop: 24 }}>

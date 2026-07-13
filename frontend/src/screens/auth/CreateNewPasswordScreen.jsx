@@ -69,7 +69,7 @@ export default function CreateNewPasswordScreen({ navigation, route }) {
                             secureTextEntry={!showNew}
                         />
                         <TouchableOpacity onPress={() => setShowNew(!showNew)}>
-                            <EyeIcon color={showNew ? '#1A0F07' : '#A29789'} />
+                            <EyeIcon visible={showNew} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -90,7 +90,7 @@ export default function CreateNewPasswordScreen({ navigation, route }) {
                             secureTextEntry={!showConfirm}
                         />
                         <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
-                            <EyeIcon color={showConfirm ? '#1A0F07' : '#A29789'} />
+                            <EyeIcon visible={showConfirm} />
                         </TouchableOpacity>
                     </View>
                 </View>
