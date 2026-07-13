@@ -8,8 +8,8 @@ import {
     TouchableOpacity,
     Share as RNShare,
     StatusBar,
+    Image
 } from "react-native";
-import LottieView from "lottie-react-native";
 
 import apiClient from "../api/client";
 import {
@@ -21,9 +21,13 @@ import {
 import { useScroll } from "../context/ScrollContext";
 import MissionHistoryCard from "../components/tracking/MissionHistoryCard";
 
-const uniHappy = require("../assets/animations/UNIIII - Child happy.json");
-const uniNormal = require("../assets/animations/UNIIII - Child normal.json");
-const uniCry = require("../assets/animations/UNIIII - Child cry.json");
+const UNI_IMAGES = {
+    'Baby Uni':  require('../assets/uni/Stage=Baby, Mode=Regular.png'),
+    'Child Uni': require('../assets/uni/Stage=Child, Mode=Regular.png'),
+    'Teen Uni':  require('../assets/uni/Stage=Teen, Mode=Regular.png'),
+    'Adult Uni': require('../assets/uni/Stage=Adult, Mode=Regular.png'),
+    'Old Uni':   require('../assets/uni/Stage=Old, Mode=Regular.png'),
+};
 
 const DEFAULT_STATS = {
     uni: {
@@ -174,16 +178,13 @@ function getHistoryImageUri(log) {
         null
     );
 }
-function UniAnimation({ mood = "normal" }) {
-    const source =
-        mood === "happy" ? uniHappy : mood === "cry" ? uniCry : uniNormal;
-
+function UniImage({ stage }) {
+    const source = UNI_IMAGES[stage] ?? UNI_IMAGES['Baby Uni'];
     return (
-        <LottieView
+        <Image
             source={source}
-            autoPlay
-            loop
             style={{ width: 120, height: 120 }}
+            resizeMode="contain"
         />
     );
 }
@@ -229,7 +230,7 @@ function UniSection({ uni }) {
             </View>
 
             <View className="mt-4 w-[120px] h-[120px] items-center justify-center">
-                <UniAnimation mood="normal" />
+                <UniImage stage={stage} />
             </View>
 
             <Text className="mt-4 text-[#1A0F0A] text-[16px] leading-[24px] font-geologica-regular text-center">
