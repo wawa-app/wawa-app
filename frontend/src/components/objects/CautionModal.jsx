@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Modal,
     Pressable,
     Text,
     View,
 } from "react-native";
+
+import WarningIcon from "../icons/Warning";
 
 export default function CautionModal({
     visible,
@@ -13,8 +15,18 @@ export default function CautionModal({
 }) {
     const [dontShowAgain, setDontShowAgain] = useState(false);
 
+    useEffect(() => {
+        if (visible) {
+            setDontShowAgain(false);
+        }
+    }, [visible]);
+
     const handleConfirm = () => {
         onConfirm(dontShowAgain);
+    };
+
+    const toggleDontShowAgain = () => {
+        setDontShowAgain((currentValue) => !currentValue);
     };
 
     return (
@@ -22,55 +34,93 @@ export default function CautionModal({
             transparent
             visible={visible}
             animationType="fade"
+            statusBarTranslucent
             onRequestClose={onCancel}
         >
-            <View className="flex-1 items-center justify-center bg-black/25">
-                <View className="w-[312px] bg-[#F1F1F1] rounded-[28px] overflow-hidden">
-                    <View className="px-6 pt-6 pb-4">
-                        <Text className="text-[24px] leading-[32px] font-geologica-regular text-[#1D1B20]">
+            <View className="flex-1 items-center justify-center bg-black/40 px-6">
+                <View
+                    className="w-[312px] min-w-[280px] max-w-[560px] bg-Base-Surface rounded-[28px] overflow-hidden"
+                    style={{
+                        elevation: 8,
+                        shadowColor: "#1A0F07",
+                        shadowOffset: {
+                            width: 0,
+                            height: 3,
+                        },
+                        shadowOpacity: 0.18,
+                        shadowRadius: 6,
+                    }}
+                >
+                    <View className="items-center px-6 pt-6 pb-4">
+                        <View className="w-12 h-12 items-center justify-center mb-4">
+                            <WarningIcon
+                                size={48}
+                                color="#FF9800"
+                            />
+                        </View>
+
+                        <Text className="text-[24px] leading-[32px] font-geologica-bold text-Base-OnSurface text-center">
                             Caution
                         </Text>
 
-                        <Text className="mt-4 text-[14px] leading-[20px] font-geologica-regular text-[#49454F]">
+                        <Text className="w-full mt-6 text-[16px] leading-[24px] font-geologica-regular text-Base-OnSurface">
                             Please ensure that no personal information (such as faces,
                             addresses, or documents) is captured by the camera.
                         </Text>
 
                         <Pressable
-                            className="mt-4 flex-row items-center"
-                            onPress={() => setDontShowAgain(!dontShowAgain)}
+                            className="w-full min-h-12 mt-8 px-2 flex-row items-center"
+                            onPress={toggleDontShowAgain}
+                            accessibilityRole="checkbox"
+                            accessibilityState={{
+                                checked: dontShowAgain,
+                            }}
                         >
-                            <View className="w-4 h-4 border border-black items-center justify-center mr-3">
+                            <View
+                                className={`
+                                    w-6
+                                    h-6
+                                    mr-4
+                                    rounded-[2px]
+                                    border-2
+                                    items-center
+                                    justify-center
+                                    ${dontShowAgain
+                                        ? "bg-Brand-Primary border-Brand-Primary"
+                                        : "bg-transparent border-Base-OnSurface"
+                                    }
+                                `}
+                            >
                                 {dontShowAgain && (
-                                    <Text className="text-[12px] leading-[12px] text-black">
+                                    <Text className="text-white text-[16px] leading-[18px] font-geologica-bold">
                                         ✓
                                     </Text>
                                 )}
                             </View>
 
-                            <Text className="text-[12px] leading-[16px] font-geologica-regular text-black">
-                                Don't show again
+                            <Text className="text-[12px] leading-[16px] font-geologica-medium text-Base-OnSurface">
+                                Don’t show again
                             </Text>
                         </Pressable>
                     </View>
 
-                    <View className="h-[1px] bg-[#D0D0D0]" />
+                    <View className="h-[1px] bg-Base-Outline" />
 
-                    <View className="h-[88px] px-6 flex-row items-center justify-end gap-2">
+                    <View className="h-[80px] flex-row items-center">
                         <Pressable
-                            className="px-4 py-[10px]"
+                            className="flex-1 h-12 items-center justify-center"
                             onPress={onCancel}
                         >
-                            <Text className="text-[14px] leading-[20px] font-geologica-medium text-black">
+                            <Text className="text-[16px] leading-[24px] font-geologica-medium text-Base-OnSurfaceVariant">
                                 Cancel
                             </Text>
                         </Pressable>
 
                         <Pressable
-                            className="px-4 py-[10px]"
+                            className="flex-1 h-12 items-center justify-center"
                             onPress={handleConfirm}
                         >
-                            <Text className="text-[14px] leading-[20px] font-geologica-medium text-black">
+                            <Text className="text-[16px] leading-[24px] font-geologica-medium text-Brand-Primary">
                                 Confirm
                             </Text>
                         </Pressable>

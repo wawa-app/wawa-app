@@ -19,6 +19,7 @@ import RNFS from "react-native-fs";
 import { pathFromUri } from "../utils/photos";
 import Fab from "../components/common/Fab";
 import { useSnackbar } from "../components/common/SnackbarProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 import EditIcon from "../components/icons/Edit";
@@ -28,6 +29,8 @@ import CheckIcon from "../components/icons/Check";
 const CHECK_MINUTES = 43200; // 30 days
 const MAX_OBJECTS = 20;
 const MIN_OBJECTS = 10;
+const CAUTION_PREFERENCE_KEY =
+    "@wawa/camera-caution-do-not-show-again";
 
 function ObjectMenu({
     position,
@@ -110,6 +113,9 @@ export default function ObjectsScreen({ navigation, route }) {
     const [showAddObjectSheet, setShowAddObjectSheet] = useState(false);
     const [pendingPhotoUri, setPendingPhotoUri] = useState(null);
     const [shouldIdentifyImage, setShouldIdentifyImage] = useState(true);
+    const [hideCameraCaution, setHideCameraCaution] = useState(false);
+    const [cautionPreferenceLoaded, setCautionPreferenceLoaded] =
+        useState(false);
 
     const [editingObject, setEditingObject] = useState(null);
     const [editingObjectId, setEditingObjectId] = useState(null);
@@ -415,6 +421,29 @@ export default function ObjectsScreen({ navigation, route }) {
         }
     };
 
+    useEffect(() => {
+        const loadCautionPreference = async () => {
+            try {
+                const storedValue = await AsyncStorage.getItem(
+                    CAUTION_PREFERENCE_KEY
+                );
+
+                setHideCameraCaution(storedValue === "true");
+            } catch (error) {
+                console.warn(
+                    "[ObjectsScreen] Unable to load caution preference:",
+                    error?.message
+                );
+
+                setHideCameraCaution(false);
+            } finally {
+                setCautionPreferenceLoaded(true);
+            }
+        };
+
+        loadCautionPreference();
+    }, []);
+
     const handleAddPress = () => {
         if (isMaxObjectsReached) {
             showSnackbar({
@@ -435,6 +464,15 @@ export default function ObjectsScreen({ navigation, route }) {
             editingObjectId: undefined,
         });
 
+        if (!cautionPreferenceLoaded) {
+            return;
+        }
+
+        if (hideCameraCaution) {
+            navigation.navigate("CameraCapture");
+            return;
+        }
+
         setShowCautionModal(true);
     };
 
@@ -442,8 +480,25 @@ export default function ObjectsScreen({ navigation, route }) {
         setShowCautionModal(false);
     };
 
-    const handleConfirmCaution = () => {
+    const handleConfirmCaution = async (dontShowAgain) => {
         setShowCautionModal(false);
+
+        if (dontShowAgain) {
+            try {
+                await AsyncStorage.setItem(
+                    CAUTION_PREFERENCE_KEY,
+                    "true"
+                );
+
+                setHideCameraCaution(true);
+            } catch (error) {
+                console.warn(
+                    "[ObjectsScreen] Unable to save caution preference:",
+                    error?.message
+                );
+            }
+        }
+
         navigation.navigate("CameraCapture");
     };
 
@@ -650,24 +705,30 @@ export default function ObjectsScreen({ navigation, route }) {
                 contentContainerStyle={{ paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View className="px-4 py-6 items-center">
-                    <View style={{ width: 328 }}>
+                <View className="px-4 pt-6">
+                    <View className="w-full">
                         <Text className="text-[32px] leading-[40px] font-geologica-bold text-Base-OnBackground">
                             Objects
                         </Text>
 
-                        <Text className="text-xs text-Base-OnBackground mt-1">
-                            <Text className="font-geologica-bold font-bold text-State-Info">
+                        <Text className="text-xs leading-4 font-geologica-medium text-Base-OnBackground mt-1">
+                            <Text className="font-geologica-medium text-State-Info">
                                 {enrolledCount} / {MAX_OBJECTS}
                             </Text>{" "}
-                            Enrolled{" "}
-                            <Text className="font-geologica-bold font-bold text-State-Error">
-                                ({objectsToCheckCount}
-                            </Text>
-                            <Text className="text-Base-OnBackground">
-                                {" "}
-                                objects you need to check)
-                            </Text>
+                            Enrolled
+
+                            {objectsToCheckCount > 0 && (
+                                <>
+                                    {" "}
+                                    <Text className="font-geologica-bold text-State-Error">
+                                        ({objectsToCheckCount}
+                                    </Text>
+                                    <Text className="text-Base-OnBackground">
+                                        {" "}
+                                        objects you need to check)
+                                    </Text>
+                                </>
+                            )}
                         </Text>
                     </View>
                 </View>
@@ -682,10 +743,11 @@ export default function ObjectsScreen({ navigation, route }) {
                             It looks like it's been over a month since the last update.
                         </Text>
 
-                        <View className="gap-4 items-center">
+                        <View className="gap-4">
                             {mustCheckObjects.map((item) => (
                                 <View
                                     key={item.id}
+                                    className="w-full"
                                     ref={(ref) => {
                                         cardRefs.current[item.id] = ref;
                                     }}
@@ -704,10 +766,11 @@ export default function ObjectsScreen({ navigation, route }) {
                     </View>
                 )}
 
-                <View className="px-4 pt-6 gap-4 items-center">
+                <View className="px-4 pt-4 gap-4">
                     {normalObjects.map((item) => (
                         <View
                             key={item.id}
+                            className="w-full"
                             ref={(ref) => {
                                 cardRefs.current[item.id] = ref;
                             }}
