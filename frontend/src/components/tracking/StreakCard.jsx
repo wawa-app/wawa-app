@@ -3,6 +3,7 @@ import {
     View,
     Text,
     ActivityIndicator,
+    ScrollView,
     StyleSheet,
     TouchableOpacity,
 } from "react-native";
@@ -10,7 +11,7 @@ import {
 import apiClient from "../../api/client";
 import { Streak, Unstreak } from "../icons";
 
-export default function StreakCard({ variant = "lose", streakCount }) {
+export default function StreakCard({ variant = "lose", streakCount, width = 265 }) {
     const hasProvidedStreak = typeof streakCount === "number";
     const [streak, setStreak] = useState(hasProvidedStreak ? streakCount : 0);
     const [loading, setLoading] = useState(!hasProvidedStreak);
@@ -66,11 +67,17 @@ export default function StreakCard({ variant = "lose", streakCount }) {
     const titleWeight = isLose ? "font-geologica-black font-black" : "font-geologica-bold font-bold";
     const StreakStatusIcon = isLose ? Unstreak : Streak;
 
-    const totalDays = 7;
-    const filledDays = Math.min(streak, totalDays);
+    const visibleDays = 7;
+    const completedDays = Math.max(0, Math.floor(streak));
+    const totalDays = Math.max(visibleDays, completedDays + (isLose ? 1 : 0));
+    const filledDays = Math.min(completedDays, totalDays);
+    const canScrollDays = totalDays > visibleDays;
 
     return (
-        <View className={`w-[265px] max-w-[280px] ${cardBg} border border-[#191919] rounded-[28px] px-4 py-6 items-center justify-center`}>
+        <View
+            className={`${cardBg} border border-[#191919] rounded-[28px] px-4 py-6 items-center justify-center`}
+            style={{ width, maxWidth: "100%" }}
+        >
 
             {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
@@ -100,7 +107,16 @@ export default function StreakCard({ variant = "lose", streakCount }) {
                     </Text>
 
                     {/* Day circles */}
-                    <View className="flex-row items-center justify-center gap-2">
+                    <ScrollView
+                        horizontal
+                        scrollEnabled={canScrollDays}
+                        showsHorizontalScrollIndicator={false}
+                        nestedScrollEnabled
+                        snapToInterval={32}
+                        decelerationRate="fast"
+                        style={styles.dayViewport}
+                        contentContainerStyle={styles.dayRow}
+                    >
                         {Array.from({ length: totalDays }).map((_, index) => {
                             const isFilled = index < filledDays;
                             const isMissed = isLose && index === filledDays;
@@ -114,6 +130,7 @@ export default function StreakCard({ variant = "lose", streakCount }) {
                                             ? "bg-[#6F7378]"
                                             : "bg-[#D8D0C4]"
                                         }`}
+                                    style={index < totalDays - 1 ? styles.daySpacing : undefined}
                                 >
                                     <Text className="text-black text-[14px] font-bold leading-[16px]">
                                         {isFilled ? "✓" : isMissed ? "×" : ""}
@@ -121,7 +138,7 @@ export default function StreakCard({ variant = "lose", streakCount }) {
                                 </View>
                             );
                         })}
-                    </View>
+                    </ScrollView>
                 </>
             )}
         </View>
@@ -131,5 +148,15 @@ export default function StreakCard({ variant = "lose", streakCount }) {
 const styles = StyleSheet.create({
     headerIcon: {
         marginRight: 12,
+    },
+    dayViewport: {
+        width: 216,
+        flexGrow: 0,
+    },
+    dayRow: {
+        alignItems: "center",
+    },
+    daySpacing: {
+        marginRight: 8,
     },
 });
