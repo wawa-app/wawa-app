@@ -121,20 +121,23 @@ export default function ChallengeCaptureScreen({
 
       <View className={tw.captureBody}>
         <View className={tw.cameraFrame} style={cameraFrameStyle}>
-          {device ? (
-            <Camera
-              ref={cameraRef}
-              style={StyleSheet.absoluteFill}
-              device={device}
-              isActive
-              outputs={[photoOutput]}
-              resizeMode="cover"
-            />
-          ) : (
-            <View className={tw.comparingFallback}>
-              <Ionicons name="camera" size={34} color="#3D2A1C" />
-            </View>
-          )}
+          <View style={[styles.cameraPreviewClip, device && styles.activeCameraFrame]}>
+            {device ? (
+              <Camera
+                ref={cameraRef}
+                style={StyleSheet.absoluteFill}
+                device={device}
+                isActive
+                outputs={[photoOutput]}
+                resizeMode="cover"
+                implementationMode={Platform.OS === 'android' ? 'compatible' : undefined}
+              />
+            ) : (
+              <View className={tw.comparingFallback}>
+                <Ionicons name="camera" size={34} color="#3D2A1C" />
+              </View>
+            )}
+          </View>
         </View>
 
         <View className={tw.captureControls} style={captureControlsStyle}>
@@ -151,3 +154,14 @@ export default function ChallengeCaptureScreen({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  cameraPreviewClip: {
+    flex: 1,
+    overflow: 'hidden',
+    borderRadius: 18,
+  },
+  activeCameraFrame: {
+    backgroundColor: '#000000',
+  },
+});

@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bc73be0d-0aaf-4455-8692-9814e63c6b4e" name="Changes" comment="" />
+    <list default="true" id="bc73be0d-0aaf-4455-8692-9814e63c6b4e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/tracking/StreakCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/tracking/StreakCard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/screens/challenge/ChallengeCaptureScreen.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/screens/challenge/ChallengeCaptureScreen.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/screens/challenge/challengeNativewind.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/screens/challenge/challengeNativewind.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

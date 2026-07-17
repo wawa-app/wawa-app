@@ -3,10 +3,11 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Linking,
   Modal,
   ScrollView,
-  Share,
   StyleSheet,
+  StatusBar,
   Text,
   TouchableOpacity,
   View,
@@ -31,7 +32,10 @@ const REVEAL_DURATION = 600;
 const HEADER_CENTER_OFFSET = Dimensions.get('window').height * 0.28;
 const SUCCESS_UNI_SIZE = 280;
 const FAILURE_UNI_SIZE = 190;
-const EMERGENCY_PROMPT_KEY = 'wawa.hideEmergencyExitPrompt';
+const SHARE_URL = 'https://wawa-wmdd.netlify.app';
+// Version the preference so a choice saved by the previous emergency dialog
+// cannot silently bypass this redesigned confirmation prompt.
+const EMERGENCY_PROMPT_KEY = 'wawa.hideEmergencyExitPrompt.v2';
 
 function UniAnimation({ mood = 'happy', size = SUCCESS_UNI_SIZE }) {
   const source = mood === 'cry' ? uniCry : uniHappy;
@@ -62,8 +66,8 @@ export default function ChallengeResultScreen({
   const [step, setStep] = React.useState('streak');
   const [revealed, setRevealed] = React.useState(false);
   const [showEmergencyPrompt, setShowEmergencyPrompt] = React.useState(false);
-  const [skipEmergencyPrompt, setSkipEmergencyPrompt] = React.useState(false);
   const [hideEmergencyPrompt, setHideEmergencyPrompt] = React.useState(false);
+  const [isEmergencyExiting, setIsEmergencyExiting] = React.useState(false);
   const reveal = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -130,13 +134,11 @@ export default function ChallengeResultScreen({
 
   const handleShare = React.useCallback(async () => {
     try {
-      await Share.share({
-        message: `I scanned my ${targetName} and kept my streak going! 🔥`,
-      });
+      await Linking.openURL(SHARE_URL);
     } catch (error) {
-      console.warn('[ChallengeResultScreen] share error:', error?.message);
+      console.warn('[ChallengeResultScreen] open share website error:', error?.message);
     }
-  }, [targetName]);
+  }, []);
 
   React.useEffect(() => {
     if (!matched) return;
@@ -180,52 +182,58 @@ export default function ChallengeResultScreen({
     };
   }, [matched, completionStats]);
 
-  React.useEffect(() => {
-    let isMounted = true;
+  const handleKeepStreak = React.useCallback(() => {
+    if (isEmergencyExiting) return;
+    setShowEmergencyPrompt(false);
+  }, [isEmergencyExiting]);
 
-    const loadEmergencyPromptPreference = async () => {
-      try {
-        const value = await AsyncStorage.getItem(EMERGENCY_PROMPT_KEY);
-        if (isMounted) setSkipEmergencyPrompt(value === 'true');
-      } catch (error) {
-        console.warn('[ChallengeResultScreen] load emergency prompt preference error:', error?.message);
+  const handleConfirmEmergencyExit = React.useCallback(async () => {
+    if (isEmergencyExiting) return;
+    setIsEmergencyExiting(true);
+    try {
+      await onEmergencyExit();
+      setShowEmergencyPrompt(false);
+    } finally {
+      setIsEmergencyExiting(false);
+    }
+  }, [isEmergencyExiting, onEmergencyExit]);
+
+  const handleEmergencyPress = React.useCallback(async () => {
+    if (isEmergencyExiting) return;
+
+    try {
+      const shouldSkipPrompt = await AsyncStorage.getItem(EMERGENCY_PROMPT_KEY);
+      if (shouldSkipPrompt === 'true') {
+        await handleConfirmEmergencyExit();
+        return;
       }
-    };
-
-    loadEmergencyPromptPreference();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const handleEmergencyPress = React.useCallback(() => {
-    if (skipEmergencyPrompt) {
-      onEmergencyExit();
-      return;
+    } catch (error) {
+      console.warn(
+        '[ChallengeResultScreen] load emergency prompt preference error:',
+        error?.message
+      );
     }
 
     setHideEmergencyPrompt(false);
     setShowEmergencyPrompt(true);
-  }, [onEmergencyExit, skipEmergencyPrompt]);
-
-  const handleKeepStreak = React.useCallback(() => {
-    setShowEmergencyPrompt(false);
-  }, []);
+  }, [handleConfirmEmergencyExit, isEmergencyExiting]);
 
   const handleSkipStreak = React.useCallback(async () => {
-    if (!hideEmergencyPrompt) return;
+    if (isEmergencyExiting) return;
 
-    try {
-      await AsyncStorage.setItem(EMERGENCY_PROMPT_KEY, 'true');
-      setSkipEmergencyPrompt(true);
-    } catch (error) {
-      console.warn('[ChallengeResultScreen] save emergency prompt preference error:', error?.message);
+    if (hideEmergencyPrompt) {
+      try {
+        await AsyncStorage.setItem(EMERGENCY_PROMPT_KEY, 'true');
+      } catch (error) {
+        console.warn(
+          '[ChallengeResultScreen] save emergency prompt preference error:',
+          error?.message
+        );
+      }
     }
 
-    setShowEmergencyPrompt(false);
-    onEmergencyExit();
-  }, [hideEmergencyPrompt, onEmergencyExit]);
+    await handleConfirmEmergencyExit();
+  }, [handleConfirmEmergencyExit, hideEmergencyPrompt, isEmergencyExiting]);
 
   const currentXp = Math.min(uni.exp % 100, 100);
   const xpProgress = `${currentXp}%`;
@@ -240,86 +248,91 @@ export default function ChallengeResultScreen({
     : undefined;
   const failureStreakCount = isFinalFailure ? 0 : completionStats?.streak?.currentCount;
 
+  if (matched && step === 'reward') {
+    return (
+      <View className={tw.screen}>
+        <View style={styles.rewardStepBody}>
+          <Text className={tw.successTitle}>MISSION{'\n'}ACCOMPLISHED</Text>
+
+          <View className={tw.uniRewardCenter} style={styles.rewardUniSpacing}>
+            <UniAnimation mood="happy" />
+            <Text className={tw.levelText}>{uni.stage} (Level: {uni.level})</Text>
+          </View>
+
+          <View className={tw.uniRewardBottom}>
+            <View className={tw.xpCard} style={styles.xpCardBackground}>
+              <View className={tw.xpHeader}>
+                <Text className={tw.xpLabel}>XP</Text>
+                <Text className={tw.xpValue}>{currentXp}/100</Text>
+              </View>
+              <View className={tw.xpTrack}>
+                <View className={tw.xpFill} style={{ width: xpProgress }} />
+              </View>
+            </View>
+
+            <View className={tw.successActions}>
+              <TouchableOpacity
+                className={tw.primaryActionButton}
+                onPress={onClose}
+                activeOpacity={0.85}
+              >
+                <Text className={tw.primaryActionText}>Close</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={tw.secondaryActionButton}
+                onPress={handleShare}
+                activeOpacity={0.85}
+              >
+                <Text className={tw.secondaryActionText}>Share</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   if (matched) {
     return (
       <ScrollView className={tw.screen} contentContainerClassName={tw.resultContent}>
-        <View className={tw.shortBlackStatus} />
+        {/* <View className={tw.shortBlackStatus} /> */}
 
-        {step === 'streak' ? (
-          <View className={tw.successCenteredBody}>
-            <Animated.View
-              className={tw.successHeaderBlock}
-              style={{ transform: [{ translateY: headerTranslateY }] }}
-            >
-              <Text className={tw.successTitle}>MISSION{'\n'}ACCOMPLISHED</Text>
-              <Text className={tw.resultCopy}>
-                Congratulations! You’ve successfully{'\n'}
-                scanned the {targetName} and started{'\n'}
-                your day on time.
-              </Text>
-            </Animated.View>
-
-            <Animated.View
-              pointerEvents={revealed ? 'auto' : 'none'}
-              style={[
-                styles.successRevealBottom,
-                { opacity: reveal, transform: [{ translateY: bottomTranslateY }] },
-              ]}
-            >
-              <View style={styles.successHeaderGap} />
-
-              <View className={tw.successCenteredBottom}>
-                <StreakCard
-                  variant="success"
-                  streakCount={successStreakCount}
-                />
-
-                <View className={tw.successActions}>
-                  <TouchableOpacity
-                    className={tw.primaryActionButton}
-                    onPress={() => setStep('reward')}
-                    activeOpacity={0.85}
-                  >
-                    <Text className={tw.primaryActionText}>Continue</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className={tw.secondaryActionButton}
-                    onPress={handleShare}
-                    activeOpacity={0.85}
-                  >
-                    <Text className={tw.secondaryActionText}>Share</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Animated.View>
-          </View>
-        ) : (
-          <View className={tw.successStepBody}>
+        <View className={tw.successCenteredBody}>
+          <Animated.View
+            className={tw.successHeaderBlock}
+            style={{ transform: [{ translateY: headerTranslateY }] }}
+          >
             <Text className={tw.successTitle}>MISSION{'\n'}ACCOMPLISHED</Text>
+            <Text className={tw.resultCopy}>
+              Congratulations! You’ve successfully{'\n'}
+              scanned the {targetName} and started{'\n'}
+              your day on time.
+            </Text>
+          </Animated.View>
 
-            <View className={tw.uniRewardCenter}>
-              <UniAnimation mood="happy" />
-              <Text className={tw.levelText}>{uni.stage} (Level: {uni.level})</Text>
-            </View>
+          <Animated.View
+            pointerEvents={revealed ? 'auto' : 'none'}
+            style={[
+              styles.successRevealBottom,
+              { opacity: reveal, transform: [{ translateY: bottomTranslateY }] },
+            ]}
+          >
+            <View style={styles.successHeaderGap} />
 
-            <View className={tw.uniRewardBottom}>
-              <View className={tw.xpCard}>
-                <View className={tw.xpHeader}>
-                  <Text className={tw.xpLabel}>XP</Text>
-                  <Text className={tw.xpValue}>{currentXp}/100</Text>
-                </View>
-                <View className={tw.xpTrack}>
-                  <View className={tw.xpFill} style={{ width: xpProgress }} />
-                </View>
-              </View>
+            <View className={tw.successCenteredBottom}>
+              <StreakCard
+                variant="success"
+                streakCount={successStreakCount}
+                width={308}
+              />
 
               <View className={tw.successActions}>
                 <TouchableOpacity
                   className={tw.primaryActionButton}
-                  onPress={onClose}
+                  onPress={() => setStep('reward')}
                   activeOpacity={0.85}
                 >
-                  <Text className={tw.primaryActionText}>Close</Text>
+                  <Text className={tw.primaryActionText}>Continue</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   className={tw.secondaryActionButton}
@@ -330,16 +343,16 @@ export default function ChallengeResultScreen({
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
-        )}
+          </Animated.View>
+        </View>
       </ScrollView>
     );
   }
 
   if (isFinalFailure) {
     return (
-      <ScrollView className={tw.screen} contentContainerClassName={tw.resultContent}>
-        <View className={tw.shortBlackStatus} />
+      <ScrollView className={tw.screen} contentContainerStyle={styles.finalFailureScrollContent}>
+        {/* <View className={tw.shortBlackStatus} /> */}
 
         <View style={styles.finalFailureBody}>
           <View style={styles.finalFailureContent}>
@@ -376,9 +389,9 @@ export default function ChallengeResultScreen({
   return (
     <>
       <ScrollView className={tw.screen} contentContainerClassName={tw.resultContent}>
-        <View className={tw.shortBlackStatus} />
+        {/* <View className={tw.shortBlackStatus} /> */}
 
-        <View className={tw.successStepBody}>
+        <View className={tw.successStepBody} style={styles.failureStepBody}>
           <Animated.View
             style={[styles.introHeader, { transform: [{ translateY: failHeaderTranslateY }] }]}
           >
@@ -443,7 +456,12 @@ export default function ChallengeResultScreen({
         <View style={styles.emergencyOverlay}>
           <View style={styles.emergencyDialog}>
             <View style={styles.emergencyContent}>
-              <Text style={styles.emergencyMessage}>
+              <Text
+                style={styles.emergencyMessage}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.85}
+              >
                 Leaving now will break your streak.{'\n'}
                 Take a second before you leave.
               </Text>
@@ -451,7 +469,10 @@ export default function ChallengeResultScreen({
               <TouchableOpacity
                 style={styles.emergencyCheckboxRow}
                 onPress={() => setHideEmergencyPrompt((value) => !value)}
+                disabled={isEmergencyExiting}
                 activeOpacity={0.8}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: hideEmergencyPrompt }}
               >
                 <View style={styles.emergencyCheckbox}>
                   {hideEmergencyPrompt ? (
@@ -466,23 +487,17 @@ export default function ChallengeResultScreen({
 
             <View style={styles.emergencyActions}>
               <TouchableOpacity
-                style={styles.emergencyActionButton}
+                style={[styles.emergencyActionButton, styles.emergencySkipButton]}
                 onPress={handleSkipStreak}
-                disabled={!hideEmergencyPrompt}
+                disabled={isEmergencyExiting}
                 activeOpacity={0.8}
               >
-                <Text
-                  style={[
-                    styles.emergencySkipText,
-                    hideEmergencyPrompt ? styles.emergencySkipTextEnabled : null,
-                  ]}
-                >
-                  Skip
-                </Text>
+                <Text style={styles.emergencySkipText}>Skip</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.emergencyActionButton}
+                style={[styles.emergencyActionButton, styles.emergencyKeepButton]}
                 onPress={handleKeepStreak}
+                disabled={isEmergencyExiting}
                 activeOpacity={0.8}
               >
                 <Text style={styles.emergencyKeepText}>Keep my streak</Text>
@@ -496,11 +511,29 @@ export default function ChallengeResultScreen({
 }
 
 const styles = StyleSheet.create({
+  rewardUniSpacing: {
+    transform: [{ translateY: 13.33 }],
+  },
+  xpCardBackground: {
+    backgroundColor: '#FFB24D',
+    borderRadius: 16,
+  },
+  rewardStepBody: {
+    flex: 1,
+    width: '100%',
+    paddingTop: 87.75,
+    // Android's edge-to-edge window height includes the status-bar inset,
+    // so compensate for it to keep the visible bottom gap at 87.25.
+    paddingBottom: 87.25 + (StatusBar.currentHeight ?? 0),
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   introHeader: {
     alignItems: 'center',
   },
   successHeaderGap: {
-    height: 54,
+    height: 32,
   },
   successRevealBottom: {
     width: '100%',
@@ -524,6 +557,13 @@ const styles = StyleSheet.create({
     width: FAILURE_UNI_SIZE,
     overflow: 'hidden',
     alignItems: 'center',
+  },
+  failureStepBody: {
+    paddingTop: 87,
+  },
+  finalFailureScrollContent: {
+    minHeight: '100%',
+    paddingHorizontal: 32,
   },
   finalFailureBody: {
     flex: 1,
@@ -549,27 +589,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   emergencyDialog: {
-    width: '100%',
-    maxWidth: 360,
+    width: 318,
+    maxWidth: '100%',
     overflow: 'hidden',
     borderRadius: 28,
+    borderWidth: 1,
+    borderColor: '#191919',
     backgroundColor: '#FFF8E1',
   },
   emergencyContent: {
-    paddingHorizontal: 24,
-    paddingTop: 26,
-    paddingBottom: 24,
+    height: 140,
+    paddingHorizontal: 26,
+    paddingTop: 25,
   },
   emergencyMessage: {
     color: '#1A0F07',
     fontFamily: 'Geologica-Regular',
     fontSize: 15,
-    lineHeight: 24,
+    lineHeight: 23,
   },
   emergencyCheckboxRow: {
-    marginTop: 16,
+    marginTop: 14,
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
   },
   emergencyCheckbox: {
     width: 18,
@@ -583,14 +626,14 @@ const styles = StyleSheet.create({
   emergencyCheckboxTick: {
     color: '#1A0F07',
     fontFamily: 'Geologica-Bold',
-    fontSize: 14,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 15,
   },
   emergencyCheckboxText: {
-    marginLeft: 14,
+    marginLeft: 16,
     color: '#1A0F07',
     fontFamily: 'Geologica-Bold',
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 18,
   },
   emergencyDivider: {
@@ -598,25 +641,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#D4CBBF',
   },
   emergencyActions: {
-    height: 80,
+    height: 82,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingHorizontal: 22,
+    paddingRight: 20,
   },
   emergencyActionButton: {
-    minWidth: 96,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  emergencySkipButton: {
+    width: 80,
+  },
+  emergencyKeepButton: {
+    width: 140,
+  },
   emergencySkipText: {
-    color: '#A29789',
+    color: '#1A0F07',
     fontFamily: 'Geologica-Bold',
     fontSize: 14,
-  },
-  emergencySkipTextEnabled: {
-    color: '#1A0F07',
   },
   emergencyKeepText: {
     color: '#FF6D00',
