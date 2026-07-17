@@ -32,8 +32,11 @@ const ObjectCardContent = ({
                 )}
             </View>
 
-            <View className="flex-1 ml-4">
-                <Text className="text-[18px] leading-[24px] font-geologica text-Base-OnSurface mb-2">
+            <View className="flex-1 ml-4 pr-6">
+                <Text
+                    className="text-[18px] leading-[24px] font-geologica text-Base-OnSurface mb-2"
+                    numberOfLines={1}
+                >
                     {objectName}
                 </Text>
 
@@ -81,7 +84,7 @@ const ObjectCard = ({
 }) => {
     if (needsCheck) {
         return (
-            <View className="w-[328px] h-[120px] p-4 rounded-2xl bg-State-Warn flex-row items-center relative">
+            <View className="w-full h-[120px] p-4 rounded-2xl bg-State-Warn flex-row items-center relative">
                 <ObjectCardContent
                     objectName={objectName}
                     date={date}
@@ -94,7 +97,7 @@ const ObjectCard = ({
     }
 
     return (
-        <View className="w-[328px] h-[120px] p-4 rounded-2xl border border-Base-OnBackground bg-Base-Surface flex-row items-center relative">
+        <View className="w-full h-[120px] p-4 rounded-2xl border border-Base-OnBackground bg-Base-Surface flex-row items-center relative">
             <ObjectCardContent
                 objectName={objectName}
                 date={date}
