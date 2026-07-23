@@ -3,9 +3,9 @@ import {
   Animated,
   Dimensions,
   Easing,
-  Linking,
   Modal,
   ScrollView,
+  Share as RNShare,
   StyleSheet,
   StatusBar,
   Text,
@@ -134,9 +134,13 @@ export default function ChallengeResultScreen({
 
   const handleShare = React.useCallback(async () => {
     try {
-      await Linking.openURL(SHARE_URL);
+      await RNShare.share({
+        title: 'Share WaWa',
+        message: `I completed my WaWa mission! ${SHARE_URL}`,
+        url: SHARE_URL,
+      });
     } catch (error) {
-      console.warn('[ChallengeResultScreen] open share website error:', error?.message);
+      console.warn('[ChallengeResultScreen] share error:', error?.message);
     }
   }, []);
 
